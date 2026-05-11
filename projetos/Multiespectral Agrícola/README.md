@@ -9,9 +9,9 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 > Incluir nome RA e foco de especialização de cada membro do grupo. Os projetos devem ser desenvolvidos em duplas ou trios.
 > |Nome  | RA | Curso|
 > |--|--|--|
-> | Nome1  | 123456  | Mestrado em xxxx|
-> | Nome2  | 123456  | Graduação em xxx|
-> | Nome3  | 123456  | xxxx|
+> | Brendon Erick Euzébio Rus Peres  | 256130  | Mestrado em xxxx|
+> | Luís Fernando Silva Lima  | 298966 | Mestrado em xxxx|
+> | Mateus Bizzo da Silva  | 200216  | Mestrado em xxxx|
 
 
 ## Descrição do Projeto
@@ -25,7 +25,7 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 
 Base de Dados | Endereço na Web | Resumo descritivo
 ----- | ----- | -----
-Título da Base | http://base1.org/ | Breve resumo (duas ou três linhas) sobre a base.
+Agriculture-Vision | https://www.agriculture-vision.com/agriculture-vision-2020/dataset | Breve resumo (duas ou três linhas) sobre a base.
 
 > Forneça também o link para o "datasheet" criado para os datasets (anexado na pasta `data`, como indicado nas [instruções E2](https://github.com/Disciplinas-FEEC/IA901-2026S1/blob/main/templates/ia901-E2-instructions.md)), contendo informações mais detalhadas e sistematizadas sobre as bases de dados.
 
