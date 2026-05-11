@@ -25,7 +25,7 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 
 Base de Dados | Endereço na Web | Resumo descritivo
 ----- | ----- | -----
-Agriculture-Vision | https://www.agriculture-vision.com/agriculture-vision-2020/dataset | Breve resumo (duas ou três linhas) sobre a base.
+Agriculture-Vision | https://www.agriculture-vision.com/agriculture-vision-2021/dataset-2021 | Breve resumo (duas ou três linhas) sobre a base.
 
 > Forneça também o link para o "datasheet" criado para os datasets (anexado na pasta `data`, como indicado nas [instruções E2](https://github.com/Disciplinas-FEEC/IA901-2026S1/blob/main/templates/ia901-E2-instructions.md)), contendo informações mais detalhadas e sistematizadas sobre as bases de dados.
 
