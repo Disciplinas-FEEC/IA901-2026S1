@@ -27,7 +27,7 @@ Base de Dados | Endereço na Web | Resumo descritivo
 ----- | ----- | -----
 Agriculture-Vision | https://www.agriculture-vision.com/agriculture-vision-2021/dataset-2021 | Breve resumo (duas ou três linhas) sobre a base.
 
-> Forneça também o link para o "datasheet" criado para os datasets (anexado na pasta `data`, como indicado nas [instruções E2](https://github.com/Disciplinas-FEEC/IA901-2026S1/blob/main/templates/ia901-E2-instructions.md)), contendo informações mais detalhadas e sistematizadas sobre as bases de dados.
+> [Link para o datasheet do dataset](https://docs.google.com/document/d/1QEhjC9ITwu-VQRwQzN5-8O_ES_J7Koa9mj8wCiMX2tE/edit?usp=sharing)
 
 ## Ferramentas
 > Ferramentas e/ou bibliotecas já utilizadas e/ou ainda a serem utilizadas (com base na visão atual do grupo sobre o projeto).
