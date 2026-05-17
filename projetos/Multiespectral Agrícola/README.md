@@ -25,7 +25,7 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 
 Base de Dados | Endereço na Web | Resumo descritivo
 ----- | ----- | -----
-Agriculture-Vision | https://www.agriculture-vision.com/agriculture-vision-2021/dataset-2021 | Breve resumo (duas ou três linhas) sobre a base.
+Agriculture-Vision | https://www.agriculture-vision.com/agriculture-vision-2021/dataset-2021 | Dataset voltado para a agricultura de precisão, composto por 94.986 imagens aéreas multiespectrais (RGB e NIR). Ele apresenta nove classes de anomalias as quais podem ser utilizadas para segmentação semântica.
 
 > [Link para o datasheet do dataset](https://docs.google.com/document/d/1QEhjC9ITwu-VQRwQzN5-8O_ES_J7Koa9mj8wCiMX2tE/edit?usp=sharing)
 
