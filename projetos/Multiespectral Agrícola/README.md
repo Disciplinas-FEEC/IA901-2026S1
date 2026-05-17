@@ -47,7 +47,12 @@ Agriculture-Vision | https://www.agriculture-vision.com/agriculture-vision-2021/
 > Liste as próximas etapas planejadas para conclusão do projeto, com uma estimativa de tempo para cada etapa.
 
 ## Uso de IA Generativa
-> Adicione aqui em quais tarefas foi usada alguma ferramenta de IA Generativa. Para cada tarefa indicada detalhe qual a ferramenta e qual o prompt utilizado.
+### Auxílio na parte gramatical do datasheet
+O Gemini foi utilizado no ajuste gramatical e na conversão dos textos para inglês. Prompt utilizado: 
+> "Escreva o seguinte trecho em inglês ajustando erros gramaticais quando necessário:"
+### Auxílio na criação dos códigos
+Foi utilizado o Gemini para a criação dos códigos de navegação entre os diretórios do dataset. Prompt utilizado:
+> "Dado os seguintes diretórios escreva um código que permita acessar as imagens presentes nas pastas."
 
 ## Referências
 > Seção obrigatória. Inclua aqui referências utilizadas no projeto.
