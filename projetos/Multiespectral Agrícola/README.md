@@ -20,6 +20,8 @@ Falar sobre imagens multiespectrais
 
 Além disso, Sa et al. [7] propuseram o WeedMap, um framework de mapeamento semântico que utiliza imagens multiespectrais para otimizar a detecção de espécies invasoras na agricultura de precisão e seus resultados mostraram que o NVDI (Normalized Difference Vegetation Index) contribui significativamente para uma classificação precisa da vegetação. A partir dessa premissa, espera-se que a inclusão dessa informação espectral resulte em uma maior eficiência na segmentação de bordas e anomalias complexas. Ao fornecer um contraste nítido entre diferentes níveis de vigor vegetativo, o índice reduz o ruído de iluminação nas imagens aéreas, permitindo que o modelo delimite com precisão as transições de estresse foliar, como zonas de seca ou deficiência de nutrientes.
 
+A principal motivação deste projeto é verificar a eficácia de modelos de segmentação semântica integrados aos subespaços do NDVI e NDWI, com vistas à sua aplicação no monitoramento de lavouras e na identificação de anomalias em imagens aéreas agrícolas. O sistema proposto deve ser capaz de processar dados multiespectrais para delimitar com precisão regiões de estresse vegetativo e corpos d'água superficiais, correlacionando os índices radiométricos com as classes de interesse. O resultado esperado do modelo será a geração de máscaras de segmentação semanticamente consistentes, onde os limites geométricos das anomalias sejam preservados de forma estatisticamente e espacialmente coerente com os dados reais de entrada.
+
 > Descrição do objetivo principal do projeto, incluindo contexto gerador, motivação, etc. Qual problema você pretende solucionar? Qual a relevância do problema e o impacto da solução do mesmo?
 
 #### Detecção de Vegetação Usando NDVI
