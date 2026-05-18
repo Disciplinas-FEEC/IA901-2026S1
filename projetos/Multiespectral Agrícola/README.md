@@ -22,9 +22,7 @@ Falar sobre imagens multiespectrais
 Além disso, Sa et al. [7] propuseram o WeedMap, um framework de mapeamento semântico que utiliza imagens multiespectrais para otimizar a detecção de espécies invasoras na agricultura de precisão e seus resultados mostraram que o NVDI (Normalized Difference Vegetation Index) contribui significativamente para uma classificação precisa da vegetação. A partir dessa premissa, espera-se que a inclusão dessa informação espectral resulte em uma maior eficiência na segmentação de bordas e anomalias complexas. Ao fornecer um contraste nítido entre diferentes níveis de vigor vegetativo, o índice reduz o ruído de iluminação nas imagens aéreas, permitindo que o modelo delimite com precisão as transições de estresse foliar, como zonas de seca ou deficiência de nutrientes.
 
 > Descrição do objetivo principal do projeto, incluindo contexto gerador, motivação, etc. Qual problema você pretende solucionar? Qual a relevância do problema e o impacto da solução do mesmo?
-### Contexto gerador
 
-### Motivação
 #### Detecção de Vegetação Usando NDVI
 Para criar o espaço semântico, o primeiro subespaço é o NDVI que é a combinação dos canais Vermelho (Red) e Infravermelho próximo (NIR). Este subespaço está relacionado ao índice de vegetação por diferença normalizada, que é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [8]. O NDVI é definido pela equação (1), calculada pelos pixels vermelho e infravermelho.
 
@@ -46,13 +44,6 @@ NDWI = \dfrac{GREEN - NIR}{GREEN + IR} & \text{(2)}
 $$
 
 Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo.
-
-
-### O problema a ser solucionado
-
-### Relevância do Problema
-
-### Impacto da Solução Proposta
 
 ## Metodologia
 > Proposta de metodologia incluindo especificação de quais técnicas pretende-se explorar. Espera-se que nesta entrega você já seja capaz de descrever de maneira mais específica (do que na Entrega 1) quais as técnicas a serem empregadas em cada etapa do projeto.
