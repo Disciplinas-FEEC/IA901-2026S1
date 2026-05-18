@@ -6,12 +6,11 @@
 O presente projeto foi originado no contexto das atividades da disciplina de pós-graduação *IA901 - Análise de Imagens e Reconhecimento de Padrões*, 
 oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dra. Leticia Rittner, do Departamento de Engenharia de Computação e Automação (DCA) da Faculdade de Engenharia Elétrica e de Computação (FEEC).
 
-> Incluir nome RA e foco de especialização de cada membro do grupo. Os projetos devem ser desenvolvidos em duplas ou trios.
-> |Nome  | RA | Curso|
-> |--|--|--|
-> | Brendon Erick Euzébio Rus Peres  | 256130  | Mestrado em xxxx|
-> | Luís Fernando Silva Lima  | 298966 | Mestrado em Engenharia Elétrica |
-> | Mateus Bizzo da Silva  | 200216  | Mestrado em xxxx|
+|Nome  | RA | Curso|
+|--|--|--|
+| Brendon Erick Euzébio Rus Peres  | 256130  | Mestrado em xxxx|
+| Luís Fernando Silva Lima  | 298966 | Mestrado em Engenharia Elétrica |
+| Mateus Bizzo da Silva  | 200216  | Mestrado em xxxx|
 
 
 ## Descrição do Projeto
