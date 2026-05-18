@@ -10,7 +10,7 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 > |Nome  | RA | Curso|
 > |--|--|--|
 > | Brendon Erick Euzébio Rus Peres  | 256130  | Mestrado em xxxx|
-> | Luís Fernando Silva Lima  | 298966 | Mestrado em xxxx|
+> | Luís Fernando Silva Lima  | 298966 | Mestrado em Engenharia Elétrica |
 > | Mateus Bizzo da Silva  | 200216  | Mestrado em xxxx|
 
 
