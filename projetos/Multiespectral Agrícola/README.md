@@ -19,6 +19,28 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 ### Contexto gerador
 
 ### Motivação
+#### Detecção de Vegetação Usando NDVI
+Para criar o espaço semântico, o primeiro subespaço é o NDVI que é a combinação dos canais Vermelho (Red) e Infravermelho próximo (NIR). Este subespaço está relacionado ao índice de vegetação por diferença normalizada, que é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [8]. O NDVI é definido pela equação (1), calculada pelos pixels vermelho e infravermelho.
+
+$$
+\begin{array}{cc}
+NDVI = \dfrac{NIR - RED}{NIR + RED} & \text{(1)}
+\end{array}
+$$
+
+Onde NIR é o valor do pixel infravermelho próximo e RED é o valor do pixel vermelho.
+
+#### Detecção de água usando NDWI
+O segundo subespaço necessário para a criação do espaço semântico no monitoramento agrícola é o NDWI. Este subespaço é definido pelos eixos Verde (Green) e Infravermelho próximo (IR). A combinação desses dois canais pode ser utilizada tanto para analisar o teor de água nas folhas das plantas quanto para delimitar corpos d'água na superfície [8]. O NDWI pode ser obtido através da equação (2).
+
+$$
+\begin{array}{cc}
+NDWI = \dfrac{GREEN - NIR}{GREEN + IR} & \text{(2)}
+\end{array}
+$$
+
+Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo.
+
 
 ### O problema a ser solucionado
 
@@ -64,18 +86,18 @@ Foi utilizado o Gemini para a criação dos códigos de navegação entre os dir
 > "Dado os seguintes diretórios escreva um código que permita acessar as imagens presentes nas pastas."
 
 ## Referências
-CHIU, Mang Tik et al. Agriculture-vision: A large aerial image database for agricultural pattern analysis. In: Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2020. p. 2828-2838.
+[1] CHIU, Mang Tik et al. Agriculture-vision: A large aerial image database for agricultural pattern analysis. In: Proceedings of the IEEE/CVF conference on computer vision and pattern recognition. 2020. p. 2828-2838.
 
-CHIU, Mang Tik et al. The 1st agriculture-vision challenge: Methods and results. In: Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops. 2020. p. 48-49.
+[2] CHIU, Mang Tik et al. The 1st agriculture-vision challenge: Methods and results. In: Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops. 2020. p. 48-49.
 
-Buvanesh, Anirudh & Narang, Pratik & Sinha, Soumendu. (2021). Proposing A Deep Learning Based Architecture for Agriculture Vision. 10.13140/RG.2.2.26628.86404. 
+[3] Buvanesh, Anirudh & Narang, Pratik & Sinha, Soumendu. (2021). Proposing A Deep Learning Based Architecture for Agriculture Vision. 10.13140/RG.2.2.26628.86404. 
 
-SHEN, Yao; WANG, Lei; JIN, Yue. AAFormer: A multi-modal transformer network for aerial agricultural images. In: Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022. p. 1705-1711.
+[4] SHEN, Yao; WANG, Lei; JIN, Yue. AAFormer: A multi-modal transformer network for aerial agricultural images. In: Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022. p. 1705-1711.
 
-INNANI, Shubham et al. Fuse-pn: A novel architecture for anomaly pattern segmentation in aerial agricultural images. In: Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2021. p. 2960-2968.
+[5] INNANI, Shubham et al. Fuse-pn: A novel architecture for anomaly pattern segmentation in aerial agricultural images. In: Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2021. p. 2960-2968.
 
-SAHIN, Halil Mertkan et al. Segmentation of weeds and crops using multispectral imaging and CRF-enhanced U-Net. Computers and Electronics in Agriculture, v. 211, p. 107956, 2023.
+[6] SAHIN, Halil Mertkan et al. Segmentation of weeds and crops using multispectral imaging and CRF-enhanced U-Net. Computers and Electronics in Agriculture, v. 211, p. 107956, 2023.
 
-SA, Inkyu et al. WeedMap: A large-scale semantic weed mapping framework using aerial multispectral imaging and deep neural network for precision farming. Remote Sensing, v. 10, n. 9, p. 1423, 2018.
+[7] SA, Inkyu et al. WeedMap: A large-scale semantic weed mapping framework using aerial multispectral imaging and deep neural network for precision farming. Remote Sensing, v. 10, n. 9, p. 1423, 2018.
 
-WIJITDECHAKUL, Jinmika et al. UAV-based multispectral image analysis system with semantic computing for agricultural health conditions monitoring and real-time management. In: 2016 International Electronics Symposium (IES). IEEE, 2016. p. 459-464.
+[8] WIJITDECHAKUL, Jinmika et al. UAV-based multispectral image analysis system with semantic computing for agricultural health conditions monitoring and real-time management. In: 2016 International Electronics Symposium (IES). IEEE, 2016. p. 459-464.
