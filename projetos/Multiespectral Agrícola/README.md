@@ -34,6 +34,7 @@ A principal motivação deste trabalho é verificar a eficácia de modelos de se
 
 > Descrição do objetivo principal do projeto, incluindo contexto gerador, motivação, etc. Qual problema você pretende solucionar? Qual a relevância do problema e o impacto da solução do mesmo?
 
+## Metodologia
 #### Detecção de Vegetação Usando NDVI
 Para criar o espaço semântico, o primeiro subespaço é o NDVI que é a combinação dos canais Vermelho (Red) e Infravermelho próximo (NIR). Este subespaço está relacionado ao índice de vegetação por diferença normalizada, que é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [8]. O NDVI é definido pela equação (1), calculada pelos pixels vermelho e infravermelho.
 
@@ -56,7 +57,6 @@ $$
 
 Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo.
 
-## Metodologia
 > Proposta de metodologia incluindo especificação de quais técnicas pretende-se explorar. Espera-se que nesta entrega você já seja capaz de descrever de maneira mais específica (do que na Entrega 1) quais as técnicas a serem empregadas em cada etapa do projeto.
 
 ## Bases de Dados e Evolução
