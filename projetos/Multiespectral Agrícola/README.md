@@ -28,8 +28,7 @@ Falar sobre imagens multiespectrais
   </p>
 </div>
 
-
-Devido à alta refletividade da clorofila no espectro do infravermelho próximo (NIR), é consideravelmente fácil eliminar o fundo irrelevante de uma imagem e, portanto, separar a vegetação do solo ou de outros objetos [9]. 
+Devido à alta refletividade da clorofila no espectro do infravermelho próximo (NIR), é consideravelmente fácil eliminar o fundo irrelevante de uma imagem e, portanto, separar a vegetação do solo ou de outros objetos [9]. O NDWI tem sido amplamente utilizado em Sensoriamento Remoto (SR) para distinguir corpos d'água de outras superfícies terrestres. Este índice baseia-se na observação de que os corpos d'água absorvem a maior parte da banda do NIR, enquanto a vegetação reflete a banda NIR em sua extensão máxima [10, 11]. Na Tabela 1 é possível observar a correlação de circunstâncias nas lavouras com os índices abordados.
 
 <div align="center">
 
@@ -132,3 +131,7 @@ Foi utilizado o Gemini para a criação dos códigos de navegação entre os dir
 [8] WIJITDECHAKUL, Jinmika et al. UAV-based multispectral image analysis system with semantic computing for agricultural health conditions monitoring and real-time management. In: 2016 International Electronics Symposium (IES). IEEE, 2016. p. 459-464.
 
 [9] P. Lottes, M. Hoeferlin, S. Sander, M. Müter, P. Schulze and L. C. Stachniss, "An effective classification system for separating sugar beets and weeds for precision farming applications," 2016 IEEE International Conference on Robotics and Automation (ICRA), Stockholm, Sweden, 2016, pp. 5157-5163, doi: 10.1109/ICRA.2016.7487720.
+
+[10] E. Özelkan (2020). Water body detection analysis using NDWI indices derived from Landsat-8 OLI [J]. Polish Journal of Environmental Studies, 29(2):1759-1769.
+
+[11] V. Shashikant, A. Shariff, A. Wayayok, et al (2021). Utilizing TVDI and NDWI to classify severity of agricultural drought in Chuping, Malaysia [J]. Agronomy, 11(6): 1243. 
