@@ -28,9 +28,30 @@ Falar sobre imagens multiespectrais
   </p>
 </div>
 
+
+Devido à alta refletividade da clorofila no espectro do infravermelho próximo (NIR), é consideravelmente fácil eliminar o fundo irrelevante de uma imagem e, portanto, separar a vegetação do solo ou de outros objetos [9]. 
+
+<div align="center">
+
+<b>Tabela 1:</b> Condições de saúde da plantação de acordo com os índices NVDI e NDWI
+
+| Significado da Correlação | NDVI | NDWI |
+| :--- | :---: | :---: |
+| Vegetação saudável durante a etapa de transpiração (Meio-dia) | + | + |
+| Vegetação saudável, mas o solo está seco ou com baixa umidade | + | + |
+| Vegetação saudável (Momento de máxima intensidade de verde*) | + | - |
+| Vegetação saudável em solo arenoso (ou planta em deserto), como abacaxi | + | - |
+| Sem vegetação em solo frágil/friável (Antes do plantio agrícola) | - | + |
+| Vegetação não saudável com algum teor de água de plantas daninhas em solo seco | - | + |
+| Sem vegetação em solo frágil/friável (Antes do plantio agrícola) | - | - |
+| Vegetação não saudável | - | - |
+
+<i>Fonte: Adaptado de Sa et al. [7].</i>
+</div>
+
 Além disso, Sa et al. [7] propuseram o WeedMap, um framework de mapeamento semântico que utiliza imagens multiespectrais para otimizar a detecção de espécies invasoras na agricultura de precisão e seus resultados mostraram que o NVDI (Normalized Difference Vegetation Index) contribui significativamente para uma classificação precisa da vegetação. A partir dessa premissa, espera-se que a inclusão dessa informação espectral resulte em uma maior eficiência na segmentação de bordas e anomalias complexas. Ao fornecer um contraste nítido entre diferentes níveis de vigor vegetativo, o índice reduz o ruído de iluminação nas imagens aéreas, permitindo que o modelo delimite com precisão as transições de estresse foliar, como zonas de seca ou deficiência de nutrientes.
 
-A principal motivação deste trabalho é verificar a eficácia de modelos de segmentação semântica integrados aos subespaços do NDVI e NDWI, com vistas à sua aplicação no monitoramento de lavouras e na identificação de anomalias em imagens aéreas agrícolas. O sistema proposto deve ser capaz de processar dados multiespectrais para delimitar com precisão regiões de estresse vegetativo e corpos d'água superficiais, correlacionando os índices radiométricos com as classes de interesse. O resultado esperado do modelo será a geração de máscaras de segmentação semanticamente consistentes, onde os limites geométricos das anomalias sejam preservados de forma estatisticamente e espacialmente coerente com os dados reais de entrada.
+A principal motivação deste trabalho é verificar a eficácia de modelos de segmentação semântica com a integração do NDVI e NDWI, haja vista a sua aplicação no monitoramento de lavouras e na identificação de anomalias em imagens aéreas agrícolas. O sistema proposto deve ser capaz de processar dados multiespectrais para delimitar com precisão regiões de estresse vegetativo e corpos d'água superficiais, correlacionando os índices radiométricos com as classes de interesse. O resultado esperado do modelo será a geração de máscaras de segmentação semanticamente consistentes, onde os limites geométricos das anomalias sejam preservados de forma estatisticamente e espacialmente coerente com os dados reais de entrada.
 
 > Descrição do objetivo principal do projeto, incluindo contexto gerador, motivação, etc. Qual problema você pretende solucionar? Qual a relevância do problema e o impacto da solução do mesmo?
 
@@ -109,3 +130,5 @@ Foi utilizado o Gemini para a criação dos códigos de navegação entre os dir
 [7] SA, Inkyu et al. WeedMap: A large-scale semantic weed mapping framework using aerial multispectral imaging and deep neural network for precision farming. Remote Sensing, v. 10, n. 9, p. 1423, 2018.
 
 [8] WIJITDECHAKUL, Jinmika et al. UAV-based multispectral image analysis system with semantic computing for agricultural health conditions monitoring and real-time management. In: 2016 International Electronics Symposium (IES). IEEE, 2016. p. 459-464.
+
+[9] P. Lottes, M. Hoeferlin, S. Sander, M. Müter, P. Schulze and L. C. Stachniss, "An effective classification system for separating sugar beets and weeds for precision farming applications," 2016 IEEE International Conference on Robotics and Automation (ICRA), Stockholm, Sweden, 2016, pp. 5157-5163, doi: 10.1109/ICRA.2016.7487720.
