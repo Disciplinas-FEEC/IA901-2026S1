@@ -245,23 +245,76 @@ Por fim, os métodos clássicos foram avaliados utilizando os valores de referê
 ## Bases de Dados e Evolução
 [Datasheet](IA901-2026S1/projetos/pattern-recognition-in-petri-dishes/assets/datasheet.md)
 
-## AGAR Dataset
-
-O dataset [AGAR(Annoted Germs for Automated Recognition)](https://agar.neurosys.com/) , disponibilizado pela empresa **NeuroSYS** sob a licença Creative Common Attribution-NonCommercial 2.0 Generic license consiste em 18000 fotos de 5 diferentes microorganismos em condições de iluminação diversas e capturadas por duas cameras diferentes
-
-também é fornecido os rótulos para essas imagens, elas são classificadas como contáveis, não contáveis e vazias e a posição (bounding box) de cada colonia foi anotada por microbiologistas. 
-
-como proposta de avaliação um segundo dataset foi preparado por especialista do CNPEM, com condições controladas de iluminação, esse segundo dataset tem como objetivo avaliar a capacidade do projeto de generalização. 
+Base de Dados | Endereço na Web | Resumo descritivo
+----- | ----- | -----
+AGAR: A Microbial Colony Dataset for Deep Learning Detection | https://agar.neurosys.com/ | Dataset público composto por aproximadamente 18.000 imagens de placas de Petri, abrangendo cinco microrganismos distintos em culturas isoladas ou mistas. As imagens foram adquiridas sob diferentes condições de iluminação e com duas câmeras distintas. As anotações estão disponíveis em formato JSON e incluem bounding boxes individuais por colônia, classe do microrganismo e contagem total. Distribuído sob licença Creative Commons Attribution-NonCommercial 2.0 Generic.
+Dataset CNPEM (LNNano) — interno | https://1drv.ms/f/c/ab5109ec6b881bc2/IgCoHt5JsShGSIm4lrKCn3rvASVMI3zXC6TBj2YiSYWSX78?e=njq0hx | Dataset coletado por pesquisadores do CNPEM (LNNano), contendo aproximadamente 300 imagens de colônias de bactérias e fungos em placas de Petri. Apresenta variação no meio de cultura, porém com condições padronizadas de aquisição (iluminação fixa e captura por smartphone). As imagens estão originalmente no formato HEIC e as anotações consistem na contagem total de colônias por imagem, sem informação espacial.
 
 
 ## Ferramentas
+As ferramentas e bibliotecas utilizadas ao longo do projeto estão listadas a seguir:
 
+- **Python 3** — linguagem principal utilizada no desenvolvimento de todos os pipelines
+- **OpenCV** — processamento de imagens, incluindo Transformada de Hough, operações morfológicas, filtros, Watershed e rotulagem de componentes conectados
+- **NumPy / SciPy** — operações matriciais e cálculo da transformada de distância
+- **Pillow / pillow-heif** — leitura e conversão das imagens originais nos formatos HEIC e JPEG para PNG
+- **Matplotlib** — visualização de resultados intermediários e histogramas de intensidade
+- **Ultralytics (YOLOv5 / YOLOv8)** — treinamento, fine-tuning e inferência dos modelos de detecção e segmentação de instâncias
+- **SAM 2.1 (Segment Anything Model — Meta AI)** — geração automática de máscaras de segmentação a partir de bounding boxes para enriquecimento das anotações
+- **CVAT** — ferramenta utilizada para anotação manual das imagens do dataset CNPEM
 
 ## Workflow
 
 
 ## Experimentos e Resultados preliminares
+### Experimento 1 — Limiarização (Otsu, adaptativa e limiar fixo)
 
+Três estratégias de limiarização foram avaliadas sobre o canal B do espaço RGB após a aplicação de CLAHE. O método de Otsu apresentou limitações importantes: como o histograma das imagens recortadas é dominado pelos pixels do fundo mascarado (valor zero), o limiar calculado automaticamente foi deslocado para valores excessivamente altos, resultando em baixa sensibilidade para detecção das colônias. A limiarização adaptativa gaussiana produziu resultados melhores em parte das amostras, porém mostrou-se inconsistente ao ser aplicada sobre imagens com diferentes condições de iluminação e variação de contraste.
+
+**Problema identificado:** nenhuma das abordagens de limiarização apresentou generalização satisfatória para o conjunto completo de imagens do dataset AGAR.
+
+### Experimento 2 — Top-Hat morfológico
+
+O operador Top-Hat com elemento estruturante elíptico de \(15 \times 15\) pixels, seguido de limiarização por Otsu, demonstrou boa capacidade de realce das colônias em imagens com fundo relativamente uniforme. Entretanto, o desempenho foi prejudicado em amostras com variação acentuada de iluminação ou com colônias de tonalidade próxima à do ágar.
+
+**Problema identificado:** sensibilidade elevada à uniformidade do fundo, com degradação do desempenho em imagens com condições de captura distintas das utilizadas na calibração dos parâmetros.
+
+### Experimento 3 — Subtração de fundo por estimativa gaussiana
+
+A subtração de fundo com kernels gaussianos de grandes dimensões (\(151 \times 151\) e \(71 \times 71\) pixels) apresentou resultados satisfatórios para um subconjunto específico de imagens, realçando as colônias ao cancelar o gradiente de iluminação de fundo. No entanto, ao se ampliar o conjunto de imagens avaliadas, surgiram erros relevantes de contagem, com desempenho especialmente insatisfatório para colônias de maior dimensão. Adicionalmente, a presença de anotações manuscritas nas placas de AGAR interferiu na segmentação, sendo frequentemente detectadas como componentes válidos.
+
+**Problema identificado:** baixa generalização para imagens com condições de captura distintas e dificuldade em lidar com colônias de morfologia variada.
+
+### Experimento 4 — Clusterização K-Means
+
+A abordagem K-Means com \(k=4\) clusters aplicada sobre os canais \(L\) e \(b\) do espaço CIE Lab após CLAHE produziu resultados mais consistentes entre amostras do que as estratégias de limiarização. A seleção do cluster correspondente às colônias pelo centróide de luminosidade mostrou-se estável frente a variações de iluminação. Contudo, o método apresentou dificuldades em imagens cujas colônias possuem tonalidade muito próxima à do ágar, gerando erros de segmentação.
+
+**Problema identificado:** dependência do contraste entre colônia e fundo para correta identificação do cluster relevante.
+
+### Experimento 5 — Watershed para separação de colônias sobrepostas
+
+O algoritmo Watershed com transformada de distância foi aplicado como etapa de pós-processamento após a binarização, com o objetivo de separar colônias conectadas ou parcialmente sobrepostas. O método funcionou satisfatoriamente para sobreposições parciais, onde os picos locais da transformada de distância foram suficientes para diferenciar instâncias adjacentes. No entanto, o algoritmo não foi capaz de separar colônias completamente fundidas, situação recorrente em imagens com alta densidade de colônias.
+
+**Problema identificado:** limitação intrínseca do método para colônias com sobreposição total ou fusão de contornos.
+
+### Experimento 6 — Detecção com YOLOv5s (fine-tuning no dataset AGAR)
+
+O modelo YOLOv5s pré-treinado no ImageNet foi submetido a fine-tuning utilizando 13.489 imagens do dataset AGAR, durante 100 épocas com *batch size* 32 e imagens redimensionadas para \(640 \times 640\) pixels. Os resultados obtidos no conjunto de validação foram:
+
+| Métrica | Valor |
+|---|---|
+| Precisão | 98% |
+| Recall | 95% |
+| mAP@0.5 | 96% |
+| mAP@0.5:0.95 | 94% |
+
+Os resultados indicam que o modelo generalizou bem para o domínio do dataset AGAR. Entretanto, ao realizar inferência direta sobre imagens do CNPEM, observou-se queda de desempenho expressiva, evidenciando a necessidade de adaptação de domínio.
+
+### Experimento 7 — Adaptação de domínio com YOLOv8s-seg (fine-tuning no dataset CNPEM)
+
+O backbone treinado no AGAR foi utilizado como ponto de partida para um modelo de segmentação de instâncias baseado em YOLOv8s-seg, submetido a fine-tuning com 38 imagens anotadas do CNPEM. O resultado preliminar demonstrou que a adaptação de domínio com poucos exemplos é viável, com segmentação visual razoável das colônias presentes nas imagens do CNPEM. Contudo, as máscaras geradas ainda apresentam imprecisões nos contornos, especialmente em colônias maiores e em regiões de sobreposição.
+
+**Problema identificado:** com apenas 38 imagens de treinamento, a qualidade dos contornos de segmentação é limitada. O enriquecimento das anotações com o SAM 2.1 é a principal estratégia proposta para superar essa limitação.
 
 ## Próximos passos
 
