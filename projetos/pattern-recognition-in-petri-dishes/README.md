@@ -18,7 +18,7 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 > |--|--|--|
 > | Leonardo Rafael Pires  | 178589  | Aluno Especial|
 > | Laura Vieira Malachies   | 299117  | Mestranda em Tecnologia|
-> | Gabriela Morales Souto  | 123456  | Mestranda em Ciência da Computação|
+> | Gabriela Morales Souto  | 299213  | Mestranda em Ciência da Computação|
 
 
 
