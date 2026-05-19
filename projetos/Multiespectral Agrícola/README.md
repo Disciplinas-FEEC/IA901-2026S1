@@ -28,7 +28,7 @@ Falar sobre imagens multiespectrais
   </p>
 </div>
 
-Devido à alta refletividade da clorofila no espectro do infravermelho próximo (NIR), é consideravelmente fácil eliminar o fundo irrelevante de uma imagem e, portanto, separar a vegetação do solo ou de outros objetos [9]. O NDWI tem sido amplamente utilizado em Sensoriamento Remoto (SR) para distinguir corpos d'água de outras superfícies terrestres. Este índice baseia-se na observação de que os corpos d'água absorvem a maior parte da banda do NIR, enquanto a vegetação reflete a banda NIR em sua extensão máxima [10, 11]. Na Tabela 1 é possível observar a correlação de circunstâncias nas lavouras com os índices abordados.
+Devido à alta refletividade da clorofila no espectro do infravermelho próximo (NIR), é consideravelmente fácil eliminar o fundo irrelevante de uma imagem e, portanto, separar a vegetação do solo ou de outros objetos [9], nesse contexto vem sendo explorada a refletância específica de vegetações saudáveis usando o NVDI (Normalized Difference Vegetation Index). Além disso, o NDWI (Normalized Difference Water Index) tem sido amplamente utilizado em Sensoriamento Remoto (SR) para distinguir corpos d'água de outras superfícies terrestres. Este índice baseia-se na observação de que os corpos d'água absorvem a maior parte da banda do NIR, enquanto a vegetação reflete a banda NIR em sua extensão máxima [10, 11]. Na Tabela 1 é possível observar a correlação de circunstâncias nas lavouras com os índices abordados.
 
 <div align="center">
 
@@ -40,15 +40,17 @@ Devido à alta refletividade da clorofila no espectro do infravermelho próximo 
 | Vegetação saudável, mas o solo está seco ou com baixa umidade | + | + |
 | Vegetação saudável (Momento de máxima intensidade de verde) | + | - |
 | Vegetação saudável em solo arenoso (ou planta em deserto), como abacaxi | + | - |
-| Sem vegetação em solo frágil/friável (Antes do plantio agrícola) | - | + |
+| Sem vegetação em solo úmido | - | + |
 | Vegetação não saudável com algum teor de água de plantas daninhas em solo seco | - | + |
-| Sem vegetação em solo frágil/friável (Antes do plantio agrícola) | - | - |
+| Sem vegetação em solo frágil/friável | - | - |
 | Vegetação não saudável | - | - |
 
 <i>Fonte: Adaptado de Sa et al. [7].</i>
 </div>
 
-Além disso, Sa et al. [7] propuseram o WeedMap, um framework de mapeamento semântico que utiliza imagens multiespectrais para otimizar a detecção de espécies invasoras na agricultura de precisão e seus resultados mostraram que o NVDI (Normalized Difference Vegetation Index) contribui significativamente para uma classificação precisa da vegetação. A partir dessa premissa, espera-se que a inclusão dessa informação espectral resulte em uma maior eficiência na segmentação de bordas e anomalias complexas. Ao fornecer um contraste nítido entre diferentes níveis de vigor vegetativo, o índice reduz o ruído de iluminação nas imagens aéreas, permitindo que o modelo delimite com precisão as transições de estresse foliar, como zonas de seca ou deficiência de nutrientes.
+Além disso, Sa et al. [7] propuseram o WeedMap, um framework de mapeamento semântico que utiliza imagens multiespectrais para otimizar a detecção de espécies invasoras na agricultura de precisão e seus resultados mostraram que o NDVI contribui significativamente para uma classificação precisa da vegetação. Nesse contexto, Wijitdechakul [8] propurseram um espaço multiespectral semântico para a análise de fazendas o qual consistia de imagens com NDVI, NDWI e SAVI (Soil Adjust Vegetation Index) o qual se mostrou capaz de detectar áreas agrícolas saudáveis e não saudáveis por meio da análise de processamento de imagens multiespectrais.
+
+A partir dessas premissas, espera-se que a inclusão dessas informações espectrais resulte em uma maior eficiência na segmentação de bordas e anomalias complexas. Ao fornecer um contraste nítido entre diferentes níveis de vigor vegetativo e corpos d'água, os índices reduzem o ruído de iluminação nas imagens aéreas, permitindo que o modelo delimite com precisão as transições de estresse foliar, como zonas de drydown ou deficiência de nutrientes.
 
 A principal motivação deste trabalho é verificar a eficácia de modelos de segmentação semântica com a integração do NDVI e NDWI, haja vista a sua aplicação no monitoramento de lavouras e na identificação de anomalias em imagens aéreas agrícolas. O sistema proposto deve ser capaz de processar dados multiespectrais para delimitar com precisão regiões de estresse vegetativo e corpos d'água superficiais, correlacionando os índices radiométricos com as classes de interesse. O resultado esperado do modelo será a geração de máscaras de segmentação semanticamente consistentes, onde os limites geométricos das anomalias sejam preservados de forma estatisticamente e espacialmente coerente com os dados reais de entrada.
 
