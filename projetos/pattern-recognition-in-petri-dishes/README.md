@@ -29,8 +29,20 @@ Este projeto é dedicado ao exploracão de metodologias de reconhecimento de pad
 
 ## Descrição do Projeto
 
-## Objetivo
-Substituir a contagem manual, cansativa e sujeita a erros por por um sistema automátizado. este projeto foca em **reconhecimento de padrões em imagem computacional** para as atividades de **detecção e segmentação de placas de Petri**.
+## Objetivos
+
+### Objetivo geral
+
+Desenvolver e avaliar um pipeline de ponta a ponta para **segmentação, detecção e contagem automática de colônias em placas de Petri**, reduzindo a dependência da contagem manual.
+
+### Objetivos específicos
+
+- Preparar imagens de diferentes formatos e resoluções para análise computacional.
+- Detectar automaticamente a região de interesse correspondente à placa de Petri.
+- Testar métodos clássicos de segmentação e contagem de colônias.
+- Treinar modelos de aprendizado profundo para detecção e segmentação.
+- Comparar métodos clássicos e modelos deep learning quanto a desempenho, robustez e limitações.
+- Investigar estratégias de adaptação de domínio entre os datasets AGAR e CNPEM.
 
 
 ##  Metodologia
@@ -317,11 +329,22 @@ O backbone treinado no AGAR foi utilizado como ponto de partida para um modelo d
 **Problema identificado:** com apenas 38 imagens de treinamento, a qualidade dos contornos de segmentação é limitada. O enriquecimento das anotações com o SAM 2.1 é a principal estratégia proposta para superar essa limitação.
 
 ## Próximos passos
-
+- Finalizar a organização da metodologia dos métodos clássicos.
+- Adicionar imagens comparativas dos resultados de cada método.
+- Calcular e reportar MAE e sMAE para os métodos clássicos.
+- Incluir matriz de confusão, curvas de loss e exemplos de inferência dos modelos YOLO.
+- Expandir o conjunto anotado do CNPEM para melhorar a adaptação de domínio.
+- Usar SAM 2.1 para enriquecer anotações do AGAR e treinar modelos de segmentação.
+- Comparar custo computacional, robustez e qualidade de contagem entre métodos clássicos e deep learning.
+- Revisar a seção de referências e padronizar todos os links e DOIs.
 
 ## Uso de IA Generativa
-> Adicione aqui em quais tarefas foi usada alguma ferramenta de IA Generativa. Para cada tarefa indicada detalhe qual a ferramenta e qual o prompt utilizado.
+Ferramentas de IA generativa foram utilizadas como apoio à escrita, revisão textual e organização do README. As decisões metodológicas, experimentos, resultados e análise crítica foram definidos pelo grupo a partir dos dados e códigos desenvolvidos no projeto.
 
+| Tarefa | Ferramenta | Uso |
+|---|---|---|
+| Revisão e reestruturação do README | ChatGPT | Organização textual, correção gramatical e padronização do Markdown |
+| Apoio na redação metodológica | ChatGPT | Reformulação de trechos a partir das anotações do grupo |
 
 ## Referências
 
