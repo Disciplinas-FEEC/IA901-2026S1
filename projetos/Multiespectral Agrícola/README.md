@@ -38,7 +38,7 @@ Devido à alta refletividade da clorofila no espectro do infravermelho próximo 
 | :--- | :---: | :---: |
 | Vegetação saudável durante a etapa de transpiração (Meio-dia) | + | + |
 | Vegetação saudável, mas o solo está seco ou com baixa umidade | + | + |
-| Vegetação saudável (Momento de máxima intensidade de verde*) | + | - |
+| Vegetação saudável (Momento de máxima intensidade de verde) | + | - |
 | Vegetação saudável em solo arenoso (ou planta em deserto), como abacaxi | + | - |
 | Sem vegetação em solo frágil/friável (Antes do plantio agrícola) | - | + |
 | Vegetação não saudável com algum teor de água de plantas daninhas em solo seco | - | + |
