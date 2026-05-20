@@ -55,6 +55,7 @@ Além disso, Sa et al. [6] propuseram o WeedMap, um framework de mapeamento sem�
 A principal motivação deste trabalho é verificar a eficácia de modelos de segmentação semântica com a integração dos canais RGB com os índices NDVI e NDWI, haja vista a sua aplicação no monitoramento de lavouras e na identificação de anomalias em imagens aéreas agrícolas. O sistema proposto deve ser capaz de processar dados multiespectrais para delimitar com precisão regiões de estresse vegetativo e corpos d'água superficiais, correlacionando esses índices com as classes de interesse. O resultado esperado do modelo será a geração de máscaras de segmentação semanticamente consistentes, onde os limites geométricos das anomalias sejam preservados de forma estatisticamente e espacialmente coerente com os dados reais de entrada.
 
 ## Metodologia
+
 Portanto, detalhando os métodos utilizados para a construção do espaço semântico podemos segmentar em duas características principais para este trabalho.
 
 #### Extração de Características: NDVI
@@ -78,6 +79,33 @@ NDWI = \dfrac{GREEN - NIR}{GREEN + IR} & \text{(2)}
 $$
 
 Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo.
+
+### Pipeline de Processamento
+1. **Carregamento do Dataset**:
+   - O dataset é estruturado em diferentes modos (`train`, `val`, `test`), com diretórios específicos para imagens RGB, NIR, máscaras e limites.
+   - A classe `AgriVisionDataset` organiza os caminhos dos arquivos para facilitar o acesso.
+
+2. **Cálculo de Índices Espectrais**:
+   - Os índices NDVI e NDWI são calculados utilizando as fórmulas mencionadas, a partir dos canais RGB e NIR das imagens.
+   - As imagens RGB e NIR são carregadas, e os valores de pixel são processados para gerar o índice.
+
+3. **Fusão de Máscaras**:
+   - As máscaras de diferentes classes são combinadas para criar uma máscara final, indicando as classes presentes em cada imagem.
+
+4. **Visualização de Amostras**:
+   - Para cada amostra selecionada, são exibidas as imagens RGB, NIR, máscaras, limites e o índice NDVI.
+   - As regiões de interesse (ROI) são destacadas, mostrando apenas os pixels relevantes para análise.
+
+  ![alt text](assets/image-1.png)
+
+### Visualização de Resultados
+- **Gráficos Gerados**:
+  - As imagens são exibidas em um layout organizado, com títulos descritivos para cada componente (e.g., "RGB (Raw)", "NDVI (Region of Interest)").
+  - Barras de cores são incluídas para os índices NDVI, facilitando a interpretação dos valores.
+  
+
+- **Destaque de Regiões de Interesse**:
+  - As regiões de interesse são recortadas com base em condições específicas, como a interseção de máscaras e limites.
 
 ## Bases de Dados e Evolução
 
