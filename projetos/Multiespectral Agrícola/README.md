@@ -16,7 +16,7 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 ## Descrição do Projeto
 A segmentação semântica de imagens aéreas agrícolas é uma das principais direções de pesquisa no campo da visão agrícola. Um algoritmo eficaz de segmentar terras agrícolas aéreas é muito importante para a detecção de áreas de anomalias no campo, como a segmentação de áreas secas, fim de linha, deficiência de nutrientes e assim por diante. O reconhecimento do padrão de anomalia é útil para monitorar o estado local das terras agrícolas, avaliar o impacto de desastres naturais. A análise de imagens aéreas agrícolas também apoia a formulação de políticas agrícolas nacionais para aumentar o rendimento dos campos agrícolas e o desenvolvimento econômico regional [4].
 
-Falar sobre imagens multiespectrais
+O método mais difundido para obter informações sobre a vegetação é através de imagens multiespectrais (MS). Com dados MS, é possível calcular vários índices de vegetação. Normalmente, essas imagens MS são adquiridas de aeronaves ou satélites, mas apenas uma parte das imagens de satélite disponíveis é distribuída gratuitamente [13]. Para compreender como esses índices diferenciam a cobertura vegetal de outros materiais, a Figura 1 apresenta a organização do espectro eletromagnético, destacando as regiões de maior interesse para o sensoriamento remoto, como o visível e o infravermelho.
 
 <div align="center">
   <img src="assets/1718303710189.png" alt="Representação do Espectro Eletromagnético" width="600">
@@ -54,11 +54,9 @@ Além disso, Sa et al. [7] propuseram o WeedMap, um framework de mapeamento sem�
 
 A principal motivação deste trabalho é verificar a eficácia de modelos de segmentação semântica com a integração do NDVI e NDWI, haja vista a sua aplicação no monitoramento de lavouras e na identificação de anomalias em imagens aéreas agrícolas. O sistema proposto deve ser capaz de processar dados multiespectrais para delimitar com precisão regiões de estresse vegetativo e corpos d'água superficiais, correlacionando esses índices com as classes de interesse. O resultado esperado do modelo será a geração de máscaras de segmentação semanticamente consistentes, onde os limites geométricos das anomalias sejam preservados de forma estatisticamente e espacialmente coerente com os dados reais de entrada.
 
-> Descrição do objetivo principal do projeto, incluindo contexto gerador, motivação, etc. Qual problema você pretende solucionar? Qual a relevância do problema e o impacto da solução do mesmo?
-
 ## Metodologia
-#### Detecção de Vegetação Usando NDVI
-Para criar o espaço semântico, o primeiro subespaço é o NDVI que é a combinação dos canais Vermelho (Red) e Infravermelho próximo (NIR). Este subespaço está relacionado ao índice de vegetação por diferença normalizada, que é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [8]. O NDVI é definido pela equação (1), calculada pelos pixels vermelho e infravermelho.
+#### Extração de Características: NDVI
+Para a construção do espaço semântico, o primeiro subespaço considerado é o NDVI , gerado a partir da combinação dos canais Vermelho (Red) e NIR (NIR). Este subespaço está relacionado ao índice de vegetação por diferença normalizada, que é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [8], o NDVI é definido pela equação (1).
 
 $$
 \begin{array}{cc}
@@ -68,8 +66,8 @@ $$
 
 Onde NIR é o valor do pixel infravermelho próximo e RED é o valor do pixel vermelho.
 
-#### Detecção de água usando NDWI
-O segundo subespaço necessário para a criação do espaço semântico no monitoramento agrícola é o NDWI. Este subespaço é definido pelos eixos Verde (Green) e Infravermelho próximo (IR). A combinação desses dois canais pode ser utilizada tanto para analisar o teor de água nas folhas das plantas quanto para delimitar corpos d'água na superfície [8]. O NDWI pode ser obtido através da equação (2).
+#### Extração de Características: NDWI
+O segundo subespaço necessário é o NDWI o qual é obtido pelos eixos Verde (Green) e NIR. A combinação desses dois canais pode ser utilizada tanto para analisar o teor de água nas folhas das plantas quanto para delimitar corpos d'água na superfície [8], o NDWI pode ser obtido através da equação (2).
 
 $$
 \begin{array}{cc}
@@ -138,4 +136,6 @@ Foi utilizado o Gemini para a criação dos códigos de navegação entre os dir
 
 [11] V. Shashikant, A. Shariff, A. Wayayok, et al (2021). Utilizing TVDI and NDWI to classify severity of agricultural drought in Chuping, Malaysia [J]. Agronomy, 11(6): 1243. 
 
-[12] Yuan, K., Zhuang, X., Schaefer, G., Feng, J., Guan, L., Fang, H.: Deep-learningbased multispectral satellite image segmentation for water body detection. IEEE J. Sel. Topics Appl. Earth Observations Remote Sens. 14, 7422–7434 (2021)
+[12] Yuan, K., Zhuang, X., Schaefer, G., Feng, J., Guan, L., Fang, H.: Deep-learningbased multispectral satellite image segmentation for water body detection. IEEE J. Sel. Topics Appl. Earth Observations Remote Sens. 14, 7422–7434 (2021).
+
+[13] M. Barjaktarovic, M. Santoni and L. Bruzzone, "Design and Verification of a Low-Cost Multispectral Camera for Precision Agriculture Application," in IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, vol. 17, pp. 6945-6957, 2024, doi: 10.1109/JSTARS.2024.3377104. 
