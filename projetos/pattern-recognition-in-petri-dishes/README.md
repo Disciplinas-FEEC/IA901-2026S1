@@ -407,22 +407,34 @@ Como proposta para melhorar o treinamento dos modelos de segmentação, foi inic
 | SAM 2.1 para máscaras | Geração automática de máscaras a partir de bounding boxes | Necessidade de validação das máscaras | Segmentação automática pode gerar erros | Máscaras incorretas podem prejudicar o treinamento supervisionado |
 | Adaptação de domínio | Estratégia mostrou potencial | Dependência de anotação manual | O CNPEM possui poucas anotações espaciais | A qualidade final depende da ampliação do conjunto anotado |
 ## Próximos passos
-- Finalizar a organização da metodologia dos métodos clássicos.
-- Adicionar imagens comparativas dos resultados de cada método.
-- Calcular e reportar MAE e sMAE para os métodos clássicos.
-- Incluir matriz de confusão, curvas de loss e exemplos de inferência dos modelos YOLO.
-- Expandir o conjunto anotado do CNPEM para melhorar a adaptação de domínio.
-- Usar SAM 2.1 para enriquecer anotações do AGAR e treinar modelos de segmentação.
-- Comparar custo computacional, robustez e qualidade de contagem entre métodos clássicos e deep learning.
-- Revisar a seção de referências e padronizar todos os links e DOIs.
+
+Para a conclusão do projeto, as próximas etapas foram organizadas considerando as pendências técnicas, experimentais e de documentação. O foco principal será consolidar os resultados dos métodos clássicos, ampliar a adaptação de domínio para o dataset CNPEM e organizar a análise comparativa final entre as abordagens testadas.
+
+| Etapa | Descrição | Tempo estimado | Entrega esperada |
+|---|---|---:|---|
+| Revisão das anotações do CNPEM | Revisar as máscaras já anotadas manualmente, corrigindo contornos inconsistentes e removendo anotações ambíguas. Essa etapa é necessária porque a qualidade das máscaras influencia diretamente o treinamento do modelo de segmentação. | 1 semana | Conjunto revisado de máscaras do CNPEM |
+| Ampliação do conjunto anotado | Aumentar a quantidade de imagens do CNPEM com máscaras de segmentação, priorizando imagens com colônias maiores, sobrepostas e com diferentes meios de cultura. | 1–2 semanas | Novo subconjunto anotado para fine-tuning |
+| Geração de máscaras com SAM 2.1 | Utilizar o SAM 2.1 para gerar máscaras a partir das bounding boxes do dataset AGAR, avaliando visualmente a qualidade das segmentações geradas automaticamente. | 1 semana | Máscaras geradas automaticamente para parte do AGAR |
+| Validação das máscaras automáticas | Comparar qualitativamente as máscaras geradas pelo SAM 2.1 com exemplos anotados manualmente, identificando erros comuns como vazamento de contorno, segmentação parcial ou inclusão de fundo. | 1 semana | Conjunto filtrado de máscaras consideradas úteis |
+| Novo treinamento com YOLOv8s-seg | Realizar novo fine-tuning do modelo de segmentação usando as máscaras revisadas do CNPEM e, se possível, as máscaras enriquecidas do AGAR. | 1 semana | Modelo de segmentação atualizado |
+| Consolidação dos métodos clássicos | Selecionar os melhores resultados obtidos com limiarização, subtração de fundo, morfologia, K-Means, Watershed e filtros geométricos. | 3–4 dias | Tabela comparativa dos métodos clássicos |
+| Avaliação quantitativa final | Calcular métricas de contagem, detecção e segmentação, como MAE, sMAE, precisão, recall, mAP e IoU, conforme a disponibilidade de ground truth em cada base. | 1 semana | Resultados quantitativos finais |
+| Análise crítica dos resultados | Comparar os métodos clássicos e os métodos baseados em deep learning, discutindo vantagens, limitações, capacidade de generalização e custo computacional. | 3–4 dias | Discussão crítica para o relatório final |
+| Organização das figuras e workflow | Inserir no README as imagens dos experimentos, o workflow do projeto e exemplos visuais dos principais resultados obtidos. | 2–3 dias | README com figuras organizadas |
+| Escrita e revisão final da entrega | Revisar o texto final, corrigir formatação em Markdown, conferir referências, datasheet, links e seção de uso de IA generativa. | 2–3 dias | Versão final da Entrega 2 |
+
 
 ## Uso de IA Generativa
-Ferramentas de IA generativa foram utilizadas como apoio à escrita, revisão textual e organização do README. As decisões metodológicas, experimentos, resultados e análise crítica foram definidos pelo grupo a partir dos dados e códigos desenvolvidos no projeto.
 
-| Tarefa | Ferramenta | Uso |
-|---|---|---|
-| Revisão e reestruturação do README | ChatGPT | Organização textual, correção gramatical e padronização do Markdown |
-| Apoio na redação metodológica | ChatGPT | Reformulação de trechos a partir das anotações do grupo |
+Durante o desenvolvimento do projeto, ferramentas de IA generativa foram utilizadas como apoio em tarefas de escrita, revisão, tradução, organização do README, interpretação de erros de código e melhoria da documentação. As ferramentas não foram utilizadas para gerar resultados experimentais automaticamente nem para substituir a análise crítica do grupo. Os resultados, decisões metodológicas e interpretações finais foram revisados pelos integrantes do projeto.
+
+| Tarefa | Ferramenta utilizada | Prompt utilizado | Uso no projeto |
+|---|---|---|---|
+| Revisão de texto em português | ChatGPT | "Corrija a gramática e melhore a clareza deste parágrafo mantendo o sentido original." | Revisão de trechos da descrição do projeto, metodologia e resultados preliminares |
+| Tradução de trechos técnicos | ChatGPT | "Traduza este trecho do espanhol para o português acadêmico, mantendo os termos técnicos de processamento de imagens." | Tradução e adaptação de anotações internas do grupo para o README |
+| Correção de código Python | ChatGPT | "Este código em Python está gerando erro. Explique o erro e sugira uma correção sem mudar a lógica principal." | Apoio na identificação de erros de sintaxe, leitura de imagens, manipulação de arrays e uso de bibliotecas |
+| Criação de tabelas em Markdown | ChatGPT | "Transforme estas informações em uma tabela Markdown organizada." | Criação de tabelas comparativas de bases de dados, ferramentas, próximos passos e problemas observados |
+| Geração de ideias para workflow | ChatGPT | "Sugira um workflow visual para um projeto de segmentação, detecção e contagem de colônias em placas de Petri." | Apoio na definição dos blocos principais do workflow do projeto |
 
 ## Referências
 
