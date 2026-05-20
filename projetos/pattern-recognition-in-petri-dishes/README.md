@@ -277,6 +277,9 @@ As ferramentas e bibliotecas utilizadas ao longo do projeto estão listadas a se
 
 ## Workflow
 
+O workflow do projeto foi organizado para representar as principais etapas necessárias para reproduzir os experimentos, desde a preparação das bases de dados até a avaliação dos métodos clássicos e baseados em aprendizado profundo.
+
+![Workflow do projeto](assets/Pipeline Contagem de Colônias.jpg)
 
 ## Experimentos e Resultados preliminares
 ### Experimento 1 — Limiarização (Otsu, adaptativa e limiar fixo)
