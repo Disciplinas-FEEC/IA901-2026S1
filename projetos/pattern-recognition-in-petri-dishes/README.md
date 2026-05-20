@@ -82,17 +82,11 @@ $$
 
 onde \(I(i,j)\) representa a intensidade do pixel localizado na posição \((i,j)\).
 
-### 2.3 Aumento de dados
-
-Com o objetivo de aumentar a variabilidade do conjunto de treinamento e reduzir efeitos de sobreajuste, foram aplicadas técnicas de aumento de dados sobre o dataset AGAR. Entre as transformações empregadas destacam-se rotações, espelhamento horizontal, alterações de brilho e contraste, modificações de cor e aplicação de desfoque gaussiano.
-
 ## 3. Métodos clássicos de segmentação
 
 ### 3.1 Limiarização
 
-Inicialmente, foram avaliadas diferentes estratégias de limiarização para segmentação das colônias bacterianas.
-
-A primeira abordagem utilizou um limiar fixo aplicado diretamente ao canal B da imagem. A operação de binarização é descrita por:
+Foram avaliadas diferentes estratégias de limiarização para segmentação das colônias bacterianas. A primeira abordagem utilizou um limiar fixo aplicado diretamente ao canal B da imagem. A operação de binarização é descrita por:
 
 $$
 g(i,j) =
@@ -144,9 +138,7 @@ Após a aplicação do operador, a imagem resultante foi segmentada utilizando l
 
 ### 3.3 Subtração de fundo por estimativa gaussiana
 
-Outra estratégia investigada consistiu na subtração de fundo utilizando filtros gaussianos de grandes dimensões, com kernels de \(151 x 151\) e \(71 x 71\) pixels.
-
-Inicialmente, o fundo estimado foi obtido pela convolução da imagem com um kernel gaussiano:
+Também foi utilizada a subtração de fundo utilizando filtros gaussianos de grandes dimensões, com kernels de \(151 x 151\) e \(71 x 71\) pixels. Inicialmente, o fundo estimado foi obtido pela convolução da imagem com um kernel gaussiano:
 
 $$
 \hat{B}(i,j) = (I * G_\sigma)(i,j)
@@ -177,13 +169,11 @@ D_{\text{norm}}(i,j)=
 {D_{\max}-D_{\min}}
 $$
 
-Finalmente, aplicou-se o método de Otsu para obtenção da máscara binária segmentada.
+E posteriormente, aplicou-se o método de Otsu para obtenção da máscara binária segmentada.
 
 ### 3.4 Clusterização K-Means
 
-Também foi avaliada uma abordagem baseada em clusterização K-Means utilizando quatro grupos distintos. Nesse caso, os canais \(L\) e \(b\) do espaço Lab foram utilizados após aplicação de CLAHE.
-
-Após a convergência do algoritmo, o agrupamento correspondente às colônias foi selecionado com base nos valores de luminosidade dos centróides obtidos.
+Também foi feita uma clusterização K-Means utilizando quatro grupos distintos. Nesse caso, os canais \(L\) e \(b\) do espaço Lab foram utilizados após aplicação de CLAHE. Após a convergência do algoritmo, o agrupamento correspondente às colônias foi selecionado com base nos valores de luminosidade dos centróides obtidos.
 
 ## 4. Separação de colônias sobrepostas
 
@@ -231,27 +221,31 @@ $$
 
 ## 6. Métodos de aprendizado profundo
 
-### 6.1 Detecção com YOLOv5s
+### 6.1 Aumento de dados
 
-No contexto dos métodos baseados em deep learning, inicialmente foi empregado o modelo YOLOv5s pré-treinado no ImageNet. O modelo foi submetido a *fine-tuning* utilizando o dataset AGAR previamente processado.
+Com o objetivo de aumentar a variabilidade do conjunto de treinamento e reduzir efeitos de sobreajuste, foram aplicadas técnicas de aumento de dados sobre o dataset AGAR. Entre as transformações empregadas destacam-se rotações, espelhamento horizontal, alterações de brilho e contraste, modificações de cor e aplicação de desfoque gaussiano.
+
+### 6.2 Detecção com YOLOv5s
+
+Inicialmente foi empregado o modelo YOLOv5s pré-treinado no ImageNet. O modelo foi submetido a *fine-tuning* utilizando o dataset AGAR previamente processado.
 
 O treinamento foi realizado durante 100 épocas, utilizando *batch size* igual a 32 e imagens redimensionadas para \(640 x 640\) pixels.
 
-### 6.2 Adaptação de domínio com segmentação
+### 6.3 Adaptação de domínio com segmentação
 
 Posteriormente, o backbone treinado na etapa anterior foi utilizado como ponto de partida para um modelo de segmentação de instâncias baseado em YOLOv8s-seg.
 
-Essa estratégia permitiu realizar adaptação de domínio utilizando as imagens anotadas manualmente no CNPEM, adequando o modelo às condições reais de aquisição presentes no novo conjunto de dados.
+Isso permitiu realizar adaptação de domínio utilizando as imagens anotadas manualmente no CNPEM, adequando o modelo às condições reais de aquisição presentes no novo conjunto de dados.
 
-### 6.3 Enriquecimento de anotações com SAM 2.1
+### 6.4 Enriquecimento de anotações com SAM 2.1
 
-Adicionalmente, o modelo SAM 2.1 (*Segment Anything Model*) foi utilizado para geração automática de máscaras de segmentação a partir das *bounding boxes* disponíveis no dataset AGAR.
+O modelo SAM 2.1 (*Segment Anything Model*) foi utilizado para geração automática de máscaras de segmentação a partir das *bounding boxes* disponíveis no dataset AGAR.
 
 As máscaras geradas foram posteriormente utilizadas para enriquecimento das anotações destinadas ao treinamento dos modelos de segmentação.
 
 ## 7. Avaliação experimental
 
-Por fim, os métodos clássicos foram avaliados utilizando os valores de referência disponíveis nos datasets empregados. Já os modelos de aprendizado profundo foram avaliados a partir das métricas de precisão, *recall*, mAP@0.5 e mAP@0.5:0.95 utilizando o conjunto de validação do dataset AGAR.
+A avaliação foi feita utilizando os valores de referência disponíveis nos datasets empregados. Já os modelos de aprendizado profundo foram avaliados a partir das métricas de precisão, *recall*, mAP@0.5 e mAP@0.5:0.95 utilizando o conjunto de validação do dataset AGAR.
 
 
 ## Bases de Dados e Evolução
