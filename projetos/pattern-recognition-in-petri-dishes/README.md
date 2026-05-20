@@ -283,87 +283,101 @@ O workflow do projeto foi organizado para representar as principais etapas neces
 
 ## Experimentos e Resultados preliminares
 
-Nesta etapa do projeto, foram realizados experimentos com métodos clássicos de processamento de imagens e com modelos baseados em aprendizado profundo. Os experimentos tiveram como objetivo avaliar diferentes estratégias para segmentação, detecção e contagem automática de colônias em placas de Petri, considerando os desafios de variação de iluminação, presença de anotações manuscritas, colônias sobrepostas e mudança de domínio entre os datasets AGAR e CNPEM.
-
-### Experimento 1 — Segmentação por limiarização
-
-**Objetivo:** avaliar se métodos simples de binarização seriam suficientes para separar as colônias do fundo da placa.
-
-**Método:** foram testadas três abordagens de limiarização: limiar fixo, limiarização de Otsu e limiarização adaptativa gaussiana. Antes da segmentação, as imagens foram recortadas usando a região de interesse da placa de Petri, realçadas com CLAHE e avaliadas em diferentes canais de cor.
-
-**Resultado preliminar:** a limiarização de Otsu apresentou baixa robustez, pois o histograma das imagens recortadas era fortemente influenciado pelos pixels zerados fora da placa. A limiarização adaptativa apresentou melhores resultados em algumas imagens, mas não foi estável para todo o conjunto.
-
-**Problemas encontrados:** os métodos baseados apenas em limiar não generalizaram bem para imagens com variação de iluminação, contraste reduzido entre colônias e ágar, ou presença de escritas na placa.
+Nesta etapa do projeto, os experimentos foram organizados em três grupos principais: experimentos de pré-processamento, experimentos de segmentação e contagem com métodos clássicos, e experimentos com modelos baseados em aprendizado profundo. Essa organização permite acompanhar a evolução do pipeline desde a preparação das imagens até a avaliação preliminar das abordagens de detecção e segmentação.
 
 ---
 
-### Experimento 2 — Subtração de fundo com filtro Gaussiano
+### 1. Experimentos de pré-processamento
 
-**Objetivo:** reduzir o efeito de iluminação irregular dentro da placa e realçar colônias com baixo contraste.
+#### 1.1 Conversão, padronização e organização das imagens
 
-**Método:** foi aplicada uma filtragem Gaussiana com kernel grande, como `151 x 151`, para estimar o fundo da imagem. Em seguida, calculou-se a diferença absoluta entre a imagem suavizada e o fundo estimado. O resultado foi normalizado para o intervalo `[0, 255]` e binarizado com Otsu.
+As imagens do dataset CNPEM foram inicialmente convertidas para o formato PNG, uma vez que os arquivos originais estavam majoritariamente em formato HEIC. Para isso, foi utilizada a biblioteca `pillow-heif`, enquanto imagens em JPEG foram lidas diretamente com `Pillow`. Após a conversão, os arquivos foram renomeados sequencialmente, seguindo o padrão `1.png`, `2.png`, etc. Essa etapa foi necessária para padronizar o acesso às imagens durante os experimentos e evitar problemas de leitura em diferentes bibliotecas de processamento de imagens.
 
-**Resultado preliminar:** o método funcionou bem em algumas imagens, principalmente quando a iluminação apresentava variação suave e as colônias tinham contraste razoável em relação ao fundo.
+![Conversão e organização das imagens](assets/experimentos/01_conversao_organizacao.png)
 
-**Problemas encontrados:** ao trocar o conjunto de imagens, surgiram erros de contagem. O desempenho foi pior em imagens com colônias maiores, microrganismos com morfologia diferente e placas com anotações manuscritas, que foram confundidas com colônias.
+#### 1.2 Definição da região de interesse com Transformada de Hough
 
----
+Após a padronização dos arquivos, foi realizada a definição automática da região de interesse. Como as imagens contêm não apenas a placa de Petri, mas também partes do ambiente de aquisição, aplicou-se a Transformada de Hough para círculos sobre a imagem em escala de cinza suavizada. A partir do círculo detectado, foi criada uma máscara binária circular, mantendo apenas os pixels internos à placa e zerando a região externa. Em alguns testes, também foi removido um anel externo da placa, pois essa região frequentemente contém bordas, reflexos e anotações manuais que interferem na segmentação das colônias.
 
-### Experimento 3 — Segmentação por operações morfológicas
+![Detecção da placa por Hough Circles](assets/experimentos/02_hough_roi.png)
 
-**Objetivo:** realçar estruturas pequenas e aproximadamente circulares correspondentes às colônias.
+#### 1.3 Análise de canais de cor e histogramas
 
-**Método:** foram testadas transformações morfológicas, como Top-Hat e Black-Hat, combinadas com binarização e operações de abertura/fechamento para remoção de ruído e preenchimento de pequenos buracos.
+Com a região da placa isolada, foram analisados histogramas dos canais RGB e diferentes espaços de cor, como HSV, CMYK e CIE Lab. Essa análise foi importante para observar como as intensidades estavam distribuídas dentro da placa e para identificar quais canais ofereciam melhor separação entre colônias e fundo. O uso de CLAHE também foi testado para realçar o contraste local, tornando mais visíveis algumas colônias que apresentavam baixa diferença de intensidade em relação ao ágar. Nos testes realizados, os canais `L` e `b` do espaço Lab apresentaram boa separação em algumas imagens, mas nenhum canal foi suficientemente robusto para todos os casos.
 
-**Resultado preliminar:** as operações morfológicas conseguiram destacar colônias em imagens com fundo relativamente uniforme. A filtragem posterior por área e circularidade ajudou a remover pequenos artefatos.
+![Comparação de canais de cor e histogramas](assets/experimentos/03_canais_histogramas.png)
 
-**Problemas encontrados:** os parâmetros, como tamanho do kernel e limiar, precisaram ser ajustados manualmente. Isso dificultou a generalização para imagens com diferentes resoluções, iluminação e tamanhos de colônia.
+#### Síntese dos problemas observados no pré-processamento
 
----
-
-### Experimento 4 — Clusterização K-Means
-
-**Objetivo:** testar uma alternativa à limiarização, agrupando pixels por similaridade de cor e intensidade.
-
-**Método:** foi aplicado K-Means com `k = 4` sobre os pixels internos da placa, usando principalmente os canais `L` e `b` do espaço de cor Lab após CLAHE.
-
-**Resultado preliminar:** o K-Means apresentou resultados mais consistentes do que a limiarização em algumas imagens, especialmente porque não depende diretamente de um único valor de limiar global.
-
-**Problemas encontrados:** o método ainda falhou quando a tonalidade das colônias era muito próxima à tonalidade do ágar. A seleção automática do cluster correspondente às colônias também permaneceu sensível às características visuais de cada imagem.
+| Etapa | Problema observado | O que ocasionou o problema | Por que não serviu bem para todas as imagens |
+|---|---|---|---|
+| Conversão e padronização | As imagens continuaram apresentando diferenças visuais relevantes | As bases possuem formatos, resoluções e condições de captura diferentes | A padronização do arquivo resolve a leitura, mas não corrige iluminação, escala ou enquadramento |
+| Hough Circles | Em algumas imagens o círculo detectado não coincidiu perfeitamente com a placa | Variações de distância da câmera, ângulo, borda pouco definida e iluminação irregular | Um erro na ROI afeta todas as etapas seguintes, pois pode cortar colônias ou manter regiões externas indesejadas |
+| Máscara circular | Presença de bordas, escritas e reflexos mesmo após o recorte | Algumas anotações estão dentro ou próximas à área útil da placa | A máscara circular remove o exterior da placa, mas não separa automaticamente colônias de artefatos internos |
+| Seleção de canais | Nenhum canal funcionou de forma universal | Diferenças de cor entre ágar, colônias e microrganismos | Um canal que destaca bem uma imagem pode falhar em outra com contraste ou coloração diferente |
 
 ---
 
-### Experimento 5 — Separação de colônias sobrepostas com Watershed
+### 2. Experimentos de segmentação e contagem com métodos clássicos
 
-**Objetivo:** separar colônias conectadas ou parcialmente sobrepostas, evitando subcontagem.
+#### 2.1 Limiarização global, Otsu e limiarização adaptativa
 
-**Método:** após a obtenção da máscara binária, foi aplicada a transformada de distância para localizar possíveis centros das colônias. Esses pontos foram usados como marcadores para o algoritmo Watershed.
+Foram testadas diferentes estratégias de limiarização para separar as colônias do fundo da placa, incluindo limiar fixo, limiarização de Otsu e limiarização adaptativa gaussiana. Esses métodos foram aplicados após a definição da região de interesse e o realce de contraste. A limiarização de Otsu apresentou limitações importantes, pois o histograma das imagens recortadas era fortemente influenciado pelos pixels zerados fora da placa. Como consequência, o limiar calculado automaticamente foi deslocado para valores pouco adequados, reduzindo a sensibilidade para detectar colônias. A limiarização adaptativa apresentou resultados melhores em algumas imagens, mas ainda foi instável diante de variações de iluminação e contraste.
 
-**Resultado preliminar:** o método funcionou satisfatoriamente em casos de sobreposição parcial, quando ainda havia separação visual entre os centros das colônias.
+![Resultados da limiarização](assets/experimentos/04_limiarizacao.png)
 
-**Problemas encontrados:** o Watershed não conseguiu separar corretamente colônias completamente fundidas ou com contornos muito pouco definidos. Nesses casos, múltiplas colônias continuaram sendo detectadas como um único objeto.
+#### 2.2 Subtração de fundo com filtro Gaussiano
+
+Também foi avaliada uma abordagem baseada em subtração de fundo. Nesse experimento, um filtro Gaussiano com kernel de grande dimensão foi utilizado para estimar a variação lenta de iluminação dentro da placa. Em seguida, calculou-se a diferença absoluta entre a imagem suavizada e o fundo estimado, realçando regiões que se destacavam localmente. O resultado foi normalizado e posteriormente binarizado com Otsu. Essa estratégia funcionou melhor em imagens nas quais o fundo apresentava uma variação suave de iluminação, mas perdeu desempenho quando havia colônias maiores, anotações manuscritas ou mudanças mais intensas na aparência do ágar.
+
+![Subtração de fundo](assets/experimentos/05_subtracao_fundo.png)
+
+#### 2.3 Operações morfológicas: Top-Hat e Black-Hat
+
+As operações morfológicas Top-Hat e Black-Hat foram testadas para realçar estruturas pequenas em relação ao fundo. O Top-Hat foi utilizado para destacar regiões claras menores que o elemento estruturante, enquanto o Black-Hat foi explorado para evidenciar estruturas escuras. Após essas transformações, foram aplicadas etapas de binarização e operações morfológicas de abertura e fechamento para remover ruídos e preencher pequenas falhas nas máscaras. Os resultados foram positivos em imagens com fundo relativamente uniforme, mas dependeram fortemente da escolha do tamanho do kernel e dos limiares utilizados.
+
+![Operações morfológicas](assets/experimentos/06_morfologia.png)
+
+#### 2.4 Clusterização K-Means
+
+Como alternativa aos métodos baseados em limiar, foi aplicado K-Means com `k = 4` sobre os pixels internos da placa, utilizando principalmente os canais `L` e `b` do espaço Lab após CLAHE. Essa abordagem agrupou os pixels por similaridade de cor e luminosidade, reduzindo a dependência de um único limiar global. Em algumas amostras, o K-Means apresentou resultados mais consistentes que a limiarização, especialmente em casos com variação moderada de iluminação. Entretanto, o método continuou apresentando dificuldades quando a tonalidade das colônias era muito próxima à do ágar, pois o cluster correspondente às colônias deixava de ser claramente separável.
+
+![Segmentação com K-Means](assets/experimentos/07_kmeans.png)
+
+#### 2.5 Separação de colônias sobrepostas com Watershed
+
+Após a obtenção das máscaras binárias, foi aplicado o algoritmo Watershed associado à transformada de distância para separar colônias conectadas ou parcialmente sobrepostas. A transformada de distância permitiu localizar possíveis centros das colônias, que foram usados como marcadores para a propagação das regiões. O método funcionou de forma satisfatória em casos de sobreposição parcial, nos quais ainda havia centros distinguíveis. No entanto, quando as colônias estavam completamente fundidas ou apresentavam contornos pouco definidos, o algoritmo não foi capaz de separar corretamente as instâncias, resultando em subcontagem. Essa limitação também foi observada nas anotações do grupo, especialmente para casos de colônias muito próximas ou confluentes. :contentReference[oaicite:1]{index=1}
+
+![Separação com Watershed](assets/experimentos/08_watershed.png)
+
+#### 2.6 Contagem por componentes conectados e filtros geométricos
+
+A etapa de contagem foi realizada a partir da rotulagem de componentes conectados presentes nas máscaras binárias. Cada região branca contígua foi interpretada como uma candidata a colônia. Para reduzir falsos positivos, foram aplicados filtros por área, circularidade e solidez. A circularidade foi usada porque muitas colônias apresentam formato aproximadamente circular, enquanto fragmentos de letras e ruídos tendem a produzir formas alongadas ou irregulares. A solidez ajudou a descartar componentes com contornos muito fragmentados. Essa combinação reduziu falsos positivos, mas a contagem continuou dependente da qualidade da segmentação inicial. Quando a máscara continha colônias unidas, partes de escrita ou regiões mal segmentadas, os filtros geométricos não eram suficientes para corrigir o erro.
+
+![Contagem por componentes conectados](assets/experimentos/09_componentes_conectados.png)
+
+#### Síntese dos problemas observados nos métodos clássicos
+
+| Experimento | Resultado preliminar | Problema observado | O que ocasionou o problema | Por que não serviu bem para essas imagens |
+|---|---|---|---|---|
+| Limiar fixo | Funcionou apenas em imagens visualmente semelhantes às usadas para calibração | Baixa generalização | Diferenças de iluminação, contraste e cor do ágar | Um único valor de limiar não representa bem todo o conjunto |
+| Otsu | Automatizou a escolha do limiar, mas falhou em várias imagens | Limiar deslocado | Histograma dominado por pixels zerados da máscara e fundo | A separação estatística entre fundo e colônia não ficou bem definida |
+| Limiarização adaptativa | Melhorou alguns casos locais | Resultado inconsistente | Sensibilidade ao tamanho da vizinhança e à iluminação | Detectou ruídos e falhou em regiões com baixo contraste |
+| Subtração de fundo | Realçou colônias em placas com iluminação suave | Erros em colônias grandes e anotações | Escritas, variações fortes de fundo e morfologias diferentes | O método assume que o fundo varia lentamente e que as colônias são pequenas |
+| Top-Hat / Black-Hat | Destacou estruturas pequenas em fundos uniformes | Dependência dos parâmetros | Tamanho do kernel e limiar definidos empiricamente | Colônias com tamanhos variados não são bem representadas por um único elemento estruturante |
+| K-Means | Foi mais estável que limiarização em algumas amostras | Confusão entre colônia e ágar | Tonalidades semelhantes entre classes | Quando as cores se sobrepõem, os clusters deixam de representar objetos reais |
+| Watershed | Separou sobreposições parciais | Não separou colônias fundidas | Ausência de máximos locais bem definidos | Colônias completamente conectadas aparecem como uma única região |
+| Componentes conectados + filtros | Reduziu falsos positivos simples | Não corrigiu erros da segmentação | Máscaras com regiões fundidas, letras ou ruídos | A filtragem geométrica atua depois da segmentação e não recupera objetos perdidos |
 
 ---
 
-### Experimento 6 — Contagem por componentes conectados e filtros geométricos
+### 3. Experimentos com aprendizado profundo
 
-**Objetivo:** transformar a máscara segmentada em uma contagem automática de colônias.
+#### 3.1 Detecção de colônias com YOLOv5s no dataset AGAR
 
-**Método:** cada região branca contígua foi rotulada como um componente conectado. Em seguida, foram aplicados filtros por área, circularidade e solidez para remover ruídos, fragmentos e partes de letras manuscritas.
+Para avaliar uma abordagem baseada em aprendizado profundo, foi realizado o fine-tuning de um modelo YOLOv5s pré-treinado. O treinamento utilizou o dataset AGAR após a remoção das imagens consideradas incontáveis, resultando em 13.489 imagens. Os dados foram divididos em 70% para treino e 30% para validação, com treinamento por 100 épocas, `batch size = 32` e imagens redimensionadas para `640 x 640`. No conjunto de validação do AGAR, o modelo apresentou bons resultados, com precisão de 98%, recall de 95%, mAP@0.5 de 96% e mAP@0.5:0.95 de 94%. Esses valores indicam que o modelo aprendeu bem o padrão visual do AGAR, mas a inferência direta em imagens do CNPEM apresentou queda de desempenho, evidenciando a diferença de domínio entre as bases. :contentReference[oaicite:2]{index=2}
 
-**Resultado preliminar:** a combinação dos filtros reduziu falsos positivos e melhorou a contagem em imagens onde as colônias eram aproximadamente circulares e bem separadas.
-
-**Problemas encontrados:** a contagem continuou sensível à qualidade da segmentação inicial. Colônias grandes, colônias fundidas e anotações manuscritas ainda causaram erros relevantes.
-
----
-
-### Experimento 7 — Detecção com YOLOv5s no dataset AGAR
-
-**Objetivo:** avaliar uma abordagem baseada em deep learning para detecção automática de colônias.
-
-**Método:** foi realizado fine-tuning de um modelo YOLOv5s pré-treinado, utilizando imagens do dataset AGAR. Após a remoção de imagens consideradas incontáveis, foram usadas 13.489 imagens. O treinamento foi feito por 100 épocas, com `batch size = 32` e imagens redimensionadas para `640 x 640`.
-
-**Resultado preliminar:**
+![Detecção com YOLOv5s](assets/experimentos/10_yolov5_agar.png)
 
 | Métrica | Valor |
 |---|---:|
@@ -372,31 +386,26 @@ Nesta etapa do projeto, foram realizados experimentos com métodos clássicos de
 | mAP@0.5 | 96% |
 | mAP@0.5:0.95 | 94% |
 
-**Problemas encontrados:** apesar do bom desempenho no AGAR, o modelo apresentou queda de desempenho ao ser aplicado diretamente nas imagens do CNPEM, indicando diferença de domínio entre as bases.
+#### 3.2 Adaptação de domínio com YOLOv8s-seg no dataset CNPEM
 
----
+Em seguida, foi testada uma estratégia de adaptação de domínio utilizando imagens do CNPEM anotadas manualmente com máscaras de segmentação. O modelo treinado anteriormente no AGAR foi utilizado como ponto de partida para um modelo de segmentação baseado em YOLOv8s-seg. Mesmo com poucas imagens anotadas, os resultados preliminares mostraram segmentações visualmente razoáveis em algumas imagens do CNPEM. No entanto, as máscaras ainda apresentaram imprecisões nos contornos, principalmente em colônias maiores, regiões de sobreposição e imagens com baixo contraste. Isso indica que a adaptação de domínio é viável, mas depende da ampliação e melhoria das anotações de segmentação.
 
-### Experimento 8 — Adaptação de domínio com YOLOv8s-seg no CNPEM
+![Segmentação com YOLOv8s-seg](assets/experimentos/11_yolov8seg_cnpem.png)
 
-**Objetivo:** adaptar o modelo para segmentação de instâncias nas imagens reais do CNPEM.
+#### 3.3 Enriquecimento de anotações com SAM 2.1
 
-**Método:** o modelo treinado anteriormente foi usado como ponto de partida para um modelo YOLOv8s-seg. Foi realizado fine-tuning com imagens do CNPEM anotadas manualmente com máscaras de segmentação.
+Como proposta para melhorar o treinamento dos modelos de segmentação, foi iniciado o uso do SAM 2.1 para gerar máscaras automaticamente a partir das bounding boxes disponíveis no dataset AGAR. Como o AGAR já possui anotações de detecção, o SAM permite transformar parte dessas anotações em máscaras, enriquecendo o conjunto de dados para segmentação de instâncias. Essa etapa ainda precisa ser validada visual e quantitativamente, pois máscaras automáticas incorretas podem introduzir ruído no treinamento. Mesmo assim, a abordagem é promissora para aumentar a quantidade de dados segmentados sem depender exclusivamente de anotação manual. :contentReference[oaicite:3]{index=3}
 
-**Resultado preliminar:** mesmo com poucas imagens anotadas, o modelo apresentou segmentações visualmente razoáveis para algumas colônias do CNPEM.
+![Máscaras geradas com SAM 2.1](assets/experimentos/12_sam21_mascaras.png)
 
-**Problemas encontrados:** as máscaras ainda apresentaram contornos imprecisos, principalmente em colônias maiores, regiões de sobreposição e imagens com baixo contraste. A principal limitação foi a pequena quantidade de imagens anotadas.
+#### Síntese dos problemas observados nos métodos de aprendizado profundo
 
----
-
-### Experimento 9 — Enriquecimento de anotações com SAM 2.1
-
-**Objetivo:** aumentar a quantidade e a qualidade das máscaras de segmentação disponíveis para treinamento.
-
-**Método:** foi proposta a utilização do SAM 2.1 para gerar máscaras automaticamente a partir das bounding boxes existentes no dataset AGAR.
-
-**Resultado preliminar:** os testes iniciais indicaram que o SAM consegue gerar máscaras úteis a partir das bounding boxes, permitindo transformar anotações de detecção em anotações de segmentação.
-
-**Problemas encontrados:** ainda é necessário validar a qualidade das máscaras geradas automaticamente e verificar se elas melhoram de fato o treinamento dos modelos de segmentação.
+| Experimento | Resultado preliminar | Problema observado | O que ocasionou o problema | Por que ainda não resolve completamente |
+|---|---|---|---|---|
+| YOLOv5s no AGAR | Alto desempenho no conjunto de validação do AGAR | Queda ao aplicar no CNPEM | Diferença de domínio entre datasets | O modelo aprendeu bem o AGAR, mas não generalizou diretamente para outro protocolo de aquisição |
+| YOLOv8s-seg no CNPEM | Segmentações razoáveis com poucas imagens | Contornos imprecisos | Pouca quantidade de máscaras anotadas | O modelo precisa de mais exemplos para aprender variações de forma, tamanho e sobreposição |
+| SAM 2.1 para máscaras | Geração automática de máscaras a partir de bounding boxes | Necessidade de validação das máscaras | Segmentação automática pode gerar erros | Máscaras incorretas podem prejudicar o treinamento supervisionado |
+| Adaptação de domínio | Estratégia mostrou potencial | Dependência de anotação manual | O CNPEM possui poucas anotações espaciais | A qualidade final depende da ampliação do conjunto anotado |
 ## Próximos passos
 - Finalizar a organização da metodologia dos métodos clássicos.
 - Adicionar imagens comparativas dos resultados de cada método.
