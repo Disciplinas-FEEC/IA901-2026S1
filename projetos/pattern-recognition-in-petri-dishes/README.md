@@ -279,7 +279,7 @@ As ferramentas e bibliotecas utilizadas ao longo do projeto estão listadas a se
 
 O workflow do projeto foi organizado para representar as principais etapas necessárias para reproduzir os experimentos, desde a preparação das bases de dados até a avaliação dos métodos clássicos e baseados em aprendizado profundo.
 
-![Workflow do projeto](assets/Pipeline Contagem de Colônias.jpg)
+![Workflow do projeto](assets/Workflow%20IA901%20%E2%80%94%20Pipeline%20Contagem%20de%20Col%C3%B4nias.jpg)
 
 ## Experimentos e Resultados preliminares
 
