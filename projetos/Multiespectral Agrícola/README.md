@@ -55,8 +55,10 @@ Além disso, Sa et al. [7] propuseram o WeedMap, um framework de mapeamento sem�
 A principal motivação deste trabalho é verificar a eficácia de modelos de segmentação semântica com a integração do NDVI e NDWI, haja vista a sua aplicação no monitoramento de lavouras e na identificação de anomalias em imagens aéreas agrícolas. O sistema proposto deve ser capaz de processar dados multiespectrais para delimitar com precisão regiões de estresse vegetativo e corpos d'água superficiais, correlacionando esses índices com as classes de interesse. O resultado esperado do modelo será a geração de máscaras de segmentação semanticamente consistentes, onde os limites geométricos das anomalias sejam preservados de forma estatisticamente e espacialmente coerente com os dados reais de entrada.
 
 ## Metodologia
+Portanto, detalhando os métodos utilizados para a construção do espaço semântico podemos segmentar em duas características principais para este trabalho.
+
 #### Extração de Características: NDVI
-Para a construção do espaço semântico, o primeiro subespaço considerado é o NDVI , gerado a partir da combinação dos canais Vermelho (Red) e NIR (NIR). Este subespaço está relacionado ao índice de vegetação por diferença normalizada, que é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [8], o NDVI é definido pela equação (1).
+O primeiro subespaço considerado é o NDVI, gerado a partir da combinação dos canais Vermelho (Red) e NIR (NIR). Este subespaço está relacionado ao índice de vegetação por diferença normalizada, que é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [8], o NDVI é definido pela equação (1).
 
 $$
 \begin{array}{cc}
@@ -77,10 +79,7 @@ $$
 
 Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo.
 
-> Proposta de metodologia incluindo especificação de quais técnicas pretende-se explorar. Espera-se que nesta entrega você já seja capaz de descrever de maneira mais específica (do que na Entrega 1) quais as técnicas a serem empregadas em cada etapa do projeto.
-
 ## Bases de Dados e Evolução
-> Elencar as bases de dados utilizadas no projeto.
 
 Base de Dados | Endereço na Web | Resumo descritivo
 ----- | ----- | -----
