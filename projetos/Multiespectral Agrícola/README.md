@@ -121,7 +121,7 @@ Base de Dados | Endereço na Web | Resumo descritivo
 ----- | ----- | -----
 Agriculture-Vision | https://www.agriculture-vision.com/agriculture-vision-2021/dataset-2021 | Dataset voltado para a agricultura de precisão, composto por 94.986 imagens aéreas multiespectrais (RGB e NIR). Ele apresenta nove classes de anomalias as quais podem ser utilizadas para segmentação semântica.
 
-[Link para o datasheet do dataset](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/MultiespectralAgrícola/data/Datasheet___Agriculture_Vision.pdf)
+[Link para o datasheet do dataset](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/data/Datasheet___Agriculture_Vision.pdf)
 
 ## Ferramentas
 As seguintes ferramentas e bibliotecas foram utilizadas para viabilizar o pipeline de processamento de dados, análise estatística, otimização de I/O e visualização de resultados:
