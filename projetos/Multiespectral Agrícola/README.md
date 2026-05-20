@@ -96,7 +96,15 @@ Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho pr�
    - Para cada amostra selecionada, são exibidas as imagens RGB, NIR, máscaras, limites e o índice NDVI.
    - As regiões de interesse (ROI) são destacadas, mostrando apenas os pixels relevantes para análise.
 
-  ![alt text](assets/image-1.png)
+ 
+<div align="center">
+  <img src="assets/image-1.png" alt="Visualização de Amostras" width="600">
+  <p>
+    <b>Figura 2:</b> Análise visual de amostra do dataset, incluindo imagens RGB, NIR, máscaras de segmentação, NDVI e ROI.
+    <br>
+    <i>Fonte: Autoria própria.</i>
+  </p>
+</div>
 
 ### Visualização de Resultados
 - **Gráficos Gerados**:
@@ -142,29 +150,29 @@ As seguintes ferramentas e bibliotecas foram utilizadas para viabilizar o pipeli
 ## Experimentos e Resultados preliminares
 ### Cálculo dos índices NDVI e NDWI
 
-Esta seção apresenta a visualização e a análise dos resultados obtidos na geração dos índices [NDVI](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/data/interim/nvdi) e [NDWI](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/data/interim/ndwi), calculados por meio da combinação de bandas espectrais conforme detalhado na metodologia. Os códigos correspondentes a esta etapa de processamento estão disponíveis neste [notebook](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/notebooks/NDVI%20and%20NDWI%20generation/nvdi_ndwi.ipynb). Essas novas imagens matriciais foram geradas para cada um dos conjuntos de dados de treinamento, validação e teste. Dentre elas foram escolhidas duas as quais ilustram melhor o comportamento de ambos os índices, a Figura 2 é a primeira delas.
+Esta seção apresenta a visualização e a análise dos resultados obtidos na geração dos índices [NDVI](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/data/interim/nvdi) e [NDWI](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/data/interim/ndwi), calculados por meio da combinação de bandas espectrais conforme detalhado na metodologia. Os códigos correspondentes a esta etapa de processamento estão disponíveis neste [notebook](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/notebooks/NDVI%20and%20NDWI%20generation/nvdi_ndwi.ipynb). Essas novas imagens matriciais foram geradas para cada um dos conjuntos de dados de treinamento, validação e teste. Dentre elas foram escolhidas duas as quais ilustram melhor o comportamento de ambos os índices, a Figura 3 é a primeira delas.
 
 <div align="center">
   <img src="assets/imagem_2026-05-20_121455397.png" alt="Representação do Espectro Eletromagnético" width="600">
   <p>
-    <b>Figura 2:</b> Imagem com presença de <i> double plantation </i> em RGB, NIR, NDVI e NDWI.
+    <b>Figura 3:</b> Imagem com presença de <i> double plantation </i> em RGB, NIR, NDVI e NDWI.
     <br>
     <i>Fonte: Autoria própria.</i>
   </p>
 </div>
 
-Na Figura 2, observa-se o fenômeno de <i> double plantation </i>, no qual duas linhas de plantio se cruzam de forma sobreposta. Para esse cenário, é esperado que tais áreas apresentem valores elevados de NDVI, devido à maior densidade de biomassa e à intensa atividade fotossintética local, características que são evidenciadas com maior contraste por esse índice. Adicionalmente, destaca-se a aplicação de <i> color maps </i> nas representações do NDVI e NDWI, para tornar mais fácil a interpretação das variações de vigor e umidade para o público geral. Paralelamente, analisando o NDWI, observa-se que a região de sobreposição das culturas exibe uma resposta distinta das áreas de plantio convencional ao seu redor. Devido a alta presença da folhagem no cruzamento das linhas, ocorre uma maior reflexão da radiação na banda do infravermelho próximo NIR, o que se traduz no mapa de calor o qual mostra a ausência de humidade naquele local enquanto o resto da plantação apresenta relativo NDWI, provavelmente, pela presença de solo úmido. Por fim, na Figura 3 é possível observar outra circunstância a ser analisada.
+Na Figura 3, observa-se o fenômeno de <i> double plantation </i>, no qual duas linhas de plantio se cruzam de forma sobreposta. Para esse cenário, é esperado que tais áreas apresentem valores elevados de NDVI, devido à maior densidade de biomassa e à intensa atividade fotossintética local, características que são evidenciadas com maior contraste por esse índice. Adicionalmente, destaca-se a aplicação de <i> color maps </i> nas representações do NDVI e NDWI, para tornar mais fácil a interpretação das variações de vigor e umidade para o público geral. Paralelamente, analisando o NDWI, observa-se que a região de sobreposição das culturas exibe uma resposta distinta das áreas de plantio convencional ao seu redor. Devido a alta presença da folhagem no cruzamento das linhas, ocorre uma maior reflexão da radiação na banda do infravermelho próximo NIR, o que se traduz no mapa de calor o qual mostra a ausência de humidade naquele local enquanto o resto da plantação apresenta relativo NDWI, provavelmente, pela presença de solo úmido. Por fim, na Figura 4 é possível observar outra circunstância a ser analisada.
 
 <div align="center">
   <img src="assets/imagem_2026-05-20_121524694.png" alt="Representação do Espectro Eletromagnético" width="600">
   <p>
-    <b>Figura 3:</b> Imagem com presença de plantas e corpos d'água em RGB, NIR, NDVI e NDWI.
+    <b>Figura 4:</b> Imagem com presença de plantas e corpos d'água em RGB, NIR, NDVI e NDWI.
     <br>
     <i>Fonte: Autoria própria.</i>
   </p>
 </div>
 
-A figura acima foi escolhida devido ao fato de apresentar vegetação e áreas com água o que possibilitará observar o comportamento de ambos os índices simultaneamente. Na Figura 3, a porção superior da imagem é composta por uma densa cobertura arbórea, a qual exibe uma forte resposta no NDVI devido à alta refletância no NIR. Inversamente, a grande massa de água que domina a metade inferior absorve quase totalmente a radiação NIR, resultando em valores mínimos de NDVI. No mapa do NDWI, o cenário se inverte onde a região hídrica é destacada com valores máximos no gradiente, mostrando a eficiência do espaço semântico multiespectral em discriminar com precisão alvos com propriedades físicas tão distintas.
+A figura acima foi escolhida devido ao fato de apresentar vegetação e áreas com água o que possibilitará observar o comportamento de ambos os índices simultaneamente. Na Figura 4, a porção superior da imagem é composta por uma densa cobertura arbórea, a qual exibe uma forte resposta no NDVI devido à alta refletância no NIR. Inversamente, a grande massa de água que domina a metade inferior absorve quase totalmente a radiação NIR, resultando em valores mínimos de NDVI. No mapa do NDWI, o cenário se inverte onde a região hídrica é destacada com valores máximos no gradiente, mostrando a eficiência do espaço semântico multiespectral em discriminar com precisão alvos com propriedades físicas tão distintas.
 
 > Descreva de forma sucinta e organizada os experimentos realizados.
 > Para cada experimento, apresente os principais resultados obtidos.
