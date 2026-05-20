@@ -10,7 +10,7 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 |--|--|--|
 | Brendon Erick Euzébio Rus Peres  | 256130  | Mestrado em xxxx|
 | Luís Fernando Silva Lima  | 298966 | Mestrado em Engenharia Elétrica |
-| Mateus Bizzo da Silva  | 200216  | Mestrado em xxxx|
+| Mateus Bizzo da Silva  | 200216  | Mestrado em Engenharia de Computação |
 
 
 ## Descrição do Projeto
@@ -89,7 +89,22 @@ Agriculture-Vision | https://www.agriculture-vision.com/agriculture-vision-2021/
 > [Link para o datasheet do dataset](https://docs.google.com/document/d/1QEhjC9ITwu-VQRwQzN5-8O_ES_J7Koa9mj8wCiMX2tE/edit?usp=sharing)
 
 ## Ferramentas
-> Ferramentas e/ou bibliotecas já utilizadas e/ou ainda a serem utilizadas (com base na visão atual do grupo sobre o projeto).
+As seguintes ferramentas e bibliotecas foram utilizadas para viabilizar o pipeline de processamento de dados, análise estatística, otimização de I/O e visualização de resultados:
+
+### Processamento de Imagens e Visão Computacional
+* **Pillow (PIL):** Responsável pela abertura, manipulação e salvamento de imagem do dataset. Utilizado para o carregamento dos arquivos brutos.
+* **Matplotlib (Pyplot / Image):** Para leitura e exibição de imagens e máscaras de segmentação.
+
+### Manipulação de Dados e Análise Estatística
+* **NumPy:** Manipulação matemática de arrays para o processamento pixel a pixel, normalização de canais e operações algébricas sobre as bandas espectrais (RGB e NIR).
+* **Pandas:** Estruturação e manipulação de metadados das imagens.
+* **Seaborn:** Construção de visualizações de gráficos.
+
+### Utilidades
+* **Concurrent Futures (ThreadPoolExecutor):** Para ler e gravar o volume massivo de imagens do dataset de forma otimizada, reduzindo o gargalo do disco.
+* **Tqdm:** Possibilita criar barras de progresso interativas em terminais e loops, dando visibilidade sobre o tempo estimado de execução em processos do pipeline.
+* **Pickle:** Serialização e persistência de objetos estruturados em Python, permitindo salvar dicionários de metadados, estruturas de dados intermediárias ou representações compactadas em disco para carregamento rápido.
+
 
 ## Workflow
 > Use uma ferramenta que permita desenhar o workflow e salvá-lo como uma imagem (Draw.io, por exemplo). Insira a imagem nesta seção.
