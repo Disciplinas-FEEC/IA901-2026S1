@@ -1,5 +1,5 @@
-# `Segmentação Semântica de Imagens Agrícolas com NDVI e NDWI`
-# `Semantic Segmentation of Agricultural Images with NDVI and NDWI`
+# `Segmentação Semântica de Imagens Agrícolas usando NDVI e NDWI`
+# `Semantic Segmentation of Agricultural Images using NDVI and NDWI`
 
 ## Apresentação
 
