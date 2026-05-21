@@ -185,7 +185,6 @@ A figura acima foi escolhida devido ao fato de apresentar vegetação e áreas c
 - Ajustar hiperparâmetros do modelo para otimizar os resultados iniciais. 
 
 2. <b> Geração de Resultados Preliminares (1 semana): </b>
-- Treinar o modelo com o conjunto completo de dados.
 - Gerar métricas de desempenho (e.g., IoU, precisão, recall) e salvar as máscaras de segmentação geradas.
 
 3. <b> Análise de Resultados (1 semana): </b>
