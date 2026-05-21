@@ -200,13 +200,10 @@ Na sequência, aplicaram-se filtros geométricos baseados em área, circularidad
 A contagem final foi definida por:
 
 $$
-N_{\text{colônias}} =
-\#\{
-k \geq 1 : A_k \geq A_{\min}
-\}
+N_{\text{colônias}} = \# \{ k \geq 1 : A_k \geq A_{\min} \}
 $$
 
-onde \(A_k\) representa a área do componente conectado.
+onde $A_k$ representa a área do componente conectado.
 
 Além disso, a circularidade utilizada nos filtros geométricos foi calculada por:
 
@@ -382,15 +379,15 @@ Para avaliar uma abordagem baseada em aprendizado profundo, foi realizado o fine
 
 Em seguida, foi testada uma estratégia de adaptação de domínio utilizando imagens do CNPEM anotadas manualmente com máscaras de segmentação. O modelo treinado anteriormente no AGAR foi utilizado como ponto de partida para um modelo de segmentação baseado em YOLOv5s-seg. Mesmo com poucas imagens anotadas, os resultados preliminares mostraram segmentações visualmente razoáveis em algumas imagens do CNPEM. No entanto, as máscaras ainda apresentaram imprecisões nos contornos, principalmente em colônias maiores, regiões de sobreposição e imagens com baixo contraste. Isso indica que a adaptação de domínio é viável, mas depende da ampliação e melhoria das anotações de segmentação.
 
-![Segmentação com YOLOv5s-seg](projetos/pattern-recognition-in-petri-dishes/assets/experimentos/cnpem-saida-yolo.png)
+![Segmentação com YOLOv5s-seg](assets/experimentos/cnpem-saida-yolo.png)
 
 #### 3.3 Enriquecimento de anotações com SAM 2.1
 
 Como proposta para melhorar o treinamento dos modelos de segmentação, foi iniciado o uso do SAM 2.1 para gerar máscaras automaticamente a partir das bounding boxes disponíveis no dataset AGAR. Como o AGAR já possui anotações de detecção, o SAM permite transformar parte dessas anotações em máscaras, enriquecendo o conjunto de dados para segmentação de instâncias. Essa etapa ainda precisa ser validada visual e quantitativamente, pois máscaras automáticas incorretas podem introduzir ruído no treinamento. Mesmo assim, a abordagem é promissora para aumentar a quantidade de dados segmentados sem depender exclusivamente de anotação manual.
 
-![exemplo 1 de imagem segmentada pelo SAM Automaticamente](projetos/pattern-recognition-in-petri-dishes/data/interim/DeepLearning/6794.png)
+![exemplo 1 de imagem segmentada pelo SAM Automaticamente](data/interim/DeepLearning/6794.png)
 
-![exemplo 2 de imagem segmentada pelo SAM Automaticamente](projetos/pattern-recognition-in-petri-dishes/data/interim/DeepLearning/6225.png)
+![exemplo 2 de imagem segmentada pelo SAM Automaticamente](data/interim/DeepLearning/6225.png)
 
 #### Síntese dos problemas observados nos métodos de aprendizado profundo
 
