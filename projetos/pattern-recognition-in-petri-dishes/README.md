@@ -335,7 +335,7 @@ Também foi avaliada uma abordagem baseada em subtração de fundo. Nesse experi
 
 Como alternativa aos métodos baseados em limiar, foi aplicado K-Means com `k = 4` sobre os pixels internos da placa, utilizando principalmente os canais `L` e `b` do espaço Lab após CLAHE. Essa abordagem agrupou os pixels por similaridade de cor e luminosidade, reduzindo a dependência de um único limiar global. Em algumas amostras, o K-Means apresentou resultados mais consistentes que a limiarização, especialmente em casos com variação moderada de iluminação. Entretanto, o método continuou apresentando dificuldades quando a tonalidade das colônias era muito próxima à do ágar, pois o cluster correspondente às colônias deixava de ser claramente separável.
 
-![Segmentação com K-Means](assets/experimentos/07_kmeans.png)
+![Segmentação com K-Means](assets/experimentos/13.png)
 
 #### 2.5 Separação de colônias sobrepostas com Watershed
 
