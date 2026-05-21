@@ -59,7 +59,7 @@ A principal motivação deste trabalho é verificar a eficácia de modelos de se
 Portanto, detalhando os métodos utilizados para a construção do espaço semântico podemos segmentar em duas características principais para este trabalho.
 
 #### Extração de Características: NDVI
-O primeiro subespaço considerado é o NDVI, gerado a partir da combinação dos canais Vermelho (Red) e NIR (NIR). Este subespaço está relacionado ao índice de vegetação por diferença normalizada, que é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [7], o NDVI é definido pela equação (1).
+O primeiro subespaço considerado é o NDVI, gerado a partir da combinação dos canais Vermelho (Red) e NIR. Este subespaço está relacionado ao índice de vegetação por diferença normalizada, que é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [7], o NDVI é definido pela equação (1).
 
 $$
 \begin{array}{cc}
@@ -67,7 +67,7 @@ NDVI = \dfrac{NIR - RED}{NIR + RED} & \text{(1)}
 \end{array}
 $$
 
-Onde NIR é o valor do pixel infravermelho próximo e RED é o valor do pixel vermelho.
+Onde NIR é o valor do pixel infravermelho próximo e RED é o valor do pixel vermelho. É importante ressaltar que o NDVI apresenta valor no intervalo [-1, 1] onde valores maiores que 0 indicam a presença de plantas e valores menores que 0 indicam a ausência. Nesse contexto, para armazenar o NDVI em formato de imagem é necessário fazer a conversão do intervalo [-1, 1] para [0, 255] e para manter o mesmo tipo de arquivo que as imagens em NIR foi escolhido o formato <i>.jpg</i>.
 
 #### Extração de Características: NDWI
 O segundo subespaço necessário é o NDWI o qual é obtido pelos eixos Verde (Green) e NIR. A combinação desses dois canais pode ser utilizada tanto para analisar o teor de água nas folhas das plantas quanto para delimitar corpos d'água na superfície [7], o NDWI pode ser obtido através da equação (2).
@@ -78,7 +78,7 @@ NDWI = \dfrac{GREEN - NIR}{GREEN + IR} & \text{(2)}
 \end{array}
 $$
 
-Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo.
+Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo. Da mesma forma o índice anterior, o NDWI também é mapeado no intervalo [-1, 1] os quais valores maiores que 0 indicam presença de água, enquanto valores menores que 0 geralmente representam solo ou vegetação. Da mesma forma descrita anteriormente, houve a mudança de intervalo para [0, 255] e armazenados no formato <i>.jpg</i>. 
 
 ### Pipeline de Processamento
 1. **Carregamento do Dataset**:
