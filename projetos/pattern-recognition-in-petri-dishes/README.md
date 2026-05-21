@@ -287,7 +287,6 @@ Nesta etapa do projeto, os experimentos foram organizados em três grupos princi
 
 As imagens do dataset CNPEM foram inicialmente convertidas para o formato PNG, uma vez que os arquivos originais estavam majoritariamente em formato HEIC. Para isso, foi utilizada a biblioteca `pillow-heif`, enquanto imagens em JPEG foram lidas diretamente com `Pillow`. Após a conversão, os arquivos foram renomeados sequencialmente, seguindo o padrão `1.png`, `2.png`, etc. Essa etapa foi necessária para padronizar o acesso às imagens durante os experimentos e evitar problemas de leitura em diferentes bibliotecas de processamento de imagens.
 
-![Conversão e organização das imagens](assets/experimentos/01_conversao_organizacao.png)
 
 #### 1.2 Definição da região de interesse com Transformada de Hough
 
@@ -299,7 +298,10 @@ Após a padronização dos arquivos, foi realizada a definição automática da 
 
 Com a região da placa isolada, foram analisados histogramas dos canais RGB e diferentes espaços de cor, como HSV, CMYK e CIE Lab. Essa análise foi importante para observar como as intensidades estavam distribuídas dentro da placa e para identificar quais canais ofereciam melhor separação entre colônias e fundo. O uso de CLAHE também foi testado para realçar o contraste local, tornando mais visíveis algumas colônias que apresentavam baixa diferença de intensidade em relação ao ágar. Nos testes realizados, os canais `L` e `b` do espaço Lab apresentaram boa separação em algumas imagens, mas nenhum canal foi suficientemente robusto para todos os casos.
 
-![Comparação de canais de cor e histogramas](assets/experimentos/03_canais_histogramas.png)
+![Comparação de canais de cor e histogramas](assets/experimentos/03.png)
+![Comparação de canais de cor e histogramas](assets/experimentos/04.png)
+![Comparação de canais de cor e histogramas](assets/experimentos/05.png)
+![Comparação de canais de cor e histogramas](assets/experimentos/06.png)
 
 #### Síntese dos problemas observados no pré-processamento
 
@@ -318,21 +320,18 @@ Com a região da placa isolada, foram analisados histogramas dos canais RGB e di
 
 Foram testadas diferentes estratégias de limiarização para separar as colônias do fundo da placa, incluindo limiar fixo, limiarização de Otsu e limiarização adaptativa gaussiana. Esses métodos foram aplicados após a definição da região de interesse e o realce de contraste. A limiarização de Otsu apresentou limitações importantes, pois o histograma das imagens recortadas era fortemente influenciado pelos pixels zerados fora da placa. Como consequência, o limiar calculado automaticamente foi deslocado para valores pouco adequados, reduzindo a sensibilidade para detectar colônias. A limiarização adaptativa apresentou resultados melhores em algumas imagens, mas ainda foi instável diante de variações de iluminação e contraste.
 
-![Resultados da limiarização](assets/experimentos/04_limiarizacao.png)
+![Resultados da limiarização](assets/experimentos/07.png)
+![Resultados da limiarização](assets/experimentos/08.png)
+
 
 #### 2.2 Subtração de fundo com filtro Gaussiano
 
 Também foi avaliada uma abordagem baseada em subtração de fundo. Nesse experimento, um filtro Gaussiano com kernel de grande dimensão foi utilizado para estimar a variação lenta de iluminação dentro da placa. Em seguida, calculou-se a diferença absoluta entre a imagem suavizada e o fundo estimado, realçando regiões que se destacavam localmente. O resultado foi normalizado e posteriormente binarizado com Otsu. Essa estratégia funcionou melhor em imagens nas quais o fundo apresentava uma variação suave de iluminação, mas perdeu desempenho quando havia colônias maiores, anotações manuscritas ou mudanças mais intensas na aparência do ágar.
 
-![Subtração de fundo](assets/experimentos/05_subtracao_fundo.png)
+![Subtração de fundo](assets/experimentos/09.png)
 
-#### 2.3 Operações morfológicas: Top-Hat e Black-Hat
 
-As operações morfológicas Top-Hat e Black-Hat foram testadas para realçar estruturas pequenas em relação ao fundo. O Top-Hat foi utilizado para destacar regiões claras menores que o elemento estruturante, enquanto o Black-Hat foi explorado para evidenciar estruturas escuras. Após essas transformações, foram aplicadas etapas de binarização e operações morfológicas de abertura e fechamento para remover ruídos e preencher pequenas falhas nas máscaras. Os resultados foram positivos em imagens com fundo relativamente uniforme, mas dependeram fortemente da escolha do tamanho do kernel e dos limiares utilizados.
-
-![Operações morfológicas](assets/experimentos/06_morfologia.png)
-
-#### 2.4 Clusterização K-Means
+#### 2.3 Clusterização K-Means
 
 Como alternativa aos métodos baseados em limiar, foi aplicado K-Means com `k = 4` sobre os pixels internos da placa, utilizando principalmente os canais `L` e `b` do espaço Lab após CLAHE. Essa abordagem agrupou os pixels por similaridade de cor e luminosidade, reduzindo a dependência de um único limiar global. Em algumas amostras, o K-Means apresentou resultados mais consistentes que a limiarização, especialmente em casos com variação moderada de iluminação. Entretanto, o método continuou apresentando dificuldades quando a tonalidade das colônias era muito próxima à do ágar, pois o cluster correspondente às colônias deixava de ser claramente separável.
 
@@ -342,13 +341,13 @@ Como alternativa aos métodos baseados em limiar, foi aplicado K-Means com `k = 
 
 Após a obtenção das máscaras binárias, foi aplicado o algoritmo Watershed associado à transformada de distância para separar colônias conectadas ou parcialmente sobrepostas. A transformada de distância permitiu localizar possíveis centros das colônias, que foram usados como marcadores para a propagação das regiões. O método funcionou de forma satisfatória em casos de sobreposição parcial, nos quais ainda havia centros distinguíveis. No entanto, quando as colônias estavam completamente fundidas ou apresentavam contornos pouco definidos, o algoritmo não foi capaz de separar corretamente as instâncias, resultando em subcontagem. Essa limitação também foi observada nas anotações do grupo, especialmente para casos de colônias muito próximas ou confluentes. :contentReference[oaicite:1]{index=1}
 
-![Separação com Watershed](assets/experimentos/08_watershed.png)
+![Separação com Watershed](assets/experimentos/11.png)
 
 #### 2.6 Contagem por componentes conectados e filtros geométricos
 
 A etapa de contagem foi realizada a partir da rotulagem de componentes conectados presentes nas máscaras binárias. Cada região branca contígua foi interpretada como uma candidata a colônia. Para reduzir falsos positivos, foram aplicados filtros por área, circularidade e solidez. A circularidade foi usada porque muitas colônias apresentam formato aproximadamente circular, enquanto fragmentos de letras e ruídos tendem a produzir formas alongadas ou irregulares. A solidez ajudou a descartar componentes com contornos muito fragmentados. Essa combinação reduziu falsos positivos, mas a contagem continuou dependente da qualidade da segmentação inicial. Quando a máscara continha colônias unidas, partes de escrita ou regiões mal segmentadas, os filtros geométricos não eram suficientes para corrigir o erro.
 
-![Contagem por componentes conectados](assets/experimentos/09_componentes_conectados.png)
+![Contagem por componentes conectados](assets/experimentos/12.png)
 
 #### Síntese dos problemas observados nos métodos clássicos
 
@@ -358,7 +357,6 @@ A etapa de contagem foi realizada a partir da rotulagem de componentes conectado
 | Otsu | Automatizou a escolha do limiar, mas falhou em várias imagens | Limiar deslocado | Histograma dominado por pixels zerados da máscara e fundo | A separação estatística entre fundo e colônia não ficou bem definida |
 | Limiarização adaptativa | Melhorou alguns casos locais | Resultado inconsistente | Sensibilidade ao tamanho da vizinhança e à iluminação | Detectou ruídos e falhou em regiões com baixo contraste |
 | Subtração de fundo | Realçou colônias em placas com iluminação suave | Erros em colônias grandes e anotações | Escritas, variações fortes de fundo e morfologias diferentes | O método assume que o fundo varia lentamente e que as colônias são pequenas |
-| Top-Hat / Black-Hat | Destacou estruturas pequenas em fundos uniformes | Dependência dos parâmetros | Tamanho do kernel e limiar definidos empiricamente | Colônias com tamanhos variados não são bem representadas por um único elemento estruturante |
 | K-Means | Foi mais estável que limiarização em algumas amostras | Confusão entre colônia e ágar | Tonalidades semelhantes entre classes | Quando as cores se sobrepõem, os clusters deixam de representar objetos reais |
 | Watershed | Separou sobreposições parciais | Não separou colônias fundidas | Ausência de máximos locais bem definidos | Colônias completamente conectadas aparecem como uma única região |
 | Componentes conectados + filtros | Reduziu falsos positivos simples | Não corrigiu erros da segmentação | Máscaras com regiões fundidas, letras ou ruídos | A filtragem geométrica atua depois da segmentação e não recupera objetos perdidos |
