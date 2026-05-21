@@ -9,7 +9,7 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 > Incluir nome RA e foco de especialização de cada membro do grupo. Os projetos devem ser desenvolvidos em duplas ou trios.
 > |Nome  | RA | Curso|
 > |--|--|--|
-> | Nome1  | 123456  | Mestrado em xxxx|
+> | Natália da Silva Guimarães  | 298997  | Mestrado em Engenharia Elétrica|
 > | Nome2  | 123456  | Graduação em xxx|
 > | Nome3  | 123456  | xxxx|
 
@@ -39,15 +39,26 @@ Título da Base | http://base1.org/ | Breve resumo (duas ou três linhas) sobre 
 > Mais informações sobre o workflow podem ser encontradas nos materiais de apoio no Classroom (Reprodutibilidade em pesquisa computacional - workflow).
 
 ## Experimentos e Resultados preliminares
-> Descreva de forma sucinta e organizada os experimentos realizados.
-> Para cada experimento, apresente os principais resultados obtidos.
-> Aponte os problemas encontrados nas soluções testadas até aqui.
+
+No que se refere a implementação para a modelagem 3D, realizamos experimentos de segmentação 3D de tumores cerebrais usando o modelo ACU-Net 3D nos datasets BraTS 2018 e BraTS 2020. O modelo foi treinado com todas as modalidades (FLAIR, T1, T1CE, T2) e 64 fatias de profundidade por paciente. Para validação, utilizamos métricas como Dice, Jaccard, IoU, sensibilidade e especificidade. Observamos que o modelo conseguiu identificar corretamente as regiões maiores de tumor, mas apresentou falsos positivos em regiões menores e discretas, especialmente nos tumores ET e TC. As previsões 3D demonstraram sobreposição razoável com a máscara real, mas ainda há espaço para refinamento da segmentação fina.
 
 ## Próximos passos
-> Liste as próximas etapas planejadas para conclusão do projeto, com uma estimativa de tempo para cada etapa.
+
+Sobre a modelagem em 3D: 
+
+- Ajuste de limiares e pós-processamento para reduzir falsos positivos (estimativa: 1 semana).
+- Treinamento com batch maior ou aumento de épocas, usando toda a base de pacientes para melhorar a precisão global (estimativa: 2 semanas).
+- Validação cruzada para avaliar robustez do modelo entre BraTS 2018 e 2020 (estimativa: 1 semana).
+- Visualização avançada 3D integrando MRI real, tumor real e tumor previsto em uma mesma figura para análise qualitativa (estimativa: 3 dias).
 
 ## Uso de IA Generativa
-> Adicione aqui em quais tarefas foi usada alguma ferramenta de IA Generativa. Para cada tarefa indicada detalhe qual a ferramenta e qual o prompt utilizado.
+Utilizamos ChatGPT para:
+
+- Elaborar explicações e interpretações dos resultados, comparando métricas do modelo com as do artigo original.
+- Criar códigos de visualização 3D avançada, incluindo sobreposição de cérebro, tumor real (azul) e tumor previsto (vermelho), para apresentações e relatórios.
+- Prompt exemplo: “"Crie um modelo de segmentação 3D para tumores cerebrais usando Keras/TensorFlow. O modelo deve ser baseado em U-Net com atenção (ACU-Net), receber 4 modalidades de imagem (FLAIR, T1, T1CE, T2) com tamanho 128x128x64, e gerar 3 classes de saída (WT, TC, ET). Inclua: camadas Conv3D, BatchNormalization, MaxPooling3D, Dropout, Attention, Conv3DTranspose e concatenations necessárias. Mostre o resumo completo do modelo (model.summary())."”
 
 ## Referências
-> Seção obrigatória. Inclua aqui referências utilizadas no projeto.
+- Zhou, Z., Rahman Siddiquee, M. M., Tajbakhsh, N., Liang, J. UNet++: A Nested U-Net Architecture for Medical Image Segmentation. Deep Learning in Medical Image Analysis, 2018.
+- Zhang, Z., Liu, Q., Wang, Y. Road Extraction by Deep Residual U-Net. IEEE Geoscience and Remote Sensing Letters, 2018. (inspiração para skip connections e atenção)
+- O conceito de atenção em redes de segmentação: Oktay, O., Schlemper, J., Folgoc, L. L., et al. Attention U-Net: Learning Where to Look for the Pancreas. arXiv:1804.03999, 2018.
