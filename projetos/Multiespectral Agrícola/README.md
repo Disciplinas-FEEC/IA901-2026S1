@@ -179,22 +179,13 @@ A figura acima foi escolhida devido ao fato de apresentar vegetação e áreas c
 > Aponte os problemas encontrados nas soluções testadas até aqui.
 
 ## Próximos passos
-
-1. <b> Validação do Pipeline de Treinamento (1 semana): </b>
-- Testar o notebook com um subconjunto do dataset para validar o funcionamento do pipeline.
-- Ajustar hiperparâmetros do modelo para otimizar os resultados iniciais. 
-
-2. <b> Geração de Resultados Preliminares (1 semana): </b>
-- Gerar métricas de desempenho (e.g., IoU, precisão, recall) e salvar as máscaras de segmentação geradas.
-
-3. <b> Análise de Resultados (1 semana): </b>
-
-- Comparar os resultados obtidos com os índices NDVI e NDWI.
-
-4. <b> Refinamento do Modelo (2 semanas): </b>
-
-- Implementar melhorias no modelo com base na análise de resultados.
-- Testar diferentes arquiteturas ou técnicas de regularização.
+| Etapa | Atividades Específicas | Duração | Período Estimado |
+| :--- | :--- | :---: | :---: |
+| **1. Validação do Pipeline** | • Testar o notebook com um subconjunto do dataset para validar o funcionamento do pipeline.<br>• Ajustar hiperparâmetros do modelo para otimizar os resultados iniciais. | 1 semana | 25/05 a 31/05 |
+| **2. Resultados Preliminares** | • Treinar o modelo com o conjunto completo de dados.<br>• Gerar métricas de desempenho ($IoU$) e salvar as máscaras de segmentação geradas. | 1 semana | 01/06 a 07/06 |
+| **3. Análise de Resultados** | • Comparar os resultados e métricas obtidos a partir dos subespaços dos índices NDVI e NDWI. | 1 semana | 08/06 a 14/06 |
+| **4. Refinamento (Parte 1)** | • Implementar as primeiras melhorias no modelo com base nas falhas e acertos da análise de resultados. | 1 semana | 15/06 a 21/06 |
+| **5. Refinamento (Parte 2)** | • Implementar melhorias no modelo com base na análise de resultados e testar diferentes variações de arquiteturas ou técnicas de regularização para consolidação dos resultados finais. | 1 semana | 22/06 a 28/06 |
 
 
 ## Uso de IA Generativa
