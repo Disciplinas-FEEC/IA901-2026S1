@@ -1,5 +1,5 @@
-# `<Título em Português do Projeto>`
-# `<Project Title in in English>`
+# `Segmentação Semântica de Imagens Agrícolas com NDVI e NDWI`
+# `Semantic Segmentation of Agricultural Images with NDVI and NDWI`
 
 ## Apresentação
 
