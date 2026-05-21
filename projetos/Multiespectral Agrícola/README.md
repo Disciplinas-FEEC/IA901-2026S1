@@ -143,10 +143,9 @@ As seguintes ferramentas e bibliotecas foram utilizadas para viabilizar o pipeli
 
 
 ## Workflow
-> Use uma ferramenta que permita desenhar o workflow e salvá-lo como uma imagem (Draw.io, por exemplo). Insira a imagem nesta seção.
-> Você pode optar por usar um gerenciador de workflow (Sacred, Pachyderm, etc) e nesse caso use o gerenciador para gerar uma figura para você.
-> Lembre-se que o objetivo de desenhar o workflow é ajudar a quem quiser reproduzir seus experimentos.
-> Mais informações sobre o workflow podem ser encontradas nos materiais de apoio no Classroom (Reprodutibilidade em pesquisa computacional - workflow).
+
+![Diagrama de Workflow do Projeto](assets/Diagrama_Projeto.png)
+
 
 ## Experimentos e Resultados preliminares
 ### Cálculo dos índices NDVI e NDWI
