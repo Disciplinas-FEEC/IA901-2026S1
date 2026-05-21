@@ -179,7 +179,24 @@ A figura acima foi escolhida devido ao fato de apresentar vegetação e áreas c
 > Aponte os problemas encontrados nas soluções testadas até aqui.
 
 ## Próximos passos
-> Liste as próximas etapas planejadas para conclusão do projeto, com uma estimativa de tempo para cada etapa.
+
+1. <b> Validação do Pipeline de Treinamento (1 semana): </b>
+- Testar o notebook com um subconjunto do dataset para validar o funcionamento do pipeline.
+- Ajustar hiperparâmetros do modelo para otimizar os resultados iniciais. 
+
+2. <b> Geração de Resultados Preliminares (1 semana): </b>
+- Treinar o modelo com o conjunto completo de dados.
+- Gerar métricas de desempenho (e.g., IoU, precisão, recall) e salvar as máscaras de segmentação geradas.
+
+3. <b> Análise de Resultados (1 semana): </b>
+
+- Comparar os resultados obtidos com os índices NDVI e NDWI.
+
+4. <b> Refinamento do Modelo (2 semanas): </b>
+
+- Implementar melhorias no modelo com base na análise de resultados.
+- Testar diferentes arquiteturas ou técnicas de regularização.
+
 
 ## Uso de IA Generativa
 ### Auxílio na parte gramatical do datasheet
