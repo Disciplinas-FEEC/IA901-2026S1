@@ -18,7 +18,7 @@ class AgricultureVisionDataModule(pl.LightningDataModule):
         diretorio_dados: str, 
         batch_size: int = 32, 
         isSplitValidationSet: bool = False, 
-        taxForValidationSet: float = 0.5, # Assumindo 0.5 como padrão baseado na sua lógica
+        taxForValidationSet: float = 0.5,
         seed: int = 7
     ):
         super().__init__()
