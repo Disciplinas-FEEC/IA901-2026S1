@@ -310,10 +310,9 @@ class exploratory_data_analysis:
             return pickle.load(f)
 
     @staticmethod
-    def show_samples(split_dataset, num_amostras: int = 3):
+    def show_samples(mode: str, split_dataset, num_amostras: int = 3):
         paths       = split_dataset.paths
         labels_dirs = split_dataset.labels_dirs
-        mode        = split_dataset.caminho_split.name
         is_test     = mode.upper() == "TEST"
         num_cols    = 5 if is_test else 6
 
