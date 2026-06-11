@@ -54,7 +54,7 @@ Note que nem todos os diretórios ou arquivos serão necessários para todos os 
 
 ## `README.md`
 
-Para a entrega E3, o README.md do repositório deve ser formatado [segundo o modelo disponibilizado neste link](https://github.com/Disciplinas-FEEC/ia901-2023S1/blob/main/templates/ia901-E3-template.md).
+Para a entrega E3, o README.md do repositório deve ser formatado [segundo o modelo disponibilizado neste link](https://github.com/Disciplinas-FEEC/ia901-2026S1/blob/main/templates/ia901-E3-template.md).
 
 Caso não tenha experiência com edição em Markdown, vide referência: [Mastering Markdown](https://guides.github.com/features/mastering-markdown/).
 Existem também múltiplas ferramentas para edição de Markdown como, por exemplo, [StackEdit](https://stackedit.io/).
