@@ -44,16 +44,16 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 > Descrição dos resultados mais importantes obtidos.
 > Apresente os resultados da forma mais rica possível, com gráficos e tabelas. Mesmo que o seu código rode online em um notebook, copie para esta parte a figura estática. A referência a código e links para execução online pode ser feita também, mas é preciso apresentar os principais resultados neste documento.
 
-# Discussão
+## Discussão
 > Discussão dos resultados. Relacionar os resultados com as perguntas de pesquisa ou hipóteses avaliadas.
 > A discussão dos resultados também pode ser feita opcionalmente na seção de Resultados, na medida em que os resultados são apresentados. Aspectos importantes a serem discutidos: É possível tirar conclusões dos resultados? Quais? Há indicações de direções para estudo? São necessários trabalhos mais profundos?
 
-# Conclusão
+## Conclusão
 > Destacar as principais conclusões obtidas no desenvolvimento do projeto.
 > Destacar os principais desafios enfrentados.
 > Principais lições aprendidas.
 
-# Trabalhos Futuros
+## Trabalhos Futuros
 > O que poderia ser melhorado se houvesse mais tempo?
 
 ## Uso de IA Generativa
