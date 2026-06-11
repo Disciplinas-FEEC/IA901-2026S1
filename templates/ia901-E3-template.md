@@ -16,7 +16,7 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 
 ## Descrição do Projeto
 > Descrição do objetivo principal do projeto, incluindo contexto gerador, motivação, etc.
-> Qual problema você pretende solucionar?
+> Qual problema o grupo pretendia solucionar?
 > Qual a relevância do problema e o impacto da solução do mesmo?
 
 ## Metodologia
