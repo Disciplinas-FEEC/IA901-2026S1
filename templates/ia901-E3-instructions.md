@@ -13,24 +13,6 @@ De maneira análoga à entrega E2, a atualização do repositório GitHub inclui
 * Após a finalização da edição do conteúdo da segunda entrega, atribuição da tag de release `IA901_E3` no repositório de origem.
 * **Pull request**  do projeto no  **branch  principal** até a data de entrega.
 
-
-## Instruções para a Apresentação
-
-Diretrizes para apresentação (sugestões de tópicos):
-* Deve contextualizar o projeto e apresentar o problema
-* Explicitar qual o objetivo do projeto
-* Abordagem adotada: dados e métodos. Pode ser interessante comentar sobre as principais ferramentas utilizadas (incluir informações úteis para que outros possam utilizá-las)
-* Resultados obtidos
-* Discussão dos resultados
-* Conclusões / Lições aprendidas
-* Trabalhos futuros
-
-DICA: Considerem no máximo 1 slide por minuto. Portanto, uma apresentação de 15 minutos não deve ter mais de 15 slides.
-
-## Avaliação
-
-A avaliação do projeto final será realizada não apenas pelos professores da disciplina, mas também passará por etapa de avaliação por pares. Instruções serão fornecidas posteriormente no ambiente Classroom da Disciplina.
-
 # Estrutura do Repositório
 A fim de uniformizar os repositórios de projetos da disciplina, os diretórios de seu repositório deverão ser nomeados e utilizados segundo a estrutura sugerida a seguir.
 
