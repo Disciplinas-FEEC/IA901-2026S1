@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
+import torch
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -11,21 +12,228 @@ import seaborn as sns
 from PIL import Image
 from tqdm import tqdm
 import yaml
+import matplotlib
+from .constants import CLASSES_DICT, BAND_DICT
 
-_CONFIG_PATH = "../../config.yaml"
+# _CONFIG_PATH = "../config.yaml"
 
 
-def read_parameters_inputted_by_user() -> dict:
-    with open(_CONFIG_PATH, "r") as f:
-        config = yaml.safe_load(f)
-    return config
+def _render_plots_data(secao: str, plots_data: list, sample_id: str = "") -> None:
+    n_cols = len(plots_data)
+    fig, axes = plt.subplots(1, n_cols, figsize=(4 * n_cols, 4), squeeze=False)
+    fig.suptitle(f"[{secao}]  ID: {sample_id}", fontsize=13, fontweight="bold")
+    for col, (titulo, data, cmap, vmin, vmax, has_colorbar) in enumerate(plots_data):
+        ax = axes[0][col]
+        im = ax.imshow(data, cmap=cmap, vmin=vmin, vmax=vmax)
+        ax.set_title(titulo, fontsize=10)
+        ax.set(xticks=[], yticks=[])
+        for spine in ax.spines.values():
+            spine.set(edgecolor="black", linewidth=0.8)
+        if has_colorbar:
+            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+    plt.tight_layout()
+    plt.show()
+
+
+def _build_rgb(image_np: np.ndarray, input_channels: str) -> np.ndarray:
+    idx = {c: i for i, c in enumerate(input_channels)}
+    H, W = image_np.shape[1], image_np.shape[2]
+    rgb = np.stack([
+        image_np[idx[c]].numpy() 
+        if c in idx 
+        else np.zeros((H, W),dtype=np.float32)
+        for c in ('r', 'g', 'b')
+    ], axis=-1)
+    return rgb
+
+
+def printInput(image: torch.Tensor, input_channels: str, mask: torch.Tensor, id: str) -> None:
+    idx   = {c: i for i, c in enumerate(input_channels)}
+    rgb   = _build_rgb(image, input_channels)
+
+    H, W = image.shape[1], image.shape[2]
+
+    facecolor = 'black'
+    # Linha 0: RGB composto + canais R, G, B com Reds/Greens/Blues, inválidos em preto
+    row0 = [("RGB", rgb, None, None, None, False, facecolor)]
+    for letra in ('r', 'g', 'b'):
+        if letra in idx:
+            canal = image[idx[letra]].numpy().copy()
+            canal[(mask.numpy() == 0)] = np.nan
+            row0.append((BAND_DICT[letra]['name'], canal,
+                        BAND_DICT[letra]['cmap'],
+                        BAND_DICT[letra]['vmin'],
+                        BAND_DICT[letra]['vmax'],
+                        BAND_DICT[letra]['colorbar'],
+                        facecolor))
+
+    # Linha 1: NIR, NDVI, NDWI
+    row1 = []
+    for letra in ('n', 'v', 'w'):
+        if letra in idx:
+            canal = image[idx[letra]].numpy().copy()
+            if letra in ('v', 'w'):
+                canal[(mask.numpy() == 0)] = np.nan
+            row1.append((BAND_DICT[letra]['name'],
+                         canal,
+                         BAND_DICT[letra]['cmap'],
+                         BAND_DICT[letra]['vmin'],
+                         BAND_DICT[letra]['vmax'],
+                         BAND_DICT[letra]['colorbar'],
+                         facecolor))
+
+
+    n_cols = max(len(row0), len(row1))
+    n_rows = 2 if row1 else 1
+
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(4 * n_cols, 4 * n_rows), squeeze=False)
+    fig.suptitle(f"[INPUT]  ID: {id}", fontsize=13, fontweight="bold")
+
+    for row_idx, plots_data in enumerate([row0, row1] if row1 else [row0]):
+        for col in range(n_cols):
+            ax = axes[row_idx][col]
+            if col < len(plots_data):
+                panel = plots_data[col]
+                title, img, cmap, vmin, vmax, has_colorbar = panel[:6]
+                facecolor = panel[6] if len(panel) > 6 else 'white'
+                ax.set_facecolor(panel[6])
+                im = ax.imshow(img, cmap=cmap, vmin=vmin, vmax=vmax)
+                ax.set_title(title, fontsize=10)
+                ax.set(xticks=[], yticks=[])
+                for spine in ax.spines.values():
+                    spine.set(edgecolor="black", linewidth=0.8)
+                if has_colorbar:
+                    fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+            else:
+                ax.axis("off")
+
+    plt.tight_layout()
+    plt.show()
+
+
+def printOutput(image: torch.Tensor,
+                input_channels: str,
+                classes2eval: list,
+                labels: torch.Tensor,
+                mask: torch.Tensor,
+                id: str) -> None:
+
+    labels_np = labels.numpy()
+    idx_band = {c: i for i, c in enumerate(input_channels)}
+
+    K, H, W = labels_np.shape
+    rgb   = _build_rgb(image, input_channels)
+    ALPHA = 0.5
+
+    class_masks = []
+    for k, class_name in enumerate(classes2eval):
+        class_color = np.array(CLASSES_DICT.get(class_name)['color'], dtype=np.float32)
+        mascara     = labels_np[k] > 0
+        if mascara.sum() == 0:
+            continue
+        class_masks.append((class_name, class_color, mascara))
+
+    def _masks_overlay_img(base):
+        img = base.copy()
+        for _, class_color, mascara in class_masks:
+            img[mascara] = (1 - ALPHA) * base[mascara] + ALPHA * class_color
+        return img
+
+    # Faz a representação visual de um único valor escalar por pixel.
+    def _to_rgb(canal, cmap_name, vmin, vmax, apply_roi=False):
+        arr = canal.copy().astype(np.float32)
+        if apply_roi:
+            arr[mask.numpy() == 0] = np.nan
+        colored = plt.get_cmap(cmap_name)(plt.Normalize(vmin=vmin, vmax=vmax)(arr))[:, :, :3].astype(np.float32)
+        # if apply_roi and roi is not None:
+        #     colored[~roi] = 0.0
+        return colored
+
+    overlays = [("RGB + Labels", _masks_overlay_img(rgb), None, None, None, False)]
+    for letra, label in [('n', 'NIR'), ('v', 'NDVI'), ('w', 'NDWI')]:
+        if letra in idx_band:
+            base_rgb = _to_rgb(image[idx_band[letra]].numpy(),
+                               BAND_DICT[letra]['cmap'],
+                               BAND_DICT[letra]['vmin'],
+                               BAND_DICT[letra]['vmax'],
+                                apply_roi=(letra in ('v', 'w')))
+            overlays.append((f"{label} + Labels", _masks_overlay_img(base_rgb), None, None, None, False))
+
+    panels = []
+    for class_name, class_color, mascara in class_masks:
+        rgba = np.ones((H, W, 4), dtype=np.float32)
+        rgba[mascara, :3] = class_color
+        panels.append((class_name, rgba, None, None, None, False))
+
+    _render_plots_data("OUTPUT — Overlays", overlays, id)
+    _render_plots_data("OUTPUT — Classes",  panels,   id)
+
+
+def printContext(mask: torch.Tensor,
+                 boundary: torch.Tensor,
+                 image:torch.Tensor,
+                 input_channels: str,
+                 id: str) -> None:
+    mask_np = mask.numpy()
+    boundary_np = boundary.numpy()
+    rgb = _build_rgb(image, input_channels)
+
+    plot_data = []
+    plot_data.append(("Mask", mask_np, "gray", 0, 1, False))
+    plot_data.append(("Boundary", boundary_np, "gray", 0, 1, False))
+    roi     = np.expand_dims((mask_np > 0) & (boundary_np > 0), axis=-1)
+    rgb_roi = np.where(roi, rgb, 0).astype(np.float32)
+    plot_data.append(("ROI (RGB)", rgb_roi, None, None, None, False))
+
+    _render_plots_data("Region of Interest (ROI)", plot_data, id)
+
+
+def printSample(sample: dict) -> None:
+    printInput(sample)
+    printOutput(sample)
+    printContext(sample)
+
+
+def printSampleById(path: str) -> None:
+    path = Path(path)
+    img = Image.open(path)
+    plt.imshow(img)
+    plt.title(path.stem, fontsize=11)
+    plt.axis("off")
+    plt.tight_layout()
+    plt.show()
+
+
+def printColorPalette() -> None:
+    ID_TO_CLASS = {info['id']: name for name, info in CLASSES_DICT.items()}
+    items = sorted(CLASSES_DICT.values(), key=lambda x: x['id'])
+    n = len(items)
+
+    fig, axes = plt.subplots(1, n, figsize=(n * 1.4, 1.8))
+    for item, ax in zip(items, axes):
+        ax.set_facecolor(item['color'])
+        ax.set_xticks([])
+        ax.set_yticks([])
+        ax.set_xlabel(f"{item['id']}\n{ID_TO_CLASS[item['id']]}", fontsize=7, labelpad=4)
+        for spine in ax.spines.values():
+            spine.set(edgecolor="black", linewidth=0.5)
+
+    plt.suptitle("Paleta de cores das classes", fontsize=11, fontweight="bold")
+    plt.tight_layout()
+    plt.show()
+
+
+# def read_parameters_inputted_by_user() -> dict:
+#     with open(_CONFIG_PATH, "r") as f:
+#         config = yaml.safe_load(f)
+#     return config
 
 
 class exploratory_data_analysis:
 
     @staticmethod
     def get_stats_from_splits(train_dataset, val_dataset, test_dataset):
-        CACHE_DIR = Path("../../data/cache")
+        CACHE_DIR = Path("../data/cache")
         CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
         cache_train = CACHE_DIR / "metricas_train.pkl"

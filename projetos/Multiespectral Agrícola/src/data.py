@@ -2,6 +2,7 @@ import random
 from collections import defaultdict
 from pathlib import Path
 
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -11,23 +12,28 @@ from torch.utils.data import Dataset
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
 
+from .constants import CLASSES_DICT
 
 class AgricultureVisionDataModule(pl.LightningDataModule):
     def __init__(
         self, 
-        diretorio_dados: str, 
-        batch_size: int = 32, 
-        isSplitValidationSet: bool = False, 
-        taxForValidationSet: float = 0.5,
-        seed: int = 7
+        dataset_dir: str,
+        input_channels: str,
+        classes2eval: list[str],
+        batch_size: int, 
+        isSplitValidationSet: bool, 
+        taxForValidationSet: float,
+        seed: int
     ):
         super().__init__()
         # Salvamos os parâmetros no estado da classe
-        self.diretorio_dados = Path(diretorio_dados)
+        self.dataset_dir = Path(dataset_dir)
         self.batch_size = batch_size
         self.isSplitValidationSet = isSplitValidationSet
         self.taxForValidationSet = taxForValidationSet
         self.seed = seed
+        self.input_channels = input_channels
+        self.classes2eval = classes2eval
 
         # Datasets inicializados como None (serão preenchidos no setup)
         self.train_dataset = None
@@ -40,10 +46,10 @@ class AgricultureVisionDataModule(pl.LightningDataModule):
         É aqui que os dados devem ser carregados e instanciados.
         """
         # 1. Prepara o conjunto de TREINO
-        caminho_rgb_train = self.diretorio_dados / "train" / "images" / "rgb"
+        caminho_rgb_train = self.dataset_dir / "train" / "images" / "rgb"
         ids_train = [arquivo.stem for arquivo in caminho_rgb_train.glob('*.*')]
-        caminho_train = self.diretorio_dados / "train"
-        self.train_dataset = AgricultureVisionDataset(caminho_train, ids_train)
+        caminho_train = self.dataset_dir / "train"
+        self.train_dataset = AgricultureVisionDataset(caminho_split=caminho_train, lista_ids=ids_train, classes2eval = self.classes2eval, input_channels=self.input_channels)
 
         # 2. Prepara os conjuntos de VALIDAÇÃO e TESTE usando o método privado
         self.val_dataset, self.test_dataset = self._create_val_n_test_set()
@@ -55,19 +61,19 @@ class AgricultureVisionDataModule(pl.LightningDataModule):
         """
         if not self.isSplitValidationSet:
             # Caso 1: As pastas 'val' e 'test' já contêm as imagens separadas
-            caminho_rgb_val = self.diretorio_dados / "val" / "images" / "rgb"
-            caminho_rgb_test = self.diretorio_dados / "test" / "images" / "rgb"
+            caminho_rgb_val = self.dataset_dir / "val" / "images" / "rgb"
+            caminho_rgb_test = self.dataset_dir / "test" / "images" / "rgb"
             
             ids_val = [arquivo.stem for arquivo in caminho_rgb_val.glob('*.*')]
             ids_test = [arquivo.stem for arquivo in caminho_rgb_test.glob('*.*')]
-            caminho_val = self.diretorio_dados / "val"
-            caminho_test = self.diretorio_dados / "test"
-            val_dataset = AgricultureVisionDataset(caminho_val, ids_val)
-            test_dataset = AgricultureVisionDataset(caminho_test, ids_test)
+            caminho_val = self.dataset_dir / "val"
+            caminho_test = self.dataset_dir / "test"
+            val_dataset = AgricultureVisionDataset(caminho_split=caminho_val, lista_ids=ids_val, classes2eval = self.classes2eval, input_channels=self.input_channels)
+            test_dataset = AgricultureVisionDataset(caminho_split=caminho_test, lista_ids=ids_test, classes2eval = self.classes2eval, input_channels=self.input_channels)
                 
         else:
             # Caso 2: Separa dinamicamente a pasta 'val' por propriedades (farmlands)
-            caminho_val = self.diretorio_dados / "val" / "images" / "rgb" 
+            caminho_val = self.dataset_dir / "val" / "images" / "rgb" 
             grupos_propriedades = defaultdict(list)
             
             for arquivo in caminho_val.glob('*.*'):
@@ -90,9 +96,9 @@ class AgricultureVisionDataModule(pl.LightningDataModule):
             for prop in files_in_test:
                 ids_test.extend(grupos_propriedades[prop])
                 
-            caminho_val = self.diretorio_dados / "val"
-            val_dataset = AgricultureVisionDataset(caminho_val, ids_val)
-            test_dataset = AgricultureVisionDataset(caminho_val, ids_test)
+            caminho_val = self.dataset_dir / "val"
+            val_dataset = AgricultureVisionDataset(caminho_split=caminho_val, lista_ids=ids_val, classes2eval = self.classes2eval, input_channels=self.input_channels)
+            test_dataset = AgricultureVisionDataset(caminho_split=caminho_val, lista_ids=ids_test, classes2eval = self.classes2eval, input_channels=self.input_channels)
             
         return val_dataset, test_dataset
 
@@ -119,17 +125,77 @@ class AgricultureVisionDataModule(pl.LightningDataModule):
         )
 
 class AgricultureVisionDataset(Dataset):
+    BAND_MAP = {
+        'r': ('rgb', 0),
+        'g': ('rgb', 1),
+        'b': ('rgb', 2),
+        'n': ('nir', 0),
+    }
+
+    def _ndvi(arquivos):
+        nir = arquivos['nir'][..., 0].astype(np.float32)
+        r   = arquivos['rgb'][..., 0].astype(np.float32)
+        return (nir - r) / (nir + r + 1e-8)
+
+    def _ndwi(arquivos):
+        g   = arquivos['rgb'][..., 1].astype(np.float32)
+        nir = arquivos['nir'][..., 0].astype(np.float32)
+        return (g - nir) / (g + nir + 1e-8)
+
+    COMPUTED_BANDS = {
+        'v': (lambda a, fn=_ndvi: fn(a), ['rgb', 'nir']),
+        'w': (lambda a, fn=_ndwi: fn(a), ['rgb', 'nir']),
+    }
+
+    def _getInput(self, id_arquivo):
+        # 1. Descobre quais arquivos carregar (sem duplicatas)
+        fontes = set()
+        input_channels = self.input_channels
+        for letra in input_channels:
+            if letra in self.BAND_MAP:
+                fontes.add(self.BAND_MAP[letra][0])
+            elif letra in self.COMPUTED_BANDS:
+                _, deps = self.COMPUTED_BANDS[letra]
+                fontes.update(deps)
+
+        # 2. Carrega cada arquivo uma única vez
+        arquivos = {}
+        for fonte in fontes:
+            if fonte == 'rgb':
+                img = cv2.imread(str(self.paths['rgb'] / f"{id_arquivo}.jpg"))
+                arquivos['rgb'] = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)   # H x W x 3
+            else:
+                arquivos[fonte] = cv2.imread(
+                    str(self.paths[fonte] / f"{id_arquivo}.jpg"),
+                    cv2.IMREAD_GRAYSCALE
+                )[..., np.newaxis]
+
+        # 3. Monta os canais na ordem pedida
+        canais = []
+        for letra in self.input_channels:
+            if letra in self.BAND_MAP:
+                fonte, idx = self.BAND_MAP[letra]
+                canais.append(arquivos[fonte][..., idx].astype(np.float32) / 255)
+            elif letra in self.COMPUTED_BANDS:
+                fn, _ = self.COMPUTED_BANDS[letra]
+                canal = fn(arquivos)            # já em [-1, 1], não divide por 255
+                canais.append(canal)
+
+        return torch.from_numpy(np.stack(canais, axis=-1)).permute(2, 0, 1)
+
     def __init__(
         self,
         caminho_split: Path,      # Ex: Caminho para a pasta 'train' ou 'val'
         lista_ids: list[str],     # Ex: ['10495_001', '88392_002'] gerados pelo DataModule
-        classes_avaliadas: list[str] = None
+        classes2eval: list[str],
+        input_channels: str  
     ):
         super().__init__()
         # Garante que é um objeto Path
         self.caminho_split = Path(caminho_split) 
         self.lista_ids = lista_ids
-        self.classes_avaliadas = classes_avaliadas or []
+        self.classes2eval = classes2eval
+        self.input_channels = input_channels
         
         # Mapeamento fixo dos diretórios para este conjunto específico de dados
         self.paths = {
@@ -141,29 +207,45 @@ class AgricultureVisionDataset(Dataset):
         
         # Lida com as labels (a pasta test original do dataset não possui labels)
         pasta_labels = self.caminho_split / "labels"
-        if pasta_labels.exists():
-            self.labels_dirs = [d for d in pasta_labels.iterdir() if d.is_dir()]
-        else:
-            self.labels_dirs = []
+        self.labels_dirs = [d for d in pasta_labels.iterdir() if d.is_dir()]
+
+
+    def _getOutput(self, id_arquivo):
+        mask_np     = cv2.imread(str(self.paths["masks"]      / f"{id_arquivo}.png"), cv2.IMREAD_GRAYSCALE)
+        boundary_np = cv2.imread(str(self.paths["boundaries"] / f"{id_arquivo}.png"), cv2.IMREAD_GRAYSCALE)
+
+        mask     = torch.from_numpy((mask_np     > 0).astype(np.float32))
+        boundary = torch.from_numpy((boundary_np > 0).astype(np.float32))
+
+        H, W = mask_np.shape
+        K = len(self.classes2eval)
+        labels_np = np.zeros((K, H, W), dtype=np.float32)
+
+        if self.labels_dirs:
+            dir_map = {d.name: d for d in self.labels_dirs}
+            for k, class_name in enumerate(self.classes2eval):
+                label_path = dir_map[class_name] / f"{id_arquivo}.png"
+                label_mask = cv2.imread(str(label_path), cv2.IMREAD_GRAYSCALE)
+                labels_np[k] = (label_mask > 0).astype(np.float32)
+
+        return {
+            "labels":   torch.from_numpy(labels_np),
+            "mask":     mask,
+            "boundary": boundary,
+        }
 
     def __len__(self):
-        # O tamanho do dataset é simplesmente o tamanho da lista de IDs
         return len(self.lista_ids)
 
     def __getitem__(self, idx):
-        # 1. Pega o ID da imagem atual
         id_arquivo = self.lista_ids[idx]
-        
-        # 2. Monta os caminhos exatos na hora H
-        # Supondo que a extensão seja .jpg (ajuste para .png se necessário)
-        path_rgb = self.paths["rgb"] / f"{id_arquivo}.jpg"
-        path_nir = self.paths["nir"] / f"{id_arquivo}.jpg"
-        
-        # TODO: Implementar a leitura dos arquivos usando cv2 ou PIL
-        # rgb_img = cv2.imread(str(path_rgb))
-        # nir_img = cv2.imread(str(path_nir))
-        
+        output = self._getOutput(id_arquivo)
         return {
-            "id": id_arquivo,
-            "caminho_rgb": str(path_rgb) # Apenas para teste, substitua pela imagem lida
+            "id":             id_arquivo,
+            "input_channels": self.input_channels,
+            "classes2eval":   self.classes2eval,
+            "image":          self._getInput(id_arquivo),
+            "labels":         output["labels"],
+            "mask":           output["mask"],
+            "boundary":       output["boundary"],
         }
