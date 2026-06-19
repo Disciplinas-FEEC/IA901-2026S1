@@ -59,6 +59,10 @@ A principal motivação deste trabalho é verificar a eficácia de modelos de se
 > Abordagem adotada pelo projeto na busca pela resposta às perguntas de pesquisa. Justificar teoricamente, sempre que possível, a metodologia adotada.
 
 ## Bases de Dados
+O dataset utilizado é o Agriculture-Vision 2022, disponível em: [Agriculture-Vision Challenge 2022](https://www.agriculture-vision.com/agriculture-vision-2022/prize-challenge-2022/agriculture-vision-challenge-2022).
+
+A base é composta por imagens aéreas coletadas por câmeras em drones, cobrindo milhares de hectares de lavouras nos Estados Unidos ao longo de diversas safras entre 2017 e 2019. Cada amostragem do dataset apresenta imagens matriciais multiespectrais que contêm 4 canais: RGB e NIR. 
+
 > Elencar as bases de dados utilizadas no projeto.
 
 > Faça uma descrição sobre o que o grupo concluiu sobre esta base. Sugere-se que respondam perguntas ou forneçam informações indicadas a seguir:
