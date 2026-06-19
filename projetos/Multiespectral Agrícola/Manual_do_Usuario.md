@@ -45,13 +45,16 @@ Siga rigorosamente os comandos abaixo no terminal para clonar o repositório e i
 
 ### Passo 1: Clonar o Repositório
 ```bash
-git clone [https://github.com/luisso2/IA901-2026S1.git](https://github.com/luisso2/IA901-2026S1.git)
-cd IA901-2026S1/projetos/Multiespectral Agricola
+git clone https://github.com/luisso2/IA901-2026S1.git
+
+cd IA901-2026S1
+
+cd "projetos/Multiespectral Agrícola"
 ````
 
 # 2. Criar e ativar o ambiente virtual (exemplo em Linux)
 ```bash
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate
 ````
 
