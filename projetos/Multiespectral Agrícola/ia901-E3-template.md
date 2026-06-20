@@ -29,9 +29,9 @@ O método mais difundido para obter informações sobre a vegetação é atravé
   </p>
 </div>
 
-Certas bandas, capturadas em frequências específicas ao longo do espectro eletromagnético, têm a capacidade de revelar informações distintas sobre as plantas. Entre essas bandas, a do infravermelho próximo (NIR) possui grande relevância em tarefas agrícolas, pois consegue destacar de forma eficaz a absorção da clorofila e o conteúdo de água na vegetação. Um índice amplamente utilizado que depende da banda NIR é o NDVI (Normalized Difference Vegetation Index), que fornece uma medida quantitativa do vigor e da densidade da vegetação. Em comparação com dados baseados apenas em RGB, a incorporação dessa informação espectral adicional pode potencializar a discriminação de diferentes objetos e feições dentro das imagens. Isso viabiliza uma identificação e classificação mais precisas das culturas, aprimorando o processo de segmentação de imagens [[3]].
+Certas bandas, capturadas em frequências específicas ao longo do espectro eletromagnético, têm a capacidade de revelar informações distintas sobre as plantas. Entre essas bandas, a do infravermelho próximo (NIR) possui grande relevância em tarefas agrícolas, pois consegue destacar de forma eficaz a absorção da clorofila e o conteúdo de água na vegetação. Um índice amplamente utilizado que depende da banda NIR é o NDVI (*Normalized Difference Vegetation Index*), que fornece uma medida quantitativa do vigor e da densidade da vegetação. Em comparação com dados baseados apenas em RGB, a incorporação dessa informação espectral adicional pode potencializar a discriminação de diferentes objetos e feições dentro das imagens. Isso viabiliza uma identificação e classificação mais precisas das culturas, aprimorando o processo de segmentação de imagens [[3]].
 
-Além disso, o NDWI (Normalized Difference Water Index) tem sido amplamente utilizado em Sensoriamento Remoto (SR) para distinguir corpos d'água de outras superfícies. Este índice baseia-se na observação de que os corpos d'água absorvem a maior parte da banda do NIR, enquanto a vegetação a reflete em sua extensão máxima [[4],[5]]. Na Tabela 1, é possível observar a correlação de diferentes circunstâncias nas lavouras com os índices abordados.
+Além disso, o NDWI (*Normalized Difference Water Index*) tem sido amplamente utilizado em Sensoriamento Remoto (SR) para distinguir corpos d'água de outras superfícies. Este índice baseia-se na observação de que os corpos d'água absorvem a maior parte da banda do NIR, enquanto a vegetação a reflete em sua extensão máxima [[4],[5]]. Na Tabela 1, é possível observar a correlação de diferentes circunstâncias nas lavouras com os índices abordados.
 
 <div align="center">
 
@@ -51,7 +51,7 @@ Além disso, o NDWI (Normalized Difference Water Index) tem sido amplamente util
 <i>Fonte: Adaptado de Sa et al. [[6]].</i>
 </div>
 
-Além disso, Sa et al. [[6]] propuseram o WeedMap, um framework de mapeamento semântico que utiliza imagens multiespectrais para otimizar a detecção de espécies invasoras na agricultura de precisão e seus resultados mostraram que o NDVI contribui significativamente para uma classificação precisa da vegetação. Nesse contexto, Wijitdechakul [[7]] apresentaram um espaço multiespectral semântico para a análise de fazendas o qual consistia de imagens com NDVI, NDWI e SAVI (Soil Adjust Vegetation Index) o qual se mostrou capaz de detectar áreas agrícolas saudáveis e não saudáveis por meio da análise de processamento de imagens multiespectrais. A partir dessas premissas, espera-se que a inclusão dessas informações espectrais resulte em uma maior eficiência na segmentação de bordas e anomalias complexas. Ao fornecer um contraste nítido entre diferentes níveis de vigor vegetativo e corpos d'água, os índices reduzem o ruído de iluminação nas imagens aéreas, permitindo que o modelo delimite com precisão as transições de estresse foliar, como zonas de drydown ou deficiência de nutrientes.
+Além disso, Sa et al. [[6]] propuseram o *WeedMap*, um *framework *de mapeamento semântico que utiliza imagens multiespectrais para otimizar a detecção de espécies invasoras na agricultura de precisão e seus resultados mostraram que o NDVI contribui significativamente para uma classificação precisa da vegetação. Nesse contexto, Wijitdechakul [[7]] apresentaram um espaço multiespectral semântico para a análise de fazendas o qual consistia de imagens com NDVI, NDWI e SAVI (*Soil Adjust Vegetation Index*) o qual se mostrou capaz de detectar áreas agrícolas saudáveis e não saudáveis por meio da análise de processamento de imagens multiespectrais. A partir dessas premissas, espera-se que a inclusão dessas informações espectrais resulte em uma maior eficiência na segmentação de bordas e anomalias complexas. Ao fornecer um contraste nítido entre diferentes níveis de vigor vegetativo e corpos d'água, os índices reduzem o ruído de iluminação nas imagens aéreas, permitindo que o modelo delimite com precisão as transições de estresse foliar, como zonas de drydown ou deficiência de nutrientes.
 
 A principal motivação deste trabalho é verificar a eficácia de modelos de segmentação semântica com a integração dos canais RGB com os índices NDVI e NDWI, haja vista a sua aplicação no monitoramento de lavouras e na identificação de anomalias em imagens aéreas agrícolas. O sistema proposto deve ser capaz de processar dados multiespectrais para delimitar com precisão regiões de estresse vegetativo e corpos d'água superficiais, correlacionando esses índices com as classes de interesse. O resultado esperado do modelo será a geração de máscaras de segmentação semanticamente consistentes, onde os limites geométricos das anomalias sejam preservados de forma estatisticamente e espacialmente coerente com os dados reais de entrada.
 
@@ -61,7 +61,20 @@ A principal motivação deste trabalho é verificar a eficácia de modelos de se
 ## Bases de Dados
 O dataset utilizado é o Agriculture-Vision 2022, disponível em: [Agriculture-Vision Challenge 2022](https://www.agriculture-vision.com/agriculture-vision-2022/prize-challenge-2022/agriculture-vision-challenge-2022).
 
-A base é composta por imagens aéreas coletadas por câmeras em drones, cobrindo milhares de hectares de lavouras nos Estados Unidos ao longo de diversas safras entre 2017 e 2019. Cada amostragem do dataset apresenta imagens matriciais multiespectrais que contêm 4 canais: RGB e NIR. 
+A base é composta por 94.986 imagens aéreas coletadas por drones cobrindo diversos hectares de lavouras nos Estados Unidos ao longo de diversas safras entre 2017 e 2019. Cada amostra do *dataset* consiste de imagens matriciais multiespectrais que contêm 4 canais: RGB e NIR, além disso, cada imagem possui um *boundary map* e uma máscara, onde o *boundary map* indica a região de plantação e a máscara sinaliza os pixels válidos, portanto, regiões que não estão contidas no *boundary map* ou da máscara não são utilizadas.
+
+O *dataset* contém 9 tipos de anotações as quais são armazenadas separadamente através de máscaras binárias permitindo sobreposição: 
+* *Double plant*: quando duas linhas de plantio se cruzam de forma sobreposta, gerando um superadensamento local de plantas;
+* *Drydown*: fase em que a planta perde umidade e começa a secar gradualmente antes da colheita;
+* *Endrow*: extremidades da plantação onde as máquinas agrícolas realizam curvas de manobra;
+* *Nutrient deficiency*: áreas onde a cultura sofre por falta de compostos essenciais resultando em amarelamento das folhas;
+* *Planter skip*: falhas mecânicas na semeadora, deixando áreas vazias sem nenhuma semente ou planta;
+* *Storm damage*: áreas afetadas por eventos climáticos severos;
+* *Water*: acúmulos explícitos de água dentro ou nas margens da plantação, como poças de inundação ou lagos de irrigação;
+* *Waterway*: caminhos para o fluxo e escoamento do excesso de água de chuva no campo;
+* *Weed cluster*: manchas de vegetação invasora que disputam nutrientes com a cultura principal.
+
+Dentre essas 9 classes os criadores da base de dados sugerem não utilizar *storm damage* devido a baixa quantidade de imagens o que seria problemático para o treinamento do modelo.
 
 > Elencar as bases de dados utilizadas no projeto.
 
