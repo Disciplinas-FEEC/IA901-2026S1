@@ -51,7 +51,7 @@ Além disso, o NDWI (*Normalized Difference Water Index*) tem sido amplamente ut
 <i>Fonte: Adaptado de Sa et al. [[6]].</i>
 </div>
 
-Além disso, Sa et al. [[6]] propuseram o *WeedMap*, um *framework *de mapeamento semântico que utiliza imagens multiespectrais para otimizar a detecção de espécies invasoras na agricultura de precisão e seus resultados mostraram que o NDVI contribui significativamente para uma classificação precisa da vegetação. Nesse contexto, Wijitdechakul [[7]] apresentaram um espaço multiespectral semântico para a análise de fazendas o qual consistia de imagens com NDVI, NDWI e SAVI (*Soil Adjust Vegetation Index*) o qual se mostrou capaz de detectar áreas agrícolas saudáveis e não saudáveis por meio da análise de processamento de imagens multiespectrais. A partir dessas premissas, espera-se que a inclusão dessas informações espectrais resulte em uma maior eficiência na segmentação de bordas e anomalias complexas. Ao fornecer um contraste nítido entre diferentes níveis de vigor vegetativo e corpos d'água, os índices reduzem o ruído de iluminação nas imagens aéreas, permitindo que o modelo delimite com precisão as transições de estresse foliar, como zonas de drydown ou deficiência de nutrientes.
+Além disso, Sa et al. [[6]] propuseram o *WeedMap*, um *framework* de mapeamento semântico que utiliza imagens multiespectrais para otimizar a detecção de espécies invasoras na agricultura de precisão e seus resultados mostraram que o NDVI contribui significativamente para uma classificação precisa da vegetação. Nesse contexto, Wijitdechakul [[7]] apresentaram um espaço multiespectral semântico para a análise de fazendas o qual consistia de imagens com NDVI, NDWI e SAVI (*Soil Adjust Vegetation Index*) o qual se mostrou capaz de detectar áreas agrícolas saudáveis e não saudáveis por meio da análise de processamento de imagens multiespectrais. A partir dessas premissas, espera-se que a inclusão dessas informações espectrais resulte em uma maior eficiência na segmentação de bordas e anomalias complexas. Ao fornecer um contraste nítido entre diferentes níveis de vigor vegetativo e corpos d'água, os índices reduzem o ruído de iluminação nas imagens aéreas, permitindo que o modelo delimite com precisão as transições de estresse foliar, como zonas de drydown ou deficiência de nutrientes.
 
 A principal motivação deste trabalho é verificar a eficácia de modelos de segmentação semântica com a integração dos canais RGB com os índices NDVI e NDWI, haja vista a sua aplicação no monitoramento de lavouras e na identificação de anomalias em imagens aéreas agrícolas. O sistema proposto deve ser capaz de processar dados multiespectrais para delimitar com precisão regiões de estresse vegetativo e corpos d'água superficiais, correlacionando esses índices com as classes de interesse. O resultado esperado do modelo será a geração de máscaras de segmentação semanticamente consistentes, onde os limites geométricos das anomalias sejam preservados de forma estatisticamente e espacialmente coerente com os dados reais de entrada.
 
@@ -74,7 +74,36 @@ O *dataset* contém 9 tipos de anotações as quais são armazenadas separadamen
 * *Waterway*: caminhos para o fluxo e escoamento do excesso de água de chuva no campo;
 * *Weed cluster*: manchas de vegetação invasora que disputam nutrientes com a cultura principal.
 
-Dentre essas 9 classes os criadores da base de dados sugerem não utilizar *storm damage* devido a baixa quantidade de imagens o que seria problemático para o treinamento do modelo.
+Dentre essas 9 classes os criadores da base de dados sugerem não utilizar *storm damage* devido a baixa quantidade de imagens o que seria problemático para o treinamento do modelo. Na Figura 2 é possível observar uma amostra da classe *weed cluster* e sua respectiva ROI (*Region of Interest*).
+
+<div align="center">
+  <img src="assets/explain_image.png" alt="Exemplo de amostra do *dataset* " width="600">
+  
+  <p>
+    <b>Figura 2:</b> Exemplo de amostra da classe <i>weed cluster</i>.
+    <br>
+  </p>
+</div>
+
+No nosso trabalho investigamos a influência do NDVI e NDWI para segmentação das imagens, o NDVI é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [[7]], o NDVI é definido pela equação (1).
+
+$$
+\begin{array}{cc}
+NDVI = \dfrac{NIR - RED}{NIR + RED} & \text{(1)}
+\end{array}
+$$
+
+Onde NIR é o valor do pixel infravermelho próximo e RED é o valor do pixel vermelho. É importante ressaltar que o NDVI apresenta valor no intervalo [-1, 1] onde valores maiores que 0 indicam a presença de plantas e valores menores que 0 indicam a ausência. Nesse contexto, para armazenar o NDVI em formato de imagem foi necessário fazer a conversão do intervalo [-1, 1] para [0, 255] e para manter o mesmo tipo de arquivo que as imagens em NIR foi escolhido o formato <i>.jpg</i>.
+
+Ademais, o NDWI pode ser utilizado tanto para analisar o teor de água nas folhas das plantas quanto para delimitar corpos d'água na superfície [[7]], o NDWI pode ser obtido através da equação (2).
+
+$$
+\begin{array}{cc}
+NDWI = \dfrac{GREEN - NIR}{GREEN + IR} & \text{(2)}
+\end{array}
+$$
+
+Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo. Da mesma forma o índice anterior, o NDWI também é mapeado no intervalo [-1, 1] os quais valores maiores que 0 indicam presença de água, enquanto valores menores que 0 geralmente representam solo ou vegetação. Da mesma forma descrita anteriormente, houve a mudança de intervalo para [0, 255] e armazenados no formato <i>.jpg</i>. 
 
 > Elencar as bases de dados utilizadas no projeto.
 
