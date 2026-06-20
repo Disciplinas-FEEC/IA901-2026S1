@@ -37,7 +37,11 @@ Esta pesquisa utiliza o dataset **Agriculture-Vision**. Para reproduzir os exper
 
 * **Link para Download:** [Clique aqui para a página do dataset](https://www.agriculture-vision.com/agriculture-vision-2022/prize-challenge-2022/agriculture-vision-challenge-2022).
 * **Instruções de Download:** Baixe os arquivos correspondentes às imagens e certifique-se de ter no mínimo 21 GB de armazenamento livre.
-* **Formatos esperados:** O pipeline está configurado para ler arquivos no formato `.jpg` / `.png`.
+* O caminho para o dataset deve estar definido no arquivo `config.yaml` na raiz do projeto, seguindo o exemplo:
+
+```yaml
+dataset_path: /caminho/da/base/dos/arquivos/do/dataset
+```
 
 ## 4. Configuração do Ambiente (Instalação)
 
