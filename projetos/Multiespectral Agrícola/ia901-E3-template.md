@@ -77,7 +77,7 @@ O *dataset* contém 9 tipos de anotações as quais são armazenadas separadamen
 Dentre essas 9 classes os criadores da base de dados sugerem não utilizar *storm damage* devido a baixa quantidade de imagens o que seria problemático para o treinamento do modelo. Na Figura 2 é possível observar uma amostra da classe *weed cluster* e sua respectiva ROI (*Region of Interest*).
 
 <div align="center">
-  <img src="assets/explain_image.png" alt="Exemplo de amostra do *dataset* " width="600">
+  <img src="assets/explain_image.png" alt="Exemplo de amostra do *dataset* " width="800">
   
   <p>
     <b>Figura 2:</b> Exemplo de amostra da classe <i>weed cluster</i>.
@@ -106,7 +106,7 @@ $$
 Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo. Da mesma forma o índice anterior, o NDWI também é mapeado no intervalo [-1, 1] os quais valores maiores que 0 indicam presença de água, enquanto valores menores que 0 geralmente representam solo ou vegetação. Portanto, houve a mudança de intervalo para [0, 255] e armazenados no formato <i>.jpg</i>. Na Figura 3 é apresentada a mesma amostra anterior, porém com os dois índices.
 
 <div align="center">
-  <img src="assets/explain_image_dw.png" alt="Exemplo de amostra do *dataset* dw " width="600">
+  <img src="assets/explain_image_dw.png" alt="Exemplo de amostra do *dataset* dw " width="800">
   
   <p>
     <b>Figura 3:</b> Exemplo anterior da classe <i>weed cluster</i> com NDVI e NDWI.
@@ -114,7 +114,18 @@ Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho pr�
   </p>
 </div>
 
+Além disso, a base de dados possui sugestão de divisão entre treinamento/validação/teste, no entanto, como este *dataset* é utilizado em um *challenge* anual as imagens de teste não possui anotações, então, a adaptação adotada foi derivar o *split* de teste a partir do *split* de validação oficial, seguindo a mesma lógica descrita no *paper* original — splitar por fazenda, não por imagem individual. Assim, o *split* de validação oficial foi dividido em *val* (50% das fazendas) e teste (50% das fazendas), essa divisão por *farmland* evita o *data leakeage*. A distribuição das classes no *split* utilizado é observada na Figura 4.
 
+<div align="center">
+  <img src="assets/distribuicao_classes_original.png" alt="CLasses original" width="1000">
+  
+  <p>
+    <b>Figura 4:</b> Distribuição das classes no <i>split</i> utilizado.
+    <br>
+  </p>
+</div>
+
+Observando a Figura 4 é notório o grande desbalanceamento de classes, um dos principais desafios do Agriculture Vision. Enquanto classes como *drydown* e *nutrient_deficiency* apresentam uma frequência expressiva outras categorias sofrem com escassez de dados. Essa diferença na distribuição amostral impõe uma grande dificuldade para que os modelos aprendam os padrões mais raros de forma equilibrada.
 
 > Elencar as bases de dados utilizadas no projeto.
 
