@@ -61,7 +61,7 @@ A principal motivação deste trabalho é verificar a eficácia de modelos de se
 ## Bases de Dados
 O dataset utilizado é o Agriculture-Vision 2022, disponível em: [Agriculture-Vision Challenge 2022](https://www.agriculture-vision.com/agriculture-vision-2022/prize-challenge-2022/agriculture-vision-challenge-2022).
 
-A base é composta por 94.986 imagens aéreas coletadas por drones cobrindo diversos hectares de lavouras nos Estados Unidos ao longo de diversas safras entre 2017 e 2019. Cada amostra do *dataset* consiste de imagens matriciais multiespectrais que contêm 4 canais: RGB e NIR, além disso, cada imagem possui um *boundary map* e uma máscara, onde o *boundary map* indica a região de plantação e a máscara sinaliza os pixels válidos, portanto, regiões que não estão contidas no *boundary map* ou da máscara não são utilizadas.
+A base é composta por 75.278 imagens aéreas coletadas por drones cobrindo diversos hectares de lavouras nos Estados Unidos ao longo de diversas safras entre 2017 e 2019. Cada amostra do *dataset* consiste de imagens matriciais multiespectrais que contêm 4 canais: RGB e NIR, além disso, cada imagem possui um *boundary map* e uma máscara, onde o *boundary map* indica a região de plantação e a máscara sinaliza os pixels válidos, portanto, regiões que não estão contidas no *boundary map* ou da máscara não são utilizadas.
 
 O *dataset* contém 9 tipos de anotações as quais são armazenadas separadamente através de máscaras binárias permitindo sobreposição: 
 * *Double plant*: quando duas linhas de plantio se cruzam de forma sobreposta, gerando um superadensamento local de plantas;
@@ -103,7 +103,18 @@ NDWI = \dfrac{GREEN - NIR}{GREEN + IR} & \text{(2)}
 \end{array}
 $$
 
-Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo. Da mesma forma o índice anterior, o NDWI também é mapeado no intervalo [-1, 1] os quais valores maiores que 0 indicam presença de água, enquanto valores menores que 0 geralmente representam solo ou vegetação. Da mesma forma descrita anteriormente, houve a mudança de intervalo para [0, 255] e armazenados no formato <i>.jpg</i>. 
+Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo. Da mesma forma o índice anterior, o NDWI também é mapeado no intervalo [-1, 1] os quais valores maiores que 0 indicam presença de água, enquanto valores menores que 0 geralmente representam solo ou vegetação. Portanto, houve a mudança de intervalo para [0, 255] e armazenados no formato <i>.jpg</i>. Na Figura 3 é apresentada a mesma amostra anterior, porém com os dois índices.
+
+<div align="center">
+  <img src="assets/explain_image_dw.png" alt="Exemplo de amostra do *dataset* dw " width="600">
+  
+  <p>
+    <b>Figura 3:</b> Exemplo anterior da classe <i>weed cluster</i> com NDVI e NDWI.
+    <br>
+  </p>
+</div>
+
+
 
 > Elencar as bases de dados utilizadas no projeto.
 
