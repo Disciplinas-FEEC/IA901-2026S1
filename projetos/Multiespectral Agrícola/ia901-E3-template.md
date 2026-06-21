@@ -77,7 +77,7 @@ O *dataset* contém 9 tipos de anotações as quais são armazenadas separadamen
 Dentre essas 9 classes os criadores da base de dados sugerem não utilizar *storm damage* devido a baixa quantidade de imagens o que seria problemático para o treinamento do modelo. Na Figura 2 é possível observar uma amostra da classe *weed cluster* e sua respectiva ROI (*Region of Interest*).
 
 <div align="center">
-  <img src="assets/explain_image.png" alt="Exemplo de amostra do *dataset* " width="800">
+  <img src="assets/explain_image.png" alt="Exemplo de amostra do *dataset* " width="1000">
   
   <p>
     <b>Figura 2:</b> Exemplo de amostra da classe <i>weed cluster</i>.
@@ -106,7 +106,7 @@ $$
 Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo. Da mesma forma o índice anterior, o NDWI também é mapeado no intervalo [-1, 1] os quais valores maiores que 0 indicam presença de água, enquanto valores menores que 0 geralmente representam solo ou vegetação. Portanto, houve a mudança de intervalo para [0, 255] e armazenados no formato <i>.jpg</i>. Na Figura 3 é apresentada a mesma amostra anterior, porém com os dois índices.
 
 <div align="center">
-  <img src="assets/explain_image_dw.png" alt="Exemplo de amostra do *dataset* dw " width="800">
+  <img src="assets/explain_image_dw.png" alt="Exemplo de amostra do *dataset* dw " width="1000">
   
   <p>
     <b>Figura 3:</b> Exemplo anterior da classe <i>weed cluster</i> com NDVI e NDWI.
