@@ -27,7 +27,7 @@ Para mitigar discrepâncias de hardware e software ("*na minha máquina funciona
 * **Memória RAM:** Mínimo de 16 GB (devido ao volume de dados carregado em memória durante o processamento).
 * **Armazenamento:** ~26GB 
     - 150 MB (AWS CLI para download do dataset)
-    - 21 GB (dataset)
+    - 41 GB (download dataset + processo de descompactação)
     - 5.1 GB (ambiente)
 * **Aceleração por Hardware (Opcional):** GPU compatível com CUDA (ex: NVIDIA GTX 1660 / RTX 2060 ou superior) se pretender acelerar o treino/inferência de modelos pesados. Caso contrário, o código correrá em CPU por omissão.
 
@@ -41,12 +41,14 @@ Esta pesquisa utiliza o dataset **Agriculture-Vision**. Para reproduzir os exper
 
 * **Link para Download:** [Clique aqui para a página do dataset](https://www.agriculture-vision.com/agriculture-vision-2022/prize-challenge-2022/agriculture-vision-challenge-2022).
 * **Instruções de Download:**
-    - Certifique-se de ter no mínimo 21 GB de armazenamento livre para o dataset.
+    - Para um processo automatizado, siga os passos descritos na seção 4 (Configuração do Ambiente).
+    - Certifique-se de ter no mínimo 21 GB de armazenamento livre para o dataset e o dobro para o processo de descompactação.
     - O caminho para o dataset deve estar definido no arquivo `config.yaml` na raiz do projeto, seguindo o exemplo:
 
 ```yaml
 dataset_path: /caminho/da/base/dos/arquivos/do/dataset
 ```
+
 
 ## 4. Configuração do Ambiente (Instalação)
 
@@ -61,7 +63,24 @@ cd IA901-2026S1
 cd "projetos/Multiespectral Agrícola"
 ```
 
-# 2. Criar e ativar o ambiente virtual (exemplo em Linux)
+### Passo 2: Prepare Dataset (opcional)
+
+O processo de download e descompactação do dataset pode ser facilitado pelo script `src/scripts/load_dataset.sh`, que identifica se o dataset já existe, realiza o download e descompacta o arquivo apagando ao final, esse processo exige a instalação do `awscli` antes.
+
+1 - Abra o terminal na pasta do projeto "Multiespectral Agrícola".
+
+2 - Dê permissão de execução ao script:
+
+```bash
+chmod +x src/scripts/load_dataset.sh
+```
+3 - Execute o script:
+```bash
+./src/scripts/load_dataset.sh
+```
+
+
+# Passo 3: Criar e ativar o ambiente virtual (exemplo em Linux)
 Esse passo é simplificado com o uso de uv
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
