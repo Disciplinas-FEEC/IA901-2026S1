@@ -3,19 +3,19 @@ import random
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
+import cv2
 import numpy as np
 import torch
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import seaborn as sns
+from matplotlib.patches import Patch
 from PIL import Image
 from tqdm import tqdm
 import yaml
 import matplotlib
 from .constants import CLASSES_DICT, BAND_DICT
-
-# _CONFIG_PATH = "../config.yaml"
 
 
 def _render_plots_data(secao: str, plots_data: list, sample_id: str = "") -> None:
@@ -202,6 +202,392 @@ def printSampleById(path: str) -> None:
     plt.axis("off")
     plt.tight_layout()
     plt.show()
+
+
+def _limpa_mascara(mask, kernel, min_area):
+    """Abertura + fechamento morfológico e remoção de blobs pequenos."""
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,  kernel)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    n_comp, labels, stats, _ = cv2.connectedComponentsWithStats(mask, connectivity=8)
+    for i in range(1, n_comp):
+        if stats[i, cv2.CC_STAT_AREA] < min_area:
+            mask[labels == i] = 0
+    return mask
+
+
+def _desenha_contornos(base_uint8, mascaras_por_classe, roi, clean,
+                       min_area=50, kernel_size=5):
+    """
+    Desenha, sobre uma cópia de base_uint8, o contorno de cada (nome, cor, mask).
+    'clean=True' aplica limpeza morfológica (uso para predições).
+    Retorna (overlay, lista de classes desenhadas).
+    """
+    overlay = base_uint8.copy()
+    kernel  = np.ones((kernel_size, kernel_size), np.uint8)
+    desenhadas = []
+    for class_name, color, mask in mascaras_por_classe:
+        m = mask.astype(np.uint8)
+        if roi is not None:
+            m = m & roi
+        if m.sum() == 0:
+            continue
+        if clean:
+            m = _limpa_mascara(m, kernel, min_area)
+            if m.sum() == 0:
+                continue
+        contours, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cor = tuple(int(c * 255) for c in color)             # RGB 0-255
+        cv2.drawContours(overlay, contours, -1, cor, 2)
+        desenhadas.append((class_name, color))
+    return overlay, desenhadas
+
+
+def _overlay_mascaras(base_uint8, mascaras_por_classe, roi, clean,
+                      min_area=50, kernel_size=5, alpha=0.5):
+    """
+    Pinta cada (nome, cor, mask) como overlay translúcido (preenchido) sobre uma
+    cópia de base_uint8. 'clean=True' aplica limpeza morfológica (uso p/ predições).
+    Retorna (overlay uint8, lista de classes desenhadas).
+    """
+    overlay = base_uint8.astype(np.float32)
+    kernel  = np.ones((kernel_size, kernel_size), np.uint8)
+    desenhadas = []
+    for class_name, color, mask in mascaras_por_classe:
+        m = mask.astype(np.uint8)
+        if roi is not None:
+            m = m & roi
+        if m.sum() == 0:
+            continue
+        if clean:
+            m = _limpa_mascara(m, kernel, min_area)
+            if m.sum() == 0:
+                continue
+        cor = np.array([c * 255 for c in color], dtype=np.float32)   # RGB 0-255
+        sel = m.astype(bool)
+        overlay[sel] = (1 - alpha) * overlay[sel] + alpha * cor
+        desenhadas.append((class_name, color))
+    return overlay.astype(np.uint8), desenhadas
+
+
+def _infer_probs(modelo, image, device):
+    """Forward de inferência -> probabilidades (K, H, W)."""
+    modelo.eval()
+    if device is None:
+        device = next(modelo.parameters()).device
+    logits = modelo(image.unsqueeze(0).to(device))           # (1, K, H, W)
+    return torch.sigmoid(logits)[0].cpu().numpy()            # (K, H, W)
+
+
+@torch.no_grad()
+def predict_and_show(modelo, sample: dict, threshold: float = 0.5,
+                     min_area: int = 50, kernel_size: int = 5, device=None) -> None:
+    """
+    Roda a inferência e desenha os contornos das classes previstas sobre o RGB,
+    no estilo das figuras do paper (com limpeza morfológica para dar o aspecto maciço).
+    """
+    probs = _infer_probs(modelo, sample["image"], device)
+    rgb   = np.clip(_build_rgb(sample["image"], sample["input_channels"]), 0, 1)
+    base  = (rgb * 255).astype(np.uint8)
+
+    roi = None
+    if sample.get("mask") is not None and sample.get("boundary") is not None:
+        roi = ((sample["mask"].numpy() > 0) & (sample["boundary"].numpy() > 0)).astype(np.uint8)
+
+    masks = [(n, CLASSES_DICT[n]['color'], probs[k] > threshold)
+             for k, n in enumerate(sample["classes2eval"]) if n in CLASSES_DICT]
+    overlay, desenhadas = _desenha_contornos(base, masks, roi, clean=True,
+                                             min_area=min_area, kernel_size=kernel_size)
+
+    fig, ax = plt.subplots(figsize=(8, 8))
+    ax.imshow(overlay)
+    ax.set_title(f"[PREDIÇÃO]  ID: {sample.get('id', '')}", fontsize=12, fontweight="bold")
+    ax.axis("off")
+    if desenhadas:
+        ax.legend(handles=[Patch(edgecolor=cor, facecolor="none", label=nome)
+                           for nome, cor in desenhadas],
+                  loc="upper right", fontsize=9, framealpha=0.8)
+    plt.tight_layout()
+    plt.show()
+
+
+@torch.no_grad()
+def compare_prediction(modelo, sample: dict, threshold: float = 0.5,
+                       min_area: int = 50, kernel_size: int = 5, device=None) -> None:
+    """
+    Compara Ground-Truth vs Predição lado a lado, mais um mapa de erros:
+      [1] RGB + contornos do ground-truth
+      [2] RGB + contornos da predição (limpa)
+      [3] Mapa de erros COERENTE com a ModifiedMIoU (src/metrics.py): a predição é
+          única por pixel (argmax acima do threshold, senão background) e "acerto"
+          significa que a classe predita está entre as labels do pixel (x ∈ Y).
+          verde=acerto de classe; azul=FN (era anomalia e o modelo não acertou a
+          classe — previu fundo ou a classe errada); vermelho=FP (previu anomalia
+          sobre fundo limpo); preto=fundo correto (TN)/fora do ROI.
+    Também imprime o IoU por classe desta amostra.
+    """
+    image        = sample["image"]
+    classes2eval = sample["classes2eval"]
+
+    probs  = _infer_probs(modelo, image, device)             # (K, H, W) previsto
+    labels = sample["labels"].numpy()                        # (K, H, W) GT binário
+    rgb    = np.clip(_build_rgb(image, sample["input_channels"]), 0, 1)
+    base   = (rgb * 255).astype(np.uint8)
+
+    roi = None
+    if sample.get("mask") is not None and sample.get("boundary") is not None:
+        roi = ((sample["mask"].numpy() > 0) & (sample["boundary"].numpy() > 0)).astype(np.uint8)
+
+    # Predição ÚNICA por pixel, igual à ModifiedMIoU (src/metrics.py): a classe de
+    # maior probabilidade acima do threshold, ou background (índice K) se nenhuma passa.
+    K = labels.shape[0]
+    x = np.where(probs.max(0) > threshold, probs.argmax(0), K)   # (H, W); K = background
+
+    # Overlay translúcido: GT (sem limpeza) e Predição (com limpeza). A predição usa
+    # a classe vencedora por pixel (x == k), batendo com a métrica — não o multilabel cru.
+    gt_masks   = [(n, CLASSES_DICT[n]['color'], labels[k] > 0)
+                  for k, n in enumerate(classes2eval) if n in CLASSES_DICT]
+    pred_masks = [(n, CLASSES_DICT[n]['color'], x == k)
+                  for k, n in enumerate(classes2eval) if n in CLASSES_DICT]
+    ov_gt,   des_gt   = _overlay_mascaras(base, gt_masks,   roi, clean=False)
+    ov_pred, des_pred = _overlay_mascaras(base, pred_masks, roi, clean=True,
+                                          min_area=min_area, kernel_size=kernel_size)
+
+    # Mapa de erros coerente com a ModifiedMIoU: "acerto" = a classe predita por
+    # pixel (x) está entre as labels verdadeiras do pixel (x ∈ Y, Y inclui background).
+    bg_label = labels.sum(0) == 0                                   # pixel sem anomalia
+    L        = np.concatenate([labels > 0, bg_label[None]], axis=0)  # (K+1, H, W) = Y
+    correct  = np.take_along_axis(L, x[None], axis=0)[0]            # x ∈ Y ?
+
+    x_is_anom   = x != K
+    gt_has_anom = ~bg_label
+    err = np.zeros((*x.shape, 3), dtype=np.uint8)                    # default preto (TN)
+    err[x_is_anom & correct]      = (0, 200, 0)    # acerto de classe (verde)
+    err[gt_has_anom & ~correct]   = (0, 0, 255)    # FN: era anomalia e o modelo não acertou
+                                                   #     a classe (previu fundo ou classe errada)
+    err[~gt_has_anom & x_is_anom] = (255, 0, 0)    # FP: previu anomalia sobre fundo limpo
+    if roi is not None:
+        err[roi == 0] = 0                                      # fora do ROI -> preto
+
+    # IoU por classe desta amostra (dentro do ROI).
+    print(f"IoU por classe — ID {sample.get('id', '')}:")
+    ious = []
+    for k, n in enumerate(classes2eval):
+        p = probs[k] > threshold
+        g = labels[k] > 0
+        if roi is not None:
+            p = p & (roi > 0)
+            g = g & (roi > 0)
+        inter = np.logical_and(p, g).sum()
+        union = np.logical_or(p, g).sum()
+        if union == 0:
+            continue
+        iou = inter / union
+        ious.append(iou)
+        print(f"  {n:20s} IoU = {iou:.3f}")
+    if ious:
+        print(f"  {'mIoU (classes presentes)':20s} = {np.mean(ious):.3f}")
+
+    # ROI da amostra (mask & boundary): RGB recortado, preto fora do ROI.
+    roi_vis = base.copy()
+    if roi is not None:
+        roi_vis[roi == 0] = 0
+
+    # Plot
+    paineis = [
+        ("Ground-Truth", ov_gt,   des_gt),
+        ("Predição",     ov_pred, des_pred),
+        ("Mapa de erros", err,    None),
+        ("ROI (mask & boundary)", roi_vis, None),
+    ]
+    fig, axes = plt.subplots(1, 4, figsize=(24, 6))
+    fig.suptitle(f"[GT vs PREDIÇÃO]  ID: {sample.get('id', '')}", fontsize=13, fontweight="bold")
+    for ax, (titulo, img, desenhadas) in zip(axes, paineis):
+        ax.imshow(img)
+        ax.set_title(titulo, fontsize=11)
+        ax.axis("off")
+        if desenhadas:
+            ax.legend(handles=[Patch(facecolor=cor, edgecolor="black", label=nome)
+                               for nome, cor in desenhadas],
+                      loc="upper right", fontsize=8, framealpha=0.8)
+    # Legenda do mapa de erros
+    axes[2].legend(handles=[
+        Patch(facecolor=(0, 200/255, 0), label="Acerto de classe (TP)"),
+        Patch(facecolor=(0, 0, 1),       label="FN: anomalia não acertada (fundo ou classe errada)"),
+        Patch(facecolor=(1, 0, 0),       label="FP: anomalia prevista sobre fundo"),
+        Patch(facecolor=(0, 0, 0), edgecolor="gray",
+              label="Fundo correto (TN) / fora do ROI"),
+    ], loc="upper right", fontsize=8, framealpha=0.8)
+    plt.tight_layout()
+    plt.show()
+
+
+@torch.no_grad()
+def test_model(weights_path,
+               sample_id: str = None,
+               *,
+               datamodule,
+               mode: str = "compare",
+               threshold: float = 0.5,
+               device=None,
+               seed: int = None) -> dict:
+    """
+    Carrega um checkpoint treinado e gera a predição de uma amostra do split de TEST.
+
+    - weights_path: caminho do .pth (ex.: '../experiments/checkpoints/rgb/best.pth').
+                    Aceita tanto o state_dict puro (best.pth/final.pth) quanto o
+                    checkpoint completo (latest.pth, que tem a chave 'model').
+    - sample_id:    ID da amostra (ex.: '10495_001'). Se None, sorteia uma
+                    amostra aleatória do split de test.
+    - datamodule:   AgricultureVisionDataModule já com setup() feito. A config do
+                    modelo (canais e classes) é lida dele para casar com o treino.
+    - mode:         'compare' -> compare_prediction (GT vs predição + mapa de
+                    erros + IoU); 'predict' -> predict_and_show (só a predição).
+    - threshold / device: repassados para a inferência.
+    - seed:         semente do sorteio aleatório (reprodutibilidade).
+
+    Retorna a amostra (dict) usada na predição.
+    """
+    from .constants import IMAGENET_MEAN, IMAGENET_STD
+    from .model import FPN_ResNet50_Segmentation
+
+    if device is None:
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    else:
+        device = torch.device(device)
+
+    input_channels = datamodule.input_channels
+    classes2eval   = datamodule.classes2eval
+
+    # 1. Reconstrói o modelo com a MESMA config do treino e carrega os pesos.
+    ch_mean = [IMAGENET_MEAN.get(c, 0.0) for c in input_channels]
+    ch_std  = [IMAGENET_STD.get(c, 1.0)  for c in input_channels]
+    modelo = FPN_ResNet50_Segmentation(
+        num_classes=len(classes2eval),
+        input_mean=ch_mean, input_std=ch_std,
+        input_channels=input_channels,
+    ).to(device)
+
+    estado = torch.load(str(weights_path), map_location=device)
+    if isinstance(estado, dict) and "model" in estado:
+        estado = estado["model"]            # checkpoint completo (latest.pth)
+    modelo.load_state_dict(estado)
+    modelo.eval()
+
+    dataset = datamodule.test_dataset
+
+    # 2. Seleciona a amostra: por ID ou aleatória (toda amostra tem anomalia).
+    if sample_id is not None:
+        sample = dataset[dataset.lista_ids.index(sample_id)]
+    else:
+        sample = dataset[random.Random(seed).randrange(len(dataset))]
+
+    # 3. Gera a visualização.
+    if mode == "compare":
+        compare_prediction(modelo, sample, threshold=threshold, device=device)
+    elif mode == "predict":
+        predict_and_show(modelo, sample, threshold=threshold, device=device)
+
+    return
+
+
+def evaluate_model(weights_path,
+                   *,
+                   datamodule,
+                   device=None,
+                   save_path=None,
+                   usar_cache: bool = False,
+                   mostrar: bool = True) -> tuple:
+    """
+    Carrega um checkpoint treinado e avalia a mIoU modificada sobre o split de
+    TESTE inteiro. Irmão do test_model (que só visualiza uma amostra). Exclusivo
+    do teste — treino e validação são avaliados pelo main.py durante o treino.
+
+    - weights_path: caminho do .pth. Aceita o state_dict puro (best.pth/final.pth)
+                    ou o checkpoint completo (latest.pth, com a chave 'model').
+    - datamodule:   AgricultureVisionDataModule já com setup() feito. A config do
+                    modelo (canais e classes) é lida dele para casar com o treino.
+    - device:       destino dos tensores; cuda:0 se disponível.
+    - save_path:    se fornecido, grava o resultado em JSON (mIoU + IoU por classe
+                    + o checkpoint avaliado).
+    - usar_cache:   se True e save_path já existir, LÊ o JSON e retorna sem
+                    recomputar. Padrão False (sempre reavalia, evitando devolver
+                    um resultado velho de outro checkpoint sem querer).
+    - mostrar:      se True, imprime a mIoU e o IoU por classe.
+
+    Retorna (mIoU: float, iou_por_classe: dict {nome: IoU}), background no fim.
+    """
+    import json
+    from .constants import IMAGENET_MEAN, IMAGENET_STD
+    from .model import FPN_ResNet50_Segmentation
+    from .metrics import ModifiedMIoU
+
+    # Atalho: lê do cache se pedido e o arquivo existir (pula modelo + varredura).
+    if usar_cache and save_path is not None and Path(save_path).exists():
+        with open(save_path) as f:
+            cache = json.load(f)
+        if mostrar:
+            print(f"[TESTE] (cache: {save_path}) mIoU modificada: {cache['mIoU']:.4f}\n")
+            for nome, iou_c in cache["iou_por_classe"].items():
+                print(f"  IoU[{nome:22s}] = {iou_c:.4f}")
+        return cache["mIoU"], cache["iou_por_classe"]
+
+    if device is None:
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    else:
+        device = torch.device(device)
+
+    input_channels = datamodule.input_channels
+    classes2eval   = datamodule.classes2eval
+
+    # 1. Reconstrói o modelo com a MESMA config do treino e carrega os pesos.
+    ch_mean = [IMAGENET_MEAN.get(c, 0.0) for c in input_channels]
+    ch_std  = [IMAGENET_STD.get(c, 1.0)  for c in input_channels]
+    modelo = FPN_ResNet50_Segmentation(
+        num_classes=len(classes2eval),
+        input_mean=ch_mean, input_std=ch_std,
+        input_channels=input_channels,
+    ).to(device)
+
+    estado = torch.load(str(weights_path), map_location=device)
+    if isinstance(estado, dict) and "model" in estado:
+        estado = estado["model"]            # checkpoint completo (latest.pth)
+    modelo.load_state_dict(estado)
+
+    # 2. Varre o teste acumulando só a matriz de confusão da mIoU modificada.
+    #    Sem loss: aqui não há treino, então um criterio seria peso morto.
+    modelo.eval()
+    metric = ModifiedMIoU(len(classes2eval), device=device)
+    with torch.no_grad():
+        for batch in tqdm(datamodule.test_dataloader(),
+                          desc="Avaliando no teste", leave=False):
+            imagens  = batch["image"].to(device)
+            labels   = batch["labels"].to(device)
+            mask     = batch["mask"].to(device)
+            boundary = batch["boundary"].to(device)
+            roi = (mask * boundary).unsqueeze(1)
+            metric.update(modelo(imagens), labels, roi)
+    metric.reduce()                       # no-op fora do DDP
+    miou, iou = metric.compute()
+
+    iou_por_classe = dict(zip(list(classes2eval) + ["background"], iou.tolist()))
+
+    if mostrar:
+        print(f"[TESTE] mIoU modificada: {miou:.4f}\n")
+        for nome, iou_c in iou_por_classe.items():
+            print(f"  IoU[{nome:22s}] = {iou_c:.4f}")
+
+    if save_path is not None:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(save_path, "w") as f:
+            json.dump({
+                "checkpoint":     str(weights_path),
+                "mIoU":           miou,
+                "iou_por_classe": iou_por_classe,
+            }, f, indent=2)
+        print(f"Resultado salvo em {save_path}")
+
+    return miou, iou_por_classe
 
 
 def printColorPalette() -> None:

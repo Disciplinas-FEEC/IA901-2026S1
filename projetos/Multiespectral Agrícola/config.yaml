@@ -3,7 +3,7 @@ dataset_path: /home/visionary/Brendon/LeticiaRittner/Dataset/Agriculture-Vision-
 # todas as combinações possíveis sendo rgbnvw o máximo delas. 
 # A ordem em que as letras estão ordenadas são ordem que as das bandas
 # na entrada do modelo.
-input_channels: 'rgbnvw'
+input_channels: 'rgbnvw' # 'rgb', 'rgbn', 'rgbnvw'
 
 
 classes_to_evaluate:
@@ -15,8 +15,7 @@ classes_to_evaluate:
   - water
   - waterway
   - weed_cluster
-  - storm_damage 
-  # - background
+  # - storm_damage
 
 code_variables:
   isSplitValidationSet: true
@@ -24,6 +23,7 @@ code_variables:
   seed: 7
 
 model_hyperparameters:
-  name: resnet18
+  name: resnet50
   pretrained: true
   batch_size: 20
+  is_weighted_loss: false

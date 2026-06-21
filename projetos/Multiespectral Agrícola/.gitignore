@@ -1,0 +1,49 @@
+# ============================================================
+# Python / ambiente
+# ============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/__pycache__/
+
+# ============================================================
+# Dados (NÃO versionar datasets em Git — usar DVC/armazenamento externo)
+# Mantém só metadados leves (datasheets, READMEs) versionados via exceção.
+# ============================================================
+# data/raw/
+# data/interim/
+# data/processed/
+# data/external/
+# data/cache/
+# # imagens / arrays brutos soltos
+# *.npy
+# *.npz
+# *.tif
+# *.tiff
+
+# ============================================================
+# Experimentos: pesos (checkpoints) + telemetria (tensorboard) -> fora do Git
+# ============================================================
+experiments/
+*.pth
+*.pickle
+
+# ============================================================
+# Logs
+# ============================================================
+logs/
+*.log
+
+
+# ============================================================
+# Exceções: metadados leves que VALE versionar
+# ============================================================
+!data/**/*.md
+!data/**/*.pdf

@@ -17,46 +17,45 @@ CLASSES_DICT = {
     'storm_damage':        {'id': 9, 'color': _colors[9]},
 }
 
-
-# ACHO QUE PATTERN2PRINT PODE EXCLUIR
 BAND_DICT = {
-    'r': {'pattern2print': 'rgb',
-          'id': 0,
+    'r': {'id': 0,
           'name': 'Red', 'cmap': 'Reds',
           'vmin': 0, 'vmax': 1,
           'colorbar': False},
-    'g': {'pattern2print': 'rgb',
-          'id': 1,
+    'g': {'id': 1,
           'name': 'Green', 'cmap': 'Greens',
           'vmin': 0, 'vmax': 1,
           'colorbar': False},
-    'b': {'pattern2print': 'rgb',
-          'id': 2,
+    'b': {'id': 2,
           'name': 'Blue', 'cmap': 'Blues',
           'vmin': 0, 'vmax': 1,
           'colorbar': False},
-    'n': {'pattern2print': 'nir',
-          'id': 0,
+    'n': {'id': 0,
           'name': 'NIR', 'cmap': 'gray',
           'vmin': 0, 'vmax': 1,
           'colorbar': False},
-    'v': {'pattern2print': 'rgb',
-          'id': 0,
+    'v': {'id': 0,
           'name': 'NDVI', 'cmap': 'RdYlGn',
           'vmin': -1, 'vmax': 1,
           'colorbar': True},
-    'w': {'pattern2print': 'nir',
-          'id': 0,
+    'w': {'id': 0,
           'name': 'NDWI', 'cmap': 'RdYlBu',
           'vmin': -1, 'vmax': 1,
           'colorbar': True},
 }
 
-CLASS_MAP    = {name: info['id']          for name, info in CLASSES_DICT.items()}
-CLASS_COLORS = {info['id']: info['color'] for info in CLASSES_DICT.values()}
+# CLASS_MAP    = {name: info['id']          for name, info in CLASSES_DICT.items()}
+# CLASS_COLORS = {info['id']: info['color'] for info in CLASSES_DICT.values()}
 
-# Parâmetros do config.yaml — lidos diretamente para evitar importação circular com utils
-_CONFIG_PATH = Path(__file__).parent.parent / "config.yaml"
+# para normalizar os canais RGB de entrada, utilizaram-se
+# estatísticas do modelo que foi pré-treinado no ImageNet, a ResNet
+# Canais sem estatística (NIR/NDVI/NDWI) ficam sem normalização (mean=0, std=1).
+# https://www.geeksforgeeks.org/python/how-to-normalize-images-in-pytorch/
+IMAGENET_MEAN = {'r': 0.485, 'g': 0.456, 'b': 0.406}
+IMAGENET_STD  = {'r': 0.229, 'g': 0.224, 'b': 0.225}
+
+_PROJECT_ROOT = Path(__file__).parent.parent
+_CONFIG_PATH = _PROJECT_ROOT / "config.yaml"
 with open(_CONFIG_PATH, "r") as _f:
     _config = yaml.safe_load(_f)
 
@@ -64,6 +63,13 @@ DATASET_DIR              = _config['dataset_path']
 INPUT_CHANNELS           = _config['input_channels']
 CLASSES2EVAL             = _config['classes_to_evaluate']
 BATCH_SIZE               = _config['model_hyperparameters']['batch_size']
+IS_WEIGHTED_LOSS         = _config['model_hyperparameters']['is_weighted_loss']
 IS_SPLIT_VALIDATION_SET  = _config['code_variables']['isSplitValidationSet']
 TAX_FOR_VALIDATION_SET   = _config['code_variables']['taxForValidationSet']
 SEED                     = _config['code_variables']['seed']
+
+
+
+CHECKPOINT_DIR = _PROJECT_ROOT / f"experiments/checkpoints/{INPUT_CHANNELS}_v3"
+TENSORBOARD_DIR = _PROJECT_ROOT / f"experiments/tensorboard/{INPUT_CHANNELS}_v3"
+CACHE_DIR = _PROJECT_ROOT / "data/cache"
