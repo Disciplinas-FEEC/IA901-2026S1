@@ -56,12 +56,37 @@ Além disso, Sa et al. [[6]] propuseram o *WeedMap*, um *framework* de mapeament
 A principal motivação deste trabalho é verificar a eficácia de modelos de segmentação semântica com a integração dos canais RGB com os índices NDVI e NDWI, haja vista a sua aplicação no monitoramento de lavouras e na identificação de anomalias em imagens aéreas agrícolas. O sistema proposto deve ser capaz de processar dados multiespectrais para delimitar com precisão regiões de estresse vegetativo e corpos d'água superficiais, correlacionando esses índices com as classes de interesse. O resultado esperado do modelo será a geração de máscaras de segmentação semanticamente consistentes, onde os limites geométricos das anomalias sejam preservados de forma estatisticamente e espacialmente coerente com os dados reais de entrada.
 
 ## Metodologia
+### Cálculo dos índices climáticos
+No nosso trabalho investigamos a influência do NDVI e NDWI para segmentação das imagens, o NDVI é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [[7]], o NDVI é definido pela equação (1).
+
+$$
+\begin{array}{cc}
+NDVI = \dfrac{NIR - RED}{NIR + RED} & \text{(1)}
+\end{array}
+$$
+
+Onde NIR é o valor do pixel infravermelho próximo e RED é o valor do pixel vermelho. É importante ressaltar que o NDVI apresenta valor no intervalo [-1, 1] onde valores maiores que 0 indicam a presença de plantas e valores menores que 0 indicam a ausência. Nesse contexto, para armazenar o NDVI em formato de imagem foi necessário fazer a conversão do intervalo [-1, 1] para [0, 255] e para manter o mesmo tipo de arquivo que as imagens em NIR foi escolhido o formato <i>.jpg</i>.
+
+Ademais, o NDWI pode ser utilizado tanto para analisar o teor de água nas folhas das plantas quanto para delimitar corpos d'água na superfície [[7]], o NDWI pode ser obtido através da equação (2).
+
+$$
+\begin{array}{cc}
+NDWI = \dfrac{GREEN - NIR}{GREEN + IR} & \text{(2)}
+\end{array}
+$$
+
+Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo. Da mesma forma o índice anterior, o NDWI também é mapeado no intervalo [-1, 1] os quais valores maiores que 0 indicam presença de água, enquanto valores menores que 0 geralmente representam solo ou vegetação. Portanto, houve a mudança de intervalo para [0, 255] e armazenados no formato <i>.jpg</i>.
+
 ### Modelo utilizado
 O modelo utilizado neste trabalho é considerado o *baseline* para o Agriculture-Vision e baseia-se em uma arquitetura FPN (*Feature Pyramid Network*). O *encoder* da FPN é uma rede ResNet-50, da qual são mantidos os três primeiros blocos residuais, enquanto o último bloco (layer4) é modificado para um bloco residual dilatado com taxa igual a 4.
 
 No *decoder* da FPN, as conexões laterais são implementadas utilizando duas camadas de convolução 3 × 3 e uma camada 1 × 1. Cada uma das convoluções 3 × 3 é sucedida por uma camada de *bacth normalization* e uma função de ativação *Leaky ReLU* com inclinação negativa de 0,01, enquanto a última camada de convolução 1 × 1 não possui unidades de *bias*. Para os módulos de *upsampling*, é utilizada uma camada de deconvolução com *kernel* = 3, *stride* = 2 e *padding* = 1, seguida por uma camada de *bacth normalization*, ativação *Leaky ReLU* e outra convolução 1 × 1 sem *bias*.
 
 A saída de cada conexão lateral e do respectivo módulo de *upsampling* são somadas, e o resultado é processado por mais duas camadas de convolução 3 × 3 com *bacth normalization* e *Leaky ReLU*. Por fim, as saídas de todos os níveis da pirâmide são redimensionadas para a maior resolução da pirâmide via interpolação bilinear e, em seguida, concatenadas. Esse resultado final é passado por uma camada de convolução 1 × 1 com unidades de *bias* para predizer o mapa semântico definitivo.
+
+ACRESCENTAR A ADAPTAÇÃO DA INTERPOLAÇÃO DA SAÍDA DO MODELO
+
+
 
 > Abordagem adotada pelo projeto na busca pela resposta às perguntas de pesquisa. Justificar teoricamente, sempre que possível, a metodologia adotada.
 
@@ -92,25 +117,7 @@ Dentre essas 9 classes os criadores da base de dados sugerem não utilizar *stor
   </p>
 </div>
 
-No nosso trabalho investigamos a influência do NDVI e NDWI para segmentação das imagens, o NDVI é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [[7]], o NDVI é definido pela equação (1).
-
-$$
-\begin{array}{cc}
-NDVI = \dfrac{NIR - RED}{NIR + RED} & \text{(1)}
-\end{array}
-$$
-
-Onde NIR é o valor do pixel infravermelho próximo e RED é o valor do pixel vermelho. É importante ressaltar que o NDVI apresenta valor no intervalo [-1, 1] onde valores maiores que 0 indicam a presença de plantas e valores menores que 0 indicam a ausência. Nesse contexto, para armazenar o NDVI em formato de imagem foi necessário fazer a conversão do intervalo [-1, 1] para [0, 255] e para manter o mesmo tipo de arquivo que as imagens em NIR foi escolhido o formato <i>.jpg</i>.
-
-Ademais, o NDWI pode ser utilizado tanto para analisar o teor de água nas folhas das plantas quanto para delimitar corpos d'água na superfície [[7]], o NDWI pode ser obtido através da equação (2).
-
-$$
-\begin{array}{cc}
-NDWI = \dfrac{GREEN - NIR}{GREEN + IR} & \text{(2)}
-\end{array}
-$$
-
-Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo. Da mesma forma o índice anterior, o NDWI também é mapeado no intervalo [-1, 1] os quais valores maiores que 0 indicam presença de água, enquanto valores menores que 0 geralmente representam solo ou vegetação. Portanto, houve a mudança de intervalo para [0, 255] e armazenados no formato <i>.jpg</i>. Na Figura 3 é apresentada a mesma amostra anterior, porém com os dois índices.
+Na Figura 3 é apresentada a mesma amostra anterior, porém com os índices NDVI e NDWI.
 
 <div align="center">
   <img src="assets/explain_image_dw.png" alt="Exemplo de amostra do *dataset* dw " width="1000">
@@ -133,6 +140,8 @@ Além disso, a base de dados possui sugestão de divisão entre treinamento/vali
 </div>
 
 Observando a Figura 4 é notório o grande desbalanceamento de classes, um dos principais desafios do Agriculture Vision. Enquanto classes como *drydown* e *nutrient_deficiency* apresentam uma frequência expressiva outras categorias sofrem com escassez de dados. Essa diferença na distribuição amostral impõe uma grande dificuldade para que os modelos aprendam os padrões mais raros de forma equilibrada.
+
+[Link para o datasheet do dataset](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/data/Datasheet___Agriculture_Vision.pdf)
 
 > Elencar as bases de dados utilizadas no projeto.
 
