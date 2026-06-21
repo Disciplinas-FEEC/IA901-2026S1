@@ -20,11 +20,15 @@ Para mitigar discrepâncias de hardware e software ("*na minha máquina funciona
 ### 2.1. Requisitos de Software
 * **Sistema Operacional:** Linux (Ubuntu 22.04 LTS ou superior) ou Windows 11 (via WSL2 recomendado).
 * **Linguagem:** Python 3.10.x (ou superior).
-* **Gestor de Ambientes:** `venv` (nativo do Python) ou `Conda`.
+* **Gestor de Ambientes:** `venv` (nativo do Python), `Conda` ou UV.
 
 ### 2.2. Requisitos de Hardware (Recomendado)
 * **Processador:** Mínimo de 4 cores / 8 threads.
 * **Memória RAM:** Mínimo de 16 GB (devido ao volume de dados carregado em memória durante o processamento).
+* **Armazenamento:** ~26GB 
+    - 150 MB (AWS CLI para download do dataset)
+    - 21 GB (dataset)
+    - 5.1 GB (ambiente)
 * **Aceleração por Hardware (Opcional):** GPU compatível com CUDA (ex: NVIDIA GTX 1660 / RTX 2060 ou superior) se pretender acelerar o treino/inferência de modelos pesados. Caso contrário, o código correrá em CPU por omissão.
 
 ---
@@ -36,8 +40,9 @@ Para mitigar discrepâncias de hardware e software ("*na minha máquina funciona
 Esta pesquisa utiliza o dataset **Agriculture-Vision**. Para reproduzir os experimentos, os dados devem ser obtidos explicitamente a partir da fonte oficial:
 
 * **Link para Download:** [Clique aqui para a página do dataset](https://www.agriculture-vision.com/agriculture-vision-2022/prize-challenge-2022/agriculture-vision-challenge-2022).
-* **Instruções de Download:** Baixe os arquivos correspondentes às imagens e certifique-se de ter no mínimo 21 GB de armazenamento livre.
-* O caminho para o dataset deve estar definido no arquivo `config.yaml` na raiz do projeto, seguindo o exemplo:
+* **Instruções de Download:**
+    - Certifique-se de ter no mínimo 21 GB de armazenamento livre para o dataset.
+    - O caminho para o dataset deve estar definido no arquivo `config.yaml` na raiz do projeto, seguindo o exemplo:
 
 ```yaml
 dataset_path: /caminho/da/base/dos/arquivos/do/dataset
@@ -54,16 +59,12 @@ git clone https://github.com/luisso2/IA901-2026S1.git
 cd IA901-2026S1
 
 cd "projetos/Multiespectral Agrícola"
-````
+```
 
 # 2. Criar e ativar o ambiente virtual (exemplo em Linux)
+Esse passo é simplificado com o uso de uv
 ```bash
-python -m venv venv
-source venv/bin/activate
-````
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# 3. Atualizar o pip e instalar as dependências
-```bash
-pip install --upgrade pip
-pip install -r requirements.txt
-````
+uv sync
+```
