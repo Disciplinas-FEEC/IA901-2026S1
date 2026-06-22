@@ -142,7 +142,7 @@ O workflow do projeto foi organizado para representar as principais etapas neces
 graph TD
 
     OBS1["📂 Origem: <br>/data/raw/*.jpg"] -.-> A
-    OBS2["📂  <br>/data/interim/ *.jpg *.csv"] -.-> NB2
+    OBS2["📂  <br>/data/interim/ *.jpg"] -.-> NB2
     OBS3["📂  <br>/data/processed/ *.jpg"]
 
     A[Entrada:<br>Imagem Original] --> NB1
