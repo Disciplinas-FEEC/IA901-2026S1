@@ -70,6 +70,6 @@ SEED                     = _config['code_variables']['seed']
 
 
 
-CHECKPOINT_DIR = _PROJECT_ROOT / f"experiments/checkpoints/{INPUT_CHANNELS}_v3"
-TENSORBOARD_DIR = _PROJECT_ROOT / f"experiments/tensorboard/{INPUT_CHANNELS}_v3"
+CHECKPOINT_DIR = _PROJECT_ROOT / f"experiments/checkpoints/{INPUT_CHANNELS}"
+TENSORBOARD_DIR = _PROJECT_ROOT / f"experiments/tensorboard/{INPUT_CHANNELS}"
 CACHE_DIR = _PROJECT_ROOT / "data/cache"
