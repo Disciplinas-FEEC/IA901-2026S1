@@ -212,6 +212,8 @@ O objetivo desta etapa é padronizar a entrada visual das imagens do dataset CNP
 * **Fallback robusto:** Quando o círculo não é detectado automaticamente, uma máscara circular central padrão é usada no lugar.
 * **Aplicação da máscara circular:** Raio reduzido a 86% do raio detectado para remover a região externa à placa.
 
+O resultado é salvo em data/processed, preservando o nome original de cada arquivo, para ser consumido diretamente pelo notebook de contagem.
+
 | Etapa | Parâmetro |
 | :--- | :--- |
 | **Largura padronizada** | 800 px |
@@ -219,6 +221,7 @@ O objetivo desta etapa é padronizar a entrada visual das imagens do dataset CNP
 | **HoughCircles** | dp=1.2, minDist=100, param1=50, param2=30, minRadius=200, maxRadius=400 |
 | **Raio da máscara final** | 86% do raio detectado |
 
+-----inserir aqui os 3 prints gerados no notebook (imagem original / máscara HoughCircles / imagem pré-processada--
 
 ### 2. Detecção e contagem de colônias 
 
@@ -234,7 +237,8 @@ Com as imagens pré-processadas, foi implementado o pipeline de contagem baseado
   * Rotulagem dos marcadores e aplicação do Watershed.
 * **Contagem final:** Feita por componentes conectados, com filtro de área mínima (> 8 px) para descartar ruídos residuais, e desenho do contorno de cada colônia detectada na imagem de saída.
 
-> **Exemplo de execução em imagem única (`IMG_0636.jpg`):** 8 colônias contadas.
+> **Exemplo de execução em imagem única (`IMG_0636.jpg`):** 8 colônias contadas .
+> inserir aqui o print com as 3 imagens lado a lado (original / máscara / detecção com contagem)
 
 
 
@@ -281,6 +285,9 @@ As maiores divergências entre os dois contadores humanos se concentraram justam
 Foram gerados dois gráficos de dispersão (índice da imagem × contagem de colônias), conectando os pares de valores comparados por uma linha vertical para facilitar a leitura da magnitude do erro placa a placa:
 * **Staff vs. CVAT:** Evidencia visualmente a divergência entre as duas contagens humanas da mesma placa.
 * **Algoritmo vs. CVAT:** Evidencia visualmente a proximidade (ou distância) entre a predição automática e a recontagem mais cuidadosa.
+
+---------------inserir aqui os 2 gráficos de dispersão gerados no notebook (staff_vs_cvat.png e algoritmo_vs_cvat.png)----------------
+
 
 ### Síntese dos resultados desta etapa
 
