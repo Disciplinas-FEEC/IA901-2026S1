@@ -141,9 +141,9 @@ O workflow do projeto foi organizado para representar as principais etapas neces
 ```mermaid
 graph TD
 
-    OBS1["📂 Origem: <br><code>/data/raw/*.jpg </code>"] -.-> A
-    OBS2["📂  <br><code>/data/interim/ *.jpg *.csv </code>"] -.-> NB2
-    OBS3["📂  <br><code>/data/processed/</code> *.jpg"]
+    OBS1["📂 Origem: <br>/data/raw/*.jpg"] -.-> A
+    OBS2["📂  <br>/data/interim/ *.jpg *.csv"] -.-> NB2
+    OBS3["📂  <br>/data/processed/ *.jpg"]
 
     A[Entrada:<br>Imagem Original] --> NB1
 
@@ -175,19 +175,19 @@ graph TD
     U -.-> OBS3
 
     %% Estilização baseada na paleta de cores da sua referência
-    style OBS1 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3
-    style OBS2 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3
-    style OBS3 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3
-    style A fill:#cee2f3,stroke:#4a90e2,stroke-width:1px
-    style NB1 fill:#e2f0d9,stroke:#70ad47,stroke-width:1px
-    style F fill:#fff2cc,stroke:#ffc000,stroke-width:1px
-    style G fill:#fff,stroke:#7f7f7f,stroke-width:1px
-    style H fill:#fff,stroke:#7f7f7f,stroke-width:1px
-    style NB2 fill:#fce4d6,stroke:#f4b183,stroke-width:1px
-    style M fill:#fff,stroke:#7f7f7f,stroke-width:1px
-    style N fill:#fff,stroke:#7f7f7f,stroke-width:1px
-    style U fill:#f8cbad,stroke:#c65911,stroke-width:2px
-    style TXT1 fill:none,stroke:none,font-style:italic,color:#555
+    style OBS1 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3,color:#1f2937
+    style OBS2 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3,color:#1f2937
+    style OBS3 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3,color:#1f2937
+    style A fill:#cee2f3,stroke:#4a90e2,stroke-width:1px,color:#1f2937
+    style NB1 fill:#e2f0d9,stroke:#70ad47,stroke-width:1px,color:#1f2937
+    style F fill:#fff2cc,stroke:#ffc000,stroke-width:1px,color:#1f2937
+    style G fill:#fff,stroke:#7f7f7f,stroke-width:1px,color:#1f2937
+    style H fill:#fff,stroke:#7f7f7f,stroke-width:1px,color:#1f2937
+    style NB2 fill:#fce4d6,stroke:#f4b183,stroke-width:1px,color:#1f2937
+    style M fill:#fff,stroke:#7f7f7f,stroke-width:1px,color:#1f2937
+    style N fill:#fff,stroke:#7f7f7f,stroke-width:1px,color:#1f2937
+    style U fill:#f8cbad,stroke:#c65911,stroke-width:2px,color:#1f2937
+    style TXT1 fill:#f8fafc,stroke:#cbd5e1,color:#1f2937
 ```
 
 > Arquivos relacionados
