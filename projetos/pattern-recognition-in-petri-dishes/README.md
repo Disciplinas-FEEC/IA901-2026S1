@@ -103,7 +103,7 @@ Colônias que se sobrepõem parcialmente aparecem na máscara binária como um �
 Cada rótulo distinto produzido pelo algoritmo Watershed é interpretado como uma colônia candidata. Em seguida, aplica-se um filtro de área mínima (`área > 8` pixels) para remover pequenos fragmentos residuais, geralmente associados a ruído de textura do ágar ou a imperfeições remanescentes da segmentação. Não foi necessário empregar filtros adicionais baseados em forma, uma vez que as etapas anteriores de realce por Black-Hat e limpeza morfológica já eliminam a maior parte dos artefatos não circulares. Assim, a contagem final de colônias corresponde ao número de componentes rotulados que satisfazem o critério de área mínima:
 
 $$
-N_{\text{colônias}} = \#\{k \geq 1 : A_k > A_{\min}\}
+N_{\text{colônias}} = \sum_{k \geq 1} \mathbf{1}(A_k > A_{\min})
 $$
 
 em que $A_k$ representa a área do componente associado ao rótulo $k$, $A_{\min}$ é a área mínima aceitável e $\#$ denota a quantidade de componentes válidos do conjunto, isto é, o número de componentes que satisfazem o critério de área mínima.
