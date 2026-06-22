@@ -132,19 +132,6 @@ As ferramentas e bibliotecas utilizadas no pipeline atual estão listadas a segu
 - **Matplotlib** — visualização das etapas do pipeline e dos gráficos comparativos staff/cvat/algoritmo
 - **CVAT** — ferramenta utilizada para a recontagem manual mais cuidadosa (`cvat`) usada como referência principal
 
-
-## Ferramentas
-As ferramentas e bibliotecas utilizadas ao longo do projeto estão listadas a seguir:
-
-- **Python 3** — linguagem principal utilizada no desenvolvimento de todos os pipelines
-- **OpenCV** — processamento de imagens, incluindo Transformada de Hough, operações morfológicas, filtros, Watershed e rotulagem de componentes conectados
-- **NumPy / SciPy** — operações matriciais e cálculo da transformada de distância
-- **Pillow / pillow-heif** — leitura e conversão das imagens originais nos formatos HEIC e JPEG para PNG
-- **Matplotlib** — visualização de resultados intermediários e histogramas de intensidade
-- **Ultralytics (YOLOv5 / YOLOv5-seg)** — treinamento, fine-tuning e inferência dos modelos de detecção e segmentação de instâncias
-- **SAM 2.1 (Segment Anything Model — Meta AI)** — geração automática de máscaras de segmentação a partir de bounding boxes para enriquecimento das anotações
-- **CVAT** — ferramenta utilizada para anotação manual das imagens do dataset CNPEM
-
 ## Workflow
 
 O workflow do projeto foi organizado para representar as principais etapas necessárias para reproduzir os experimentos, desde a preparação das bases de dados até a avaliação dos métodos clássicos e baseados em aprendizado profundo.
