@@ -84,9 +84,24 @@ No *decoder* da FPN, as conexões laterais são implementadas utilizando duas ca
 
 A saída de cada conexão lateral e do respectivo módulo de *upsampling* são somadas, e o resultado é processado por mais duas camadas de convolução 3 × 3 com *bacth normalization* e *Leaky ReLU*. Por fim, as saídas de todos os níveis da pirâmide são redimensionadas para a maior resolução da pirâmide via interpolação bilinear e, em seguida, concatenadas. Esse resultado final é passado por uma camada de convolução 1 × 1 com unidades de *bias* para predizer o mapa semântico definitivo.
 
-ACRESCENTAR A ADAPTAÇÃO DA INTERPOLAÇÃO DA SAÍDA DO MODELO
+**ACRESCENTAR A ADAPTAÇÃO DA INTERPOLAÇÃO DA SAÍDA DO MODELO**
 
+### Métodos de avaliação
+A avaliação dos resultados foi realizada de forma quantitativa e qualitativa. A forma quantitativa foi através do mIoU (sigla) e a qualitativa através da visualização das segmentações.
 
+A avaliação do desempenho do modelo foi feita de forma quantitativa e qualitativa. A análise quantitativa baseou-se na métrica *Mean Intersection over Union* ($mIoU$) descrita na equação (3), comumente utilizada para mensurar a acurácia de sobreposição por classe. Além disso, a avaliação qualitativa foi realizada por meio da inspeção visual e comparativa das máscaras de segmentação geradas pelo modelo face ao *ground-truth* das imagens agrícolas. O $mIoU$ calcula a média da razão entre a área de interseção e a área de união entre as predições do modelo e as anotações reais, estendida a todas as 8 classes e o *background*.
+
+$$
+\begin{array}{cc}
+mIoU = \frac{1}{k} \sum_{i=1}^{k} \frac{TP_i}{TP_i + FP_i + FN_i} & \text{(3)}
+\end{array}
+$$
+
+Onde:
+* **$k$**: Número total de classes.
+* **$TP_i$** (*True Positives*): Verdadeiros Positivos da classe $i$.
+* **$FP_i$** (*False Positives*): Falsos Positivos da classe $i$.
+* **$FN_i$** (*False Negatives*): Falsos Negativos da classe $i$.
 
 > Abordagem adotada pelo projeto na busca pela resposta às perguntas de pesquisa. Justificar teoricamente, sempre que possível, a metodologia adotada.
 
@@ -161,6 +176,55 @@ Observando a Figura 4 é notório o grande desbalanceamento de classes, um dos p
 > Lembre-se: o objetivo de desenhar o workflow é ajudar a quem quiser reproduzir seus experimentos!!!
 
 ## Experimentos e Resultados
+Neste trabalho abordamos quatro estratégias para avaliar o impacto dos diversos canais de entradas e do desbalanceamento de classes, para cada abordagem os modelos foram treinados em 25.000 iterações e foi utilizado um *batch* de 40 amostras divididos em duas *GTX Titan Xp* (12 GB), onde os pesos em cada GPU são atualizados a cada 2 *batchs* lidos. Foi utilizado o algoritmo SGD com uma taxa de aprendizado base de 0,01 e *weight decay* de $5 \times 10^{-4}$, porém, ao longo das 25.000 iterações, o treinamento inicia com uma etapa de *warmup* de 1.000 iterações, onde a taxa de aprendizado cresce de forma linear entre 0 e 0.01. Na sequência, mantém-se o treinamento por 7.000 iterações sob uma taxa constante de 0.01. Nas últimas 17.000 iterações, a taxa de aprendizado diminui progressivamente até atingir 0, utilizando a regra polinomial.
+
+### RGB (*Red, Green, Blue*)
+A primeira estratégia foi utilizar como entrada do modelo apenas os canais RGB, pois, é possível é estabelecer um referencial de desempenho baseado unicamente no espectro visível. O objetivo deste experimento é mensurar o quanto a ausência de faixas espectrais infravermelhas prejudica a geração das segmentações e o quanto o modelo se torna vulnerável a ruídos de sombreamento e variações de iluminação natural nas imagens aéreas. A curva de aprendizado pode ser observada na Figura 5.
+
+<div align="center">
+  <img src="assets/loss_rgb.png" alt="Loss RGB" width="900">
+  
+  <p>
+    <b>Figura 5:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RBG.
+    <br>
+  </p>
+</div>
+
+### RGB com Weight Loss (*Red, Green, Blue* + *Weight Loss*)
+
+### RGBN (*Red, Green, Blue, NIR*)
+Nessa abordagem expandiu-se o espaço de entrada para englobar a informações NIR, configurando o arranjo como RGBN. Diferente da abordagem convencional que se limita ao espectro visível, a inclusão desse quarto canal fornece ao modelo dados diretamente correlacionados com as propriedades biofísicas das áreas agrícolas, tais como o vigor da vegetação e o estresse hídrico. Essa configuração serve como um importante ponto de controle experimental para determinar se o modelo consegue gerar melhores segmentações a partir de outro canal com informações mais detalhadas. Na Figura 6 é ilustrado o comportamento da *loss* de treino e validação durante o treinamento.
+
+<div align="center">
+  <img src="assets/loss_rgbn.png" alt="Loss RGBN" width="900">
+  
+  <p>
+    <b>Figura 6:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RGBN.
+    <br>
+  </p>
+</div>
+
+### RGBNVW (*Red, Green, Blue, NIR, NDVI, NDWI*)
+
+<div align="center">
+  <img src="assets/loss_rgbnvw.png" alt="Loss RGBNVW" width="900">
+  
+  <p>
+    <b>Figura 7:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RGBNVW.
+    <br>
+  </p>
+</div>
+
+### Resultados
+
+| | mIoU (%) | Background | Double plant | Drydown | Endrow | Nutrient deficiency | Planter skip | Water | Waterway | Weed cluster |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| RGB | 0,3693 | 0,7189 | 0,2289 | 0,5057 | 0,0942 | 0,2803 | **0,3006** | 0,7028 | 0,2288 | 0,263 |
+| RGB + Weighted Loss | 0,3706 | 0,7196 | 0,2211 | 0,5081 | 0,0962 | 0,2783 | 0,2861 | 0,713 | 0,237 | **0,2763** |
+| RGBN | 0,3756 | 0,7291 | 0,2024 | 0,4996 | **0,1133** | 0,3554 | 0,276 | 0,7068 | 0,2564 | 0,2418 |
+| RGBNVW | **0,3836** | **0,7326** | **0,2308** | **0,5215** | 0,1033 | **0,3512** | 0,2709 | **0,7194** | **0,2757** | 0,247 |
+
+
 > Descrição dos resultados mais importantes obtidos.
 > Apresente os resultados da forma mais rica possível, com gráficos e tabelas. Mesmo que o seu código rode online em um notebook, copie para esta parte a figura estática. A referência a código e links para execução online pode ser feita também, mas é preciso apresentar os principais resultados neste documento.
 
