@@ -1,6 +1,9 @@
+import os
+import re
+from pathlib import Path
+
 import matplotlib
 import yaml
-from pathlib import Path
 
 _colors = list(matplotlib.colormaps['tab10'].colors)  # 10 cores RGB floats
 
@@ -56,8 +59,52 @@ IMAGENET_STD  = {'r': 0.229, 'g': 0.224, 'b': 0.225}
 
 _PROJECT_ROOT = Path(__file__).parent.parent
 _CONFIG_PATH = _PROJECT_ROOT / "config.yaml"
+
+
+def _load_dotenv(dotenv_path: Path) -> dict[str, str]:
+      env_vars: dict[str, str] = {}
+      if not dotenv_path.exists():
+            return env_vars
+
+      for raw_line in dotenv_path.read_text().splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                  continue
+
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key:
+                  env_vars[key] = value
+
+      return env_vars
+
+
+def _expand_env_placeholder(value: str, env_vars: dict[str, str]) -> str:
+      pattern = re.compile(r"\$\{([^}:]+)(?::-([^}]*))?\}")
+
+      def replace(match: re.Match[str]) -> str:
+            var_name = match.group(1)
+            default_value = match.group(2) or ""
+            return env_vars.get(var_name, default_value)
+
+      return pattern.sub(replace, value)
+
+
+def _resolve_dataset_path(raw_path: str) -> str:
+      env_vars = _load_dotenv(_PROJECT_ROOT / ".env")
+      merged_env = {**env_vars, **os.environ}
+      expanded_path = _expand_env_placeholder(raw_path, merged_env)
+      path = Path(expanded_path)
+      if not path.is_absolute():
+            path = (_PROJECT_ROOT / path).resolve()
+      return str(path)
+
+
 with open(_CONFIG_PATH, "r") as _f:
     _config = yaml.safe_load(_f)
+
+_config['dataset_path'] = _resolve_dataset_path(_config['dataset_path'])
 
 DATASET_DIR              = _config['dataset_path']
 INPUT_CHANNELS           = _config['input_channels']

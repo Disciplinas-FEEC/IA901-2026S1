@@ -43,11 +43,14 @@ Esta pesquisa utiliza o dataset **Agriculture-Vision**. Para reproduzir os exper
 * **Instruções de Download:**
     - Para um processo automatizado, siga os passos descritos na seção 4 (Configuração do Ambiente).
     - Certifique-se de ter no mínimo 21 GB de armazenamento livre para o dataset e o dobro para o processo de descompactação.
-    - O caminho para o dataset deve estar definido no arquivo `config.yaml` na raiz do projeto, seguindo o exemplo:
+    - O script de download gera automaticamente um arquivo `.env` na raiz do projeto com a variável `DATASET_PATH`, usada pelo `config.yaml`.
+    - Se preferir configurar manualmente, o caminho para o dataset pode ser definido no arquivo `.env`, seguindo o exemplo:
 
-```yaml
-dataset_path: /caminho/da/base/dos/arquivos/do/dataset
+```env
+DATASET_PATH=/caminho/da/base/dos/arquivos/do/dataset
 ```
+
+O `config.yaml` já é preparado para usar essa variável automaticamente.
 
 
 ## 4. Configuração do Ambiente (Instalação)
@@ -78,6 +81,8 @@ chmod +x src/scripts/load_dataset.sh
 ```bash
 ./src/scripts/load_dataset.sh
 ```
+
+Ao final, o script irá gerar o arquivo `.env` na raiz do projeto apontando para o diretório descompactado do dataset.
 
 
 # Passo 3: Criar e ativar o ambiente virtual (exemplo em Linux)
