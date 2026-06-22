@@ -77,7 +77,7 @@ Multiespectral Agrícola/
 │
 ├── notebooks/
 │   ├── exploratory-data-analysis_eda.ipynb   # análise exploratória (EDA)
-│   ├── model-dev.ipynb                        # inspeção visual + mIoU no teste
+│   ├── model_eval.ipynb                        # inspeção visual + mIoU no teste
 │   └── NDVI and NDWI generation/
 │       └── nvdi_ndwi.ipynb                     # geração standalone das imagens NDVI/NDWI
 │
@@ -240,7 +240,7 @@ Há dois caminhos típicos, dependendo do seu objetivo:
 
 **A) Só quero ver os resultados / avaliar um modelo já treinado** → vá direto para a
 [seção 9](#9-avaliação-e-visualização-das-predições) (baixe os checkpoints prontos e abra o
-`model-dev.ipynb`).
+`model_eval.ipynb`).
 
 **B) Quero rodar o pipeline completo do zero** → siga nesta ordem:
 
@@ -318,7 +318,7 @@ Os logs ficam separados em `train/` e `val/` dentro de
 
 ## 9. Avaliação e visualização das predições
 
-Use o notebook [notebooks/model-dev.ipynb](notebooks/model-dev.ipynb). Ele faz duas coisas:
+Use o notebook [notebooks/model_eval.ipynb](notebooks/model_eval.ipynb). Ele faz duas coisas:
 
 * **Avaliação qualitativa** — `test_model(...)` desenha a predição sobre o RGB (ground truth
   vs. predição + mapa de erros) para uma amostra específica ou aleatória do dataset de **teste**.
@@ -348,7 +348,7 @@ e coloque em `experiments/` no projeto.
 | Logs do TensorBoard | `experiments/tensorboard/<canais>/` | treino |
 | `pos_weight.json` (pesos da loss) | `data/cache/` | treino, quando `is_weighted_loss: true` |
 | Métricas da EDA em cache | `data/cache/metricas_*.pkl` | notebook de EDA |
-| JSON da mIoU de teste | onde você indicar em `save_path` | `evaluate_model` no `model-dev.ipynb` |
+| JSON da mIoU de teste | onde você indicar em `save_path` | `evaluate_model` no `model_eval.ipynb` |
 
 ---
 

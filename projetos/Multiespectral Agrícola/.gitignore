@@ -1,2 +1,4 @@
 /data/dataset
 .env
+experiments/checkpoints/
+/data/dataset
