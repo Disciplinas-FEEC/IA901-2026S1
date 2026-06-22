@@ -174,12 +174,6 @@ graph TD
     N --> U([Contagem Final dos<br>Marcadores Segmentados])
     U -.-> OBS3
 
-    click OBS1 "./data/raw" "Abrir pasta raw"
-    click OBS2 "./data/interim" "Abrir pasta interim"
-    click NB1 "./notebooks/1_preprocessamento_imagens.ipynb" "Abrir Notebook 1"
-    click NB2 "./notebooks/2_pipeline_contagem_colonias_cnpem.ipynb" "Abrir Notebook 2"
-    click OBS3 "./data/processed" "Abrir pasta processed"
-
     %% Estilização baseada na paleta de cores da sua referência
     style OBS1 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3
     style OBS2 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3
@@ -195,6 +189,14 @@ graph TD
     style U fill:#f8cbad,stroke:#c65911,stroke-width:2px
     style TXT1 fill:none,stroke:none,font-style:italic,color:#555
 ```
+
+> Arquivos relacionados
+
+- 📓 [Notebook 1](./notebooks/1_preprocessamento_imagens.ipynb)
+- 📓 [Notebook 2](./notebooks/2_pipeline_contagem_colonias_cnpem.ipynb)
+- 📂 [Dados brutos](./data/raw)
+- 📂 [Dados intermediários](./data/interim)
+- 📂 [Dados processados](./data/processed)
 
 ## Experimentos e Resultados preliminares
 Os experimentos foram organizados em dois notebooks: pré-processamento das imagens e detecção e contagem de colônias com avaliação quantitativa.
