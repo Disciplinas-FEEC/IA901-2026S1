@@ -136,7 +136,65 @@ As ferramentas e bibliotecas utilizadas no pipeline atual estão listadas a segu
 
 O workflow do projeto foi organizado para representar as principais etapas necessárias para reproduzir os experimentos, desde a preparação das bases de dados até a avaliação dos métodos clássicos e baseados em aprendizado profundo.
 
-![Workflow do projeto](assets/workflow.png)
+<!-- ![Workflow do projeto](assets/workflow.png) -->
+
+```mermaid
+graph TD
+
+    OBS1["📂 Origem: <br><code>/data/raw/*.jpg </code>"] -.-> A
+    OBS2["📂  <br><code>/data/interim/ *.jpg *.csv </code>"] -.-> NB2
+    OBS3["📂  <br><code>/data/processed/</code> *.jpg"]
+
+    A[Entrada:<br>Imagem Original] --> NB1
+
+    %% Primeiro Bloco (Notebook 1) como uma macro-etapa unificada
+    NB1["<b>1_preprocessamento_imagens.ipynb</b><br>• Resize (800px)<br>• Escala de cinza (PCA)<br>• Transformada de Hough"] 
+    
+    %% Decisão da Placa
+    NB1 --> F{Placa<br>Detectada?}
+
+    A ~~~ TXT1["📌 Determinação da<br>Região de Interesse (ROI)"]
+    
+    %% Ramificações paralelas
+    F -- Sim --> G[Máscara Automatizada]
+    F -- Não --> H[Máscara Central 0.4 da imagem]
+    
+    %% Convergência para o Segundo Bloco (Notebook 2)
+    G --> OBS2
+    H --> OBS2
+
+
+
+    %% Segundo Bloco como macro-etapa de Processamento Morfológico
+    NB2["<b>2_pipeline_contagem_colonias_cnpem.ipynb</b><br>• Blackhat Morfológico<br>• Limiarização<br>• Transformada de distância"]
+
+    %% Etapas Finais de Segmentação e Contagem
+    NB2 --> M[Connected components ]
+    M --> N[Watershed]
+    N --> U([Contagem Final dos<br>Marcadores Segmentados])
+    U -.-> OBS3
+
+    click OBS1 "./data/raw" "Abrir pasta raw"
+    click OBS2 "./data/interim" "Abrir pasta interim"
+    click NB1 "./notebooks/1_preprocessamento_imagens.ipynb" "Abrir Notebook 1"
+    click NB2 "./notebooks/2_pipeline_contagem_colonias_cnpem.ipynb" "Abrir Notebook 2"
+    click OBS3 "./data/processed" "Abrir pasta processed"
+
+    %% Estilização baseada na paleta de cores da sua referência
+    style OBS1 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3
+    style OBS2 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3
+    style OBS3 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3
+    style A fill:#cee2f3,stroke:#4a90e2,stroke-width:1px
+    style NB1 fill:#e2f0d9,stroke:#70ad47,stroke-width:1px
+    style F fill:#fff2cc,stroke:#ffc000,stroke-width:1px
+    style G fill:#fff,stroke:#7f7f7f,stroke-width:1px
+    style H fill:#fff,stroke:#7f7f7f,stroke-width:1px
+    style NB2 fill:#fce4d6,stroke:#f4b183,stroke-width:1px
+    style M fill:#fff,stroke:#7f7f7f,stroke-width:1px
+    style N fill:#fff,stroke:#7f7f7f,stroke-width:1px
+    style U fill:#f8cbad,stroke:#c65911,stroke-width:2px
+    style TXT1 fill:none,stroke:none,font-style:italic,color:#555
+```
 
 ## Experimentos e Resultados preliminares
 Os experimentos foram organizados em dois notebooks: pré-processamento das imagens e detecção e contagem de colônias com avaliação quantitativa.
