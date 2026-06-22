@@ -221,7 +221,7 @@ O resultado é salvo em data/processed, preservando o nome original de cada arqu
 | **HoughCircles** | dp=1.2, minDist=100, param1=50, param2=30, minRadius=200, maxRadius=400 |
 | **Raio da máscara final** | 86% do raio detectado |
 
------inserir aqui os 3 prints gerados no notebook (imagem original / máscara HoughCircles / imagem pré-processada--
+![Detecção da placa por Hough Circles](assets/experimentos/04_preprocesamiento.png)
 
 ### 2. Detecção e contagem de colônias 
 
