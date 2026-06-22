@@ -6,6 +6,7 @@ SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 PROJECT_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)"
 DATASET_DIR="$PROJECT_ROOT/data/dataset"
 S3_SOURCE="s3://intelinair-data-releases/agriculture-vision/cvpr_challenge_2021/supervised"
+DOTENV_FILE="$PROJECT_ROOT/.env"
 
 echo "Verificando pasta do dataset em: $DATASET_DIR"
 
@@ -97,5 +98,17 @@ while IFS= read -r tar_file; do
 		exit 1
 	fi
 done < "$tar_list_file"
+
+DATASET_PATH_VALUE="$SUPERVISED_DIR/Agriculture-Vision-2021"
+
+if [ -d "$DATASET_PATH_VALUE" ]; then
+	printf 'DATASET_PATH=%s\n' "$DATASET_PATH_VALUE" > "$DOTENV_FILE"
+	echo "Arquivo .env gerado em: $DOTENV_FILE"
+	echo "DATASET_PATH configurado para: $DATASET_PATH_VALUE"
+else
+	echo "Aviso: diretório esperado não encontrado após descompactação: $DATASET_PATH_VALUE"
+	echo "Arquivo .env não foi gerado."
+	exit 1
+fi
 
 echo "Processo finalizado."

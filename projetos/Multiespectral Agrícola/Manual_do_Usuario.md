@@ -56,6 +56,7 @@ mIoU, medindo o impacto dos canais NIR (n), NDVI (v) + NDWI (w).
 
 ## 2. Estrutura do repositório
 
+<<<<<<< HEAD
 ```
 Multiespectral Agrícola/
 ├── config.yaml                  # ⚙️  ÚNICO arquivo que você edita para configurar tudo
@@ -154,6 +155,7 @@ chmod +x src/scripts/load_dataset.sh
 ./src/scripts/load_dataset.sh
 ```
 
+<<<<<<< HEAD
 O script baixa para `data/dataset/` e descompacta em `data/dataset/supervised/`. Ele pede
 confirmação antes de descompactar (mostrando o espaço necessário). Ao final, você terá a
 estrutura esperada do dataset:
@@ -267,6 +269,10 @@ O treino é feito por [src/main.py](src/main.py), que **só roda via `torchrun`*
 as variáveis de ambiente do DDP, como `LOCAL_RANK`).
 
 **Com 2 GPUs** (configuração original):
+=======
+Ao final, o script irá gerar o arquivo `.env` na raiz do projeto apontando para o diretório descompactado do dataset.
+
+>>>>>>> 762e79244d7d8a614872c4122df924c018eec5fd
 
 ```bash
 uv run torchrun --nproc_per_node=2 --standalone src/main.py
