@@ -198,7 +198,7 @@ graph TD
 - 📂 [Dados intermediários](./data/interim)
 - 📂 [Dados processados](./data/processed)
 
-## Experimentos e Resultados preliminares
+## Experimentos e Resultados 
 Nesta etapa do projeto, o pipeline foi consolidado em dois notebooks principais: um notebook de pré-processamento das imagens (`1_preprocessamento_imagens.ipynb`) e um notebook de detecção e contagem de colônias (`2_pipeline_contagem_colonias_cnpem.ipynb`). Juntos, eles implementam um pipeline clássico de visão computacional, desde a padronização das imagens até a avaliação quantitativa do algoritmo contra duas contagens humanas independentes.
 
 ### 1. Pré-processamento das imagens 
@@ -290,7 +290,7 @@ Foram gerados dois gráficos de dispersão (índice da imagem × contagem de col
   ![algoritmo_vs_cvat](assets/experimentos/03_comparacao_algoritmovsCVAT.png)
 
 
-### Síntese dos resultados desta etapa
+### Síntese dos resultados 
 
 | Notebook | O que faz | Resultado obtido |
 | :--- | :--- | :--- |
