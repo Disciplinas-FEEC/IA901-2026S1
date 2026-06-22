@@ -4,7 +4,7 @@ dataset_path: '/home/visionary/Brendon/LeticiaRittner/Dataset/Agriculture-Vision
 # todas as combinações possíveis sendo rgbnvw o máximo delas. 
 # A ordem em que as letras estão ordenadas são ordem que as das bandas
 # na entrada do modelo.
-input_channels: 'rgbnvw' # 'rgb', 'rgbn', 'rgbnvw'
+input_channels: 'rgbn' # 'rgb', 'rgbn', 'rgbnvw'
 
 
 classes_to_evaluate:
@@ -27,4 +27,4 @@ model_hyperparameters:
   name: resnet50
   pretrained: true
   batch_size: 20
-  is_weighted_loss: false
+  is_weighted_loss: true
