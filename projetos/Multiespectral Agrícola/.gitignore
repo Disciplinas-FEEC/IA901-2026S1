@@ -1,4 +1,1 @@
-experiments/
-*.pth
-*.pickle
 /data/dataset
