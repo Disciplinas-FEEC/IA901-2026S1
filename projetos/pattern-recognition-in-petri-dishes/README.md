@@ -284,9 +284,10 @@ As maiores divergências entre os dois contadores humanos se concentraram justam
 
 Foram gerados dois gráficos de dispersão (índice da imagem × contagem de colônias), conectando os pares de valores comparados por uma linha vertical para facilitar a leitura da magnitude do erro placa a placa:
 * **Staff vs. CVAT:** Evidencia visualmente a divergência entre as duas contagens humanas da mesma placa.
-* **Algoritmo vs. CVAT:** Evidencia visualmente a proximidade (ou distância) entre a predição automática e a recontagem mais cuidadosa.
+  ![staff_vs_cvat](assets/experimentos/02_comparacao_staffvsCVAT.png)
 
----------------inserir aqui os 2 gráficos de dispersão gerados no notebook (staff_vs_cvat.png e algoritmo_vs_cvat.png)----------------
+* **Algoritmo vs. CVAT:** Evidencia visualmente a proximidade (ou distância) entre a predição automática e a recontagem mais cuidadosa.
+  ![algoritmo_vs_cvat](assets/experimentos/03_comparacao_algoritmovsCVAT.png)
 
 
 ### Síntese dos resultados desta etapa
