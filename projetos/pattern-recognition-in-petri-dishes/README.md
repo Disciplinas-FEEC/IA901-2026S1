@@ -222,6 +222,7 @@ O resultado é salvo em data/processed, preservando o nome original de cada arqu
 | **Raio da máscara final** | 86% do raio detectado |
 
 ![Detecção da placa por Hough Circles](assets/experimentos/04_preprocesamiento.png)
+![Detecção da placa por Hough Circles](assets/experimentos/02_hough_roi.png)
 
 ### 2. Detecção e contagem de colônias 
 
