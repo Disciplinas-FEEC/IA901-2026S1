@@ -139,7 +139,7 @@ O workflow do projeto foi organizado para representar as principais etapas neces
 ![Workflow do projeto](assets/workflow.png)
 
 ## Experimentos e Resultados preliminares
-
+Os experimentos foram organizados em dois notebooks: pré-processamento das imagens e detecção e contagem de colônias com avaliação quantitativa.
 
 
 
