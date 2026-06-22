@@ -199,9 +199,95 @@ graph TD
 - 📂 [Dados processados](./data/processed)
 
 ## Experimentos e Resultados preliminares
-Os experimentos foram organizados em dois notebooks: pré-processamento das imagens e detecção e contagem de colônias com avaliação quantitativa.
+Nesta etapa do projeto, o pipeline foi consolidado em dois notebooks principais: um notebook de pré-processamento das imagens (`1_preprocessamento_imagens.ipynb`) e um notebook de detecção e contagem de colônias (`2_pipeline_contagem_colonias_cnpem.ipynb`). Juntos, eles implementam um pipeline clássico de visão computacional, desde a padronização das imagens até a avaliação quantitativa do algoritmo contra duas contagens humanas independentes.
+
+### 1. Pré-processamento das imagens 
+
+O objetivo desta etapa é padronizar a entrada visual das imagens do dataset CNPEM, reduzindo variações irrelevantes de fundo, iluminação e escala antes da etapa de contagem.
+
+#### Pipeline implementado:
+* **Padronização de tamanho:** Todas as imagens são redimensionadas para largura fixa de 800 pixels, mantendo a proporção original.
+* **Conversão para escala de cinza via PCA:** Em vez de uma conversão RGB→cinza tradicional, os três canais de cor são condensados em uma única componente principal (PCA), normalizada de volta para 8 bits. Essa abordagem busca realçar o contraste global entre colônias e ágar.
+* **Detecção da placa com HoughCircles:** Aplicada sobre a imagem suavizada (blur mediano) para localizar centro e raio da placa de Petri.
+* **Fallback robusto:** Quando o círculo não é detectado automaticamente, uma máscara circular central padrão é usada no lugar.
+* **Aplicação da máscara circular:** Raio reduzido a 86% do raio detectado para remover a região externa à placa.
+
+| Etapa | Parâmetro |
+| :--- | :--- |
+| **Largura padronizada** | 800 px |
+| **Blur (mediana)** | kernel 21 |
+| **HoughCircles** | dp=1.2, minDist=100, param1=50, param2=30, minRadius=200, maxRadius=400 |
+| **Raio da máscara final** | 86% do raio detectado |
 
 
+### 2. Detecção e contagem de colônias 
+
+Com as imagens pré-processadas, foi implementado o pipeline de contagem baseado no método de *Chiang et al. (2014)*, utilizando Transformada de Distância e Watershed para separar colônias sobrepostas.
+
+#### Pipeline implementado (função `contar_colonias`):
+* **Realce via Black-Hat:** Operação morfológica (kernel elíptico 35×35) que realça estruturas escuras (colônias) sobre fundo claro (ágar).
+* **Binarização:** Threshold fixo (sensibilidade = 12) seguido de limpeza morfológica (abertura, kernel 3×3) para remover ruídos pequenos.
+* **Separação de colônias sobrepostas (Watershed):**
+  * Cálculo da região de fundo certo (dilatação);
+  * Transformada de Distância para localizar centros prováveis das colônias;
+  * Identificação da região de fronteira desconhecida entre colônias próximas;
+  * Rotulagem dos marcadores e aplicação do Watershed.
+* **Contagem final:** Feita por componentes conectados, com filtro de área mínima (> 8 px) para descartar ruídos residuais, e desenho do contorno de cada colônia detectada na imagem de saída.
+
+> **Exemplo de execução em imagem única (`IMG_0636.jpg`):** 8 colônias contadas.
+
+
+
+### 3. Avaliação quantitativa: algoritmo vs. contagem humana
+
+A avaliação foi feita sobre **94 imagens** do dataset CNPEM, comparando o algoritmo contra duas contagens humanas independentes da mesma placa:
+* **staff:** Contagem original do analista, feita durante a rotina de laboratório;
+* **cvat:** Recontagem posterior, mais cuidadosa, realizada com apoio da ferramenta de anotação visual CVAT, colônia a colônia.
+
+#### 3.1 Divergência entre as duas contagens humanas (staff vs. cvat)
+
+| Métrica | Valor |
+| :--- | :--- |
+| **MAE** | 13,41 colônias |
+| **RMSE** | 43,23 colônias |
+| **MAPE** | 14,05% |
+
+Mesmo entre dois contadores humanos analisando a mesma placa, há uma divergência relevante. Isso é uma evidência de que a contagem manual está sujeita a uma margem de erro própria, decorrente do esforço cognitivo da tarefa, especialmente em placas muito povoadas.
+
+#### 3.2 Algoritmo vs. staff e vs. cvat
+
+| Comparação | MAE | RMSE | MAPE |
+| :--- | :---: | :---: | :---: |
+| **Algoritmo vs. staff** | 22,14 | 39,29 | 100,33% |
+| **Algoritmo vs. cvat** | 29,94 | 63,66 | 134,28% |
+| **staff vs. cvat (referência)** | 13,41 | 43,23 | 14,05% |
+
+O erro do algoritmo em relação a ambas as referências humanas foi maior do que a divergência observada entre as duas contagens humanas entre si. Isso indica que o pipeline clássico atual (Black-Hat + Watershed) ainda não atinge a consistência de um segundo contador humano, subestimando ou superestimando a contagem principalmente nas placas mais povoadas.
+
+#### 3.3 Placas com maior divergência entre staff e cvat
+
+As maiores divergências entre os dois contadores humanos se concentraram justamente nas placas mais povoadas — os casos mais custosos para a contagem manual:
+
+| Imagem | staff | cvat | Diferença |
+| :--- | :---: | :---: | :---: |
+| `IMG_0529.jpg` | 260 | 551 | 291 |
+| `IMG_0561.jpg` | 9 | 174 | 165 |
+| `IMG_0531.jpg` | 170 | 290 | 120 |
+| `IMG_0563.jpg` | 9 | 118 | 109 |
+| `10_3_i.jpg` | 42 | 145 | 103 |
+
+#### 3.4 Gráficos comparativos
+
+Foram gerados dois gráficos de dispersão (índice da imagem × contagem de colônias), conectando os pares de valores comparados por uma linha vertical para facilitar a leitura da magnitude do erro placa a placa:
+* **Staff vs. CVAT:** Evidencia visualmente a divergência entre as duas contagens humanas da mesma placa.
+* **Algoritmo vs. CVAT:** Evidencia visualmente a proximidade (ou distância) entre a predição automática e a recontagem mais cuidadosa.
+
+### Síntese dos resultados desta etapa
+
+| Notebook | O que faz | Resultado obtido |
+| :--- | :--- | :--- |
+| `1_preprocessamento_imagens.ipynb` | Padroniza tamanho, converte para cinza via PCA, detecta a placa com HoughCircles e aplica máscara circular. | Conjunto padronizado de imagens salvo em `data/processed`, pronto para a contagem. |
+| `2_pipeline_contagem_colonias_cnpem.ipynb` | Realça colônias com Black-Hat, binariza, separa sobreposições com Watershed e conta por componentes conectados. | MAE de 22,14 (vs. staff) e 29,94 (vs. cvat) colônias em 94 imagens; erro humano-humano (staff vs. cvat) de 13,41 colônias como referência. |
 
 ## Uso de IA Generativa
 
