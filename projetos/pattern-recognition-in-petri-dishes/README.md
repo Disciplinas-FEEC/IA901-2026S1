@@ -224,7 +224,7 @@ O objetivo desta etapa é padronizar a entrada visual das imagens do dataset CNP
 
 Com as imagens pré-processadas, foi implementado o pipeline de contagem baseado no método de *Chiang et al. (2014)*, utilizando Transformada de Distância e Watershed para separar colônias sobrepostas.
 
-#### Pipeline implementado (função `contar_colonias`):
+#### Pipeline implementado:
 * **Realce via Black-Hat:** Operação morfológica (kernel elíptico 35×35) que realça estruturas escuras (colônias) sobre fundo claro (ágar).
 * **Binarização:** Threshold fixo (sensibilidade = 12) seguido de limpeza morfológica (abertura, kernel 3×3) para remover ruídos pequenos.
 * **Separação de colônias sobrepostas (Watershed):**
