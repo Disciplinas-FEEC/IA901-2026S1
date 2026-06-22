@@ -71,7 +71,7 @@ Ademais, o NDWI pode ser utilizado tanto para analisar o teor de água nas folha
 
 $$
 \begin{array}{cc}
-NDWI = \dfrac{GREEN - NIR}{GREEN + IR} & \text{(2)}
+NDWI = \dfrac{GREEN - NIR}{GREEN + NIR} & \text{(2)}
 \end{array}
 $$
 
