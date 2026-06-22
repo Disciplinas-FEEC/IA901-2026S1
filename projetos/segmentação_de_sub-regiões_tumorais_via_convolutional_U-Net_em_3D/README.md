@@ -1,12 +1,11 @@
-# Extração de Características em fMRI: Segmentação de Sub-regiões Tumorais via Convolutional U-Net em 3D
-# fMRI Feature Extraction: Tumor Sub-region Segmentation via 3D Convolutional U-Net
+# Segmentação de Tumores Cerebrais em Ressonâncias Magnéticas Multimodais usando ACU-Net 2.5D com Mecanismo de Atenção
+
+# Brain Tumor Segmentation in Multimodal Magnetic Resonance Imaging Using a 2.5D Attention-Based ACU-Net
 
 ## Apresentação
 
-O presente projeto foi originado no contexto das atividades da disciplina de pós-graduação *IA901 - Análise de Imagens e Reconhecimento de Padrões*, 
-oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dra. Leticia Rittner, do Departamento de Engenharia de Computação e Automação (DCA) da Faculdade de Engenharia Elétrica e de Computação (FEEC).
+O presente projeto foi originado no contexto das atividades da disciplina de pós-graduação *IA901 - Análise de Imagens e Reconhecimento de Padrões*, oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dra. Leticia Rittner, do Departamento de Engenharia de Computação e Automação (DCA) da Faculdade de Engenharia Elétrica e de Computação (FEEC).
 
-> Incluir nome RA e foco de especialização de cada membro do grupo. Os projetos devem ser desenvolvidos em duplas ou trios.
 > |Nome  | RA | Curso|
 > |--|--|--|
 > | Natália da Silva Guimarães  | 298997  | Mestrado em Engenharia Elétrica|
@@ -14,66 +13,325 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 
 
 ## Descrição do Projeto
-A segmentação e o delineamento manual de gliomas em exames de ressonância magnética (fMRI) representam uma tarefa exaustiva e sujeita a alta variabilidade intra e inter-observador. Este projeto tem como objetivo automatizar a extração de características e a segmentação de três sub-regiões tumorais críticas: o Tumor Inteiro (WT), o Núcleo do Tumor (TC) e o Tumor Realçado (ET). A motivação central é prover uma ferramenta analítica de precisão para apoiar o diagnóstico neuro-oncológico. Embora a concepção inicial do projeto englobe convoluções em 3D, o impacto e a relevância da solução atual baseiam-se em otimizar essa análise tridimensional através de técnicas 2.5D, garantindo alta precisão clínica sem incorrer em gargalos proibitivos de hardware (VRAM).
+
+A segmentação manual de gliomas em exames de ressonância magnética multimodal é uma tarefa trabalhosa e sujeita à variabilidade entre diferentes especialistas. Este projeto propõe automatizar a segmentação de três sub-regiões tumorais relevantes: Tumor Inteiro (*Whole Tumor* — WT), Núcleo Tumoral (*Tumor Core* — TC) e Tumor Realçado (*Enhancing Tumor* — ET).
+
+A solução utiliza as modalidades T1, T1CE, T2 e FLAIR do conjunto de dados BraTS, combinando informações complementares para localizar e delimitar o tumor. Embora os exames sejam volumes tridimensionais, a implementação adota uma estratégia 2.5D: para segmentar uma fatia central, o modelo também utiliza as fatias imediatamente anterior e posterior como contexto espacial.
+
+A arquitetura proposta é uma ACU-Net 2.5D com mecanismo de atenção, capaz de reduzir a influência de regiões menos relevantes e enfatizar características associadas ao tumor. Essa abordagem busca equilibrar contexto tridimensional, precisão de segmentação e menor consumo de memória de GPU em comparação com arquiteturas totalmente 3D, contribuindo como ferramenta de apoio à análise neuro-oncológica.
+
 
 ## Metodologia
-A metodologia do projeto baseia-se em um pipeline de processamento de imagens médicas divididas nas seguintes etapas:
 
-1. **Pré-processamento e Limpeza (Controle de Qualidade):**
-   - **Normalização Estatística Restrita:** Aplicação de *Brain-Only Z-Score*, isolando os zeros (fundo/ar) para que o cálculo da média e desvio padrão reflita exclusivamente o contraste do tecido cerebral.
-   - **Desconstrução do Ground Truth:** Conversão dos rótulos ordinais originais do dataset (1, 2, 4) em três canais binários simultâneos (Whole Tumor, Tumor Core, Enhancing Tumor) via portas lógicas.
 
-2. **Engenharia de Dados (Fatiamento 2.5D):**
-   - Implementação de um gerador de lotes (*DataGenerator*) que extrai janelas deslizantes ao longo do eixo Z. Para predizer a máscara da fatia central $z$, o modelo empilha as fatias $z-1$, $z$ e $z+1$ das 4 modalidades, gerando tensores hiper-profundos de 12 canais com uso de *Zero-Padding* nas bordas.
 
-3. **Arquitetura de Modelagem e Otimização:**
-   - Construção orientada a objetos de uma **ACU-Net (Attention-based Convolutional U-Net)** no framework PyTorch.
-   - Integração de *Attention Gates* nas conexões residuais (*Skip Connections*) para focar matematicamente os pesos na região da patologia, filtrando o tecido saudável.
-   - Uso da função de custo *Dice Loss* para contornar o extremo desequilíbrio espacial de classes (onde o tecido são domina >95% do volume).
+#### 1. Base de dados e organização dos pacientes
+
+O projeto utiliza imagens de ressonância magnética multimodal dos conjuntos **BraTS 2018** e **BraTS 2020**. Para cada paciente, são utilizadas quatro modalidades de imagem:
+
+* **T1:** representação anatômica do cérebro;
+* **T1CE:** imagem T1 com contraste;
+* **T2:** modalidade sensível a líquidos e alterações teciduais;
+* **FLAIR:** modalidade útil para evidenciar edema e regiões anormais.
+
+Cada paciente também possui uma máscara de referência denominada `SEG`, produzida por especialistas, que indica as regiões tumorais.
+
+Os pacientes dos dois datasets são combinados, embaralhados com `seed = 42` e divididos em:
+
+```text
+80% para treinamento
+20% para validação
+```
+
+O carregamento dos volumes ocorre sob demanda, ou seja, um paciente é processado por vez. Essa estratégia reduz o consumo de memória RAM.
+
+---
+
+#### 2. Normalização das imagens
+
+Cada modalidade de ressonância passa por normalização estatística utilizando o método **Brain-Only Z-Score**.
+
+Inicialmente, os voxels com valor igual a zero são ignorados, pois normalmente representam o fundo preto da imagem. Em seguida, a média e o desvio padrão são calculados apenas nos voxels pertencentes ao cérebro.
+
+A normalização é dada por:
+
+$$
+z = \frac{x - \mu}{\sigma + 10^{-8}}
+$$
+
+onde:
+
+* $x$ representa a intensidade original do voxel;
+* $\mu$ representa a média das intensidades cerebrais;
+* $\sigma$ representa o desvio padrão das intensidades cerebrais.
+
+Esse processo reduz diferenças de brilho entre pacientes e exames, tornando as imagens mais comparáveis para o modelo.
+
+---
+
+#### 3. Processamento das máscaras tumorais
+
+A máscara original `SEG` possui rótulos que representam regiões diferentes do tumor. Esses rótulos são convertidos em três máscaras binárias independentes:
+
+```text
+WT — Whole Tumor
+TC — Tumor Core
+ET — Enhancing Tumor
+```
+
+A definição de cada classe é:
+
+```text
+WT = rótulos 1, 2 e 4
+TC = rótulos 1 e 4
+ET = rótulo 4
+```
+
+Assim, a máscara final possui três canais, permitindo que o modelo aprenda a segmentar simultaneamente o tumor completo, o núcleo tumoral e a região realçada por contraste.
+
+---
+
+#### 4. Estratégia 2.5D
+
+Embora os exames sejam volumes tridimensionais, o projeto utiliza uma abordagem **2.5D**.
+
+Para prever a segmentação de uma fatia central $z$, são utilizadas três fatias consecutivas:
+
+```text
+z - 1
+z
+z + 1
+```
+
+Cada fatia contém quatro modalidades de ressonância:
+
+```text
+T1, T1CE, T2 e FLAIR
+```
+
+Portanto, a entrada do modelo possui:
+
+```text
+3 fatias × 4 modalidades = 12 canais
+```
+
+A máscara-alvo corresponde apenas à fatia central. Dessa forma, o modelo recebe contexto espacial das fatias vizinhas sem exigir o alto consumo de memória de uma arquitetura totalmente 3D.
+
+Nas primeiras e últimas fatias do volume, onde uma fatia vizinha não existe, é aplicado *zero-padding*.
+
+---
+
+#### 5. Recorte anatômico
+
+Após a preparação dos lotes, é aplicado um recorte central nas imagens e máscaras.
+
+```text
+Dimensão original: 240 × 240
+Dimensão após recorte: 160 × 192
+```
+
+O objetivo é remover parte do fundo preto ao redor do cérebro, reduzir o custo computacional e concentrar o processamento na região anatômica mais relevante.
+
+---
+
+#### 6. Aumento de dados
+
+Durante o treinamento, são aplicadas transformações para aumentar artificialmente a diversidade dos dados.
+
+As transformações incluem:
+
+* espelhamento horizontal;
+* espelhamento vertical;
+* adição de ruído gaussiano nas imagens de ressonância.
+
+Os espelhamentos são aplicados tanto às imagens quanto às máscaras, mantendo o alinhamento entre o cérebro e as regiões tumorais.
+
+O ruído gaussiano é aplicado apenas às imagens de entrada, pois a máscara médica deve permanecer inalterada.
+
+Essas técnicas ajudam a reduzir o risco de sobreajuste e tornam o modelo mais robusto a pequenas variações nos exames.
+
+---
+
+#### 7. Arquitetura ACU-Net 2.5D
+
+A arquitetura utilizada é uma **Attention-based Convolutional U-Net (ACU-Net)** implementada em PyTorch.
+
+A rede recebe lotes com o seguinte formato:
+
+```text
+(Batch, 12, 160, 192)
+```
+
+onde:
+
+```text
+12 canais = 3 fatias consecutivas × 4 modalidades
+```
+
+A saída possui três canais:
+
+```text
+(Batch, 3, 160, 192)
+```
+
+correspondentes às classes WT, TC e ET.
+
+O encoder da rede possui blocos `DoubleConv`, compostos por:
+
+```text
+Convolução 3 × 3
+Batch Normalization
+ReLU
+Convolução 3 × 3
+Batch Normalization
+ReLU
+```
+
+Durante o encoder, a resolução espacial é reduzida por operações de `MaxPool2d`, enquanto o número de filtros aumenta progressivamente.
+
+No decoder, convoluções transpostas restauram a resolução espacial. As conexões entre encoder e decoder são realizadas por *skip connections*.
+
+Antes da concatenação, as informações vindas do encoder passam por **Attention Gates**, que ajudam a rede a reduzir informações irrelevantes e enfatizar regiões potencialmente associadas ao tumor.
+
+---
+
+#### 8. Treinamento
+
+O treinamento utiliza um gerador global que seleciona pacientes, processa seus volumes e produz lotes 2.5D sob demanda.
+
+Os principais parâmetros utilizados são:
+
+| Parâmetro           |                       Valor |
+| ------------------- | --------------------------: |
+| Tamanho do lote     |                           8 |
+| Lotes por paciente  |                           5 |
+| Passos por época    |                         100 |
+| Número de épocas    |                         100 |
+| Otimizador          |                        Adam |
+| Taxa de aprendizado |          $5 \times 10^{-5}$ |
+| Função de perda     |                   Dice Loss |
+| Dispositivo         | GPU CUDA, quando disponível |
+
+A cada passo de treinamento, o modelo recebe um lote de imagens, gera a segmentação das três regiões tumorais e compara sua saída com a máscara médica correta.
+
+Os pesos da rede são atualizados por retropropagação, utilizando o otimizador Adam.
+
+---
+
+#### 9. Função de perda
+
+A função de perda utilizada é a **Dice Loss**, baseada na sobreposição entre a máscara prevista e a máscara real.
+
+$$
+Dice = \frac{2TP}{2TP + FP + FN}
+$$
+
+A Dice Loss é definida como:
+
+$$
+DiceLoss = 1 - Dice
+$$
+
+Essa métrica é adequada para segmentação tumoral porque o tumor ocupa apenas uma pequena parte da imagem. Portanto, métricas tradicionais de acurácia poderiam apresentar valores altos apenas por identificar corretamente o fundo.
+
+---
+
+#### 10. Avaliação do modelo
+
+Após o treinamento, um paciente pertencente ao conjunto de validação é selecionado para inferência.
+
+O modelo recebe as imagens processadas e produz máscaras para:
+
+```text
+WT — Whole Tumor
+TC — Tumor Core
+ET — Enhancing Tumor
+```
+
+As previsões são comparadas com a máscara médica de referência por meio de:
+
+* Dice Score geral;
+* Dice Score por classe;
+* matrizes de confusão pixel a pixel;
+* verdadeiros positivos;
+* falsos positivos;
+* falsos negativos;
+* verdadeiros negativos.
+
+Além das métricas quantitativas, as máscaras previstas são sobrepostas à modalidade FLAIR para permitir uma avaliação visual da localização e da extensão das regiões tumorais.
+
 
 ## Bases de Dados e Evolução
 
-| Base de Dados | Endereço na Web | Resumo descritivo |
-| ----- | ----- | ----- |
-| BraTS 2018 | [MICCAI BraTS](http://braintumorsegmentation.org/) | Reúne exames multimodais de fMRI (T1, T1ce, T2, FLAIR) de pacientes com gliomas de alto (HGG) e baixo grau (LGG), padronizados em 240x240x155. |
-| BraTS 2020 | [MICCAI BraTS](http://braintumorsegmentation.org/) | Expansão da base original agregando maior volume de exames e heterogeneidade de *scanners*, fundamental para validação cruzada. |
+| Base de Dados | Endereço na Web | Características | Evolução e papel no projeto |
+| ------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| BraTS 2018    | [MICCAI BraTS](http://braintumorsegmentation.org/) | Base de referência para segmentação de gliomas, composta por imagens de ressonância magnética multimodal (**T1, T1CE, T2 e FLAIR**) e máscara clínica `SEG`. Inclui casos de gliomas de alto grau (HGG) e baixo grau (LGG), com volumes padronizados em **240 × 240 × 155** voxels. | Fornece uma base consolidada para o treinamento e a validação do modelo, permitindo aprender a segmentação das regiões WT, TC e ET. |
+| BraTS 2020    | [MICCAI BraTS](http://braintumorsegmentation.org/) | Versão posterior do desafio BraTS, mantendo as modalidades **T1, T1CE, T2 e FLAIR** e as anotações das regiões tumorais. Amplia a diversidade de casos e condições de aquisição.                                                                                                    | Complementa a BraTS 2018 ao aumentar a variabilidade dos pacientes, favorecendo maior capacidade de generalização da ACU-Net 2.5D.  |
 
-> O detalhamento do processo de coleta, composição e o racional das escolhas de pré-processamento encontram-se documentados no Datasheet for Datasets localizado na pasta `data`.
+Os pacientes das bases BraTS 2018 e BraTS 2020 são combinados e embaralhados antes da divisão experimental. A separação é realizada por paciente, com:
+
+- 80% dos pacientes para treinamento
+- 20% dos pacientes para validação
 
 ## Ferramentas
-- **Python:** Linguagem base de todo o fluxo computacional.
-- **PyTorch:** Framework escolhido para a construção arquitetural da ACU-Net, gerenciamento de gradientes e instigação do *Dice Loss*.
-- **SimpleITK:** Biblioteca para modelagem física avançada, especificamente para o cálculo do *N4 Bias Field Correction*.
-- **Nibabel:** Extração e manipulação dos tensores brutos no formato neuro-médico NIfTI (`.nii.gz`).
-- **NumPy & Matplotlib:** Manipulação da álgebra linear geométrica (Stacking 2.5D) e auditoria visual dos histogramas e predições inferidas.
+
+- **Python:** linguagem principal utilizada em todas as etapas do projeto, incluindo carregamento dos dados, pré-processamento, treinamento, avaliação e visualização dos resultados.
+
+- **Google Colab:** ambiente computacional utilizado para execução do notebook, armazenamento temporário dos datasets e acesso acelerado por GPU quando disponível.
+Kaggle API: utilizada para realizar o download automatizado dos conjuntos BraTS 2018 e BraTS 2020.
+
+- **PyTorch:** framework empregado na implementação da arquitetura ACU-Net 2.5D, criação de tensores, execução das convoluções, gerenciamento automático de gradientes, retropropagação, uso do otimizador Adam e treinamento em GPU via CUDA.
+
+- **SimpleITK:** biblioteca utilizada para demonstrar a aplicação do N4 Bias Field Correction, técnica de correção de variações artificiais de intensidade causadas pelo campo magnético da ressonância. Essa etapa foi avaliada no pré-processamento, mas não foi integrada ao gerador oficial de treinamento.
+
+- **NiBabel:** utilizada para leitura e manipulação dos exames médicos no formato NIfTI, como arquivos .nii e .nii.gz.
+
+- **NumPy:** empregada na manipulação de arrays multidimensionais, normalização Z-score, criação de máscaras binárias, empilhamento das modalidades, construção da estratégia 2.5D, transposição de eixos, recorte anatômico e aumento de dados.
+
+- **Matplotlib:** utilizada para auditoria visual das imagens de ressonância, histogramas, máscaras tumorais, curvas de aprendizado, comparações entre ground truth e predições da rede.
+
+- **Pandas:** utilizada para organizar e exibir tabelas de métricas, incluindo Dice Score, verdadeiros positivos, falsos positivos, falsos negativos e verdadeiros negativos.
+
+- **Seaborn:** utilizada para gerar mapas de calor das matrizes de confusão para as classes WT, TC e ET.
+
+- **Scikit-learn:** utilizada especificamente para calcular as matrizes de confusão pixel a pixel por meio da função confusion_matrix.
+
+- **OS, Glob e Random:** bibliotecas auxiliares utilizadas para localizar arquivos dos pacientes, percorrer diretórios, criar pastas, embaralhar pacientes e organizar a divisão entre treinamento e validação.
 
 ## Workflow
+
 > *(Após definição de continuação em 3D ou 2.5D será inserido a imagem aqui)*
 > 
 > Fluxograma planejado (2.5D): [Volumes NIfTI] -> [Otsu Mask & N4 Bias Correction] -> [Brain-Only Z-Score] -> [DataGenerator: Extração de Blocos 2.5D (12 canais)] -> [ACU-Net: Encoder -> Attention Gate -> Decoder] -> [Máscaras Preditivas WT, TC, ET] -> [Avaliação: Dice Coefficient].
 
 ## Experimentos e Resultados preliminares
 
-No que se refere a implementação para a modelagem 3D, realizamos experimentos de segmentação 3D de tumores cerebrais usando o modelo ACU-Net 3D nos datasets BraTS 2018 e BraTS 2020. O modelo foi treinado com todas as modalidades (FLAIR, T1, T1CE, T2) e 64 fatias de profundidade por paciente. Para validação, utilizamos métricas como Dice, Jaccard, IoU, sensibilidade e especificidade. Observamos que o modelo conseguiu identificar corretamente as regiões maiores de tumor, mas apresentou falsos positivos em regiões menores e discretas, especialmente nos tumores ET e TC. As previsões 3D demonstraram sobreposição razoável com a máscara real, mas ainda há espaço para refinamento da segmentação fina.
 
 ## Próximos passos
 
 **Sobre a modelagem em 3D inicial:**
-- Ajuste de limiares e pós-processamento para reduzir falsos positivos (estimativa: 1 semana).
-- Treinamento com batch maior ou aumento de épocas, usando toda a base de pacientes para melhorar a precisão global (estimativa: 2 semanas).
-- Validação cruzada para avaliar robustez do modelo entre BraTS 2018 e 2020 (estimativa: 1 semana).
-- Visualização avançada 3D integrando MRI real, tumor real e tumor previsto em uma mesma figura para análise qualitativa (estimativa: 3 dias).
+
+Inicialmente, o projeto previa a continuidade da modelagem em 3D, incluindo ajuste de limiares e técnicas de pós-processamento para redução de falsos positivos, treinamento com maior número de épocas e lotes, validação cruzada entre as bases BraTS 2018 e BraTS 2020 e visualizações tridimensionais integrando as imagens de ressonância, as máscaras médicas e as predições do modelo.
+
+Entretanto, essas etapas foram interrompidas devido às restrições de tempo disponíveis para execução do projeto e às limitações computacionais do ambiente utilizado. O treinamento de arquiteturas 3D demanda maior capacidade de memória GPU, processamento e tempo de execução, especialmente ao utilizar volumes completos de ressonância magnética e múltiplas modalidades por paciente.
+
+Dessa forma, optou-se pela estratégia 2.5D, que preserva parte do contexto espacial entre fatias vizinhas e reduz significativamente o consumo de memória em comparação com convoluções totalmente 3D. As etapas não concluídas permanecem como possibilidades de evolução futura do projeto.
 
 **Migração Estratégica para Modelagem 2.5D:**
+
 Devido aos severos gargalos de hardware e problemas de *Out of Memory* (OOM) encontrados nas convoluções tridimensionais, os próximos passos visam otimizar a extração das características espaciais:
 - Substituição das funções `Conv3D` pesadas por convoluções `Conv2D` hiper-profundas (12 canais de entrada), permitindo que a rede avalie simultaneamente o contexto da fatia $z-1$, $z$ e $z+1$.
 - Execução do Bucle de Treinamento em PyTorch utilizando ambiente acelerado por GPU (Colab T4), injetando os lotes 2.5D dinamicamente.
 - Avaliação comparativa do *Dice Loss* entre a arquitetura 3D original e a nova estrutura 2.5D.
 
 ## Uso de IA Generativa
+
 Utilizamos ChatGPT para:
+
 - Elaborar explicações e interpretações dos resultados, comparando métricas do modelo com as do artigo original.
-- Criar códigos de visualização 3D avançada, incluindo sobreposição de cérebro, tumor real (azul) e tumor previsto (vermelho), para apresentações e relatórios.
+
+- Apoiar a exploração inicial de uma arquitetura 3D baseada em U-Net com atenção. Essa proposta serviu como referência conceitual, mas não foi incorporada à implementação final devido às limitações computacionais associadas ao processamento de volumes completos em 3D.
+
 - Prompt exemplo: “Crie um modelo de segmentação 3D para tumores cerebrais usando Keras/TensorFlow. O modelo deve ser baseado em U-Net com atenção (ACU-Net), receber 4 modalidades de imagem (FLAIR, T1, T1CE, T2) com tamanho 128x128x64, e gerar 3 classes de saída (WT, TC, ET). Inclua: camadas Conv3D, BatchNormalization, MaxPooling3D, Dropout, Attention, Conv3DTranspose e concatenations necessárias. Mostre o resumo completo do modelo (model.summary()).”
 
 Utilizamos o Gemini para:
