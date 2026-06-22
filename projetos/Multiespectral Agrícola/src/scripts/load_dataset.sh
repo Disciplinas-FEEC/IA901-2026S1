@@ -40,10 +40,25 @@ if [ "$should_download" -eq 1 ]; then
 fi
 
 SUPERVISED_DIR="$DATASET_DIR/supervised"
+DATASET_PATH_VALUE="$SUPERVISED_DIR/Agriculture-Vision-2021"
+
+write_dotenv_if_dataset_exists() {
+	if [ -d "$DATASET_PATH_VALUE" ]; then
+		printf 'DATASET_PATH=%s\n' "$DATASET_PATH_VALUE" > "$DOTENV_FILE"
+		echo "Arquivo .env gerado em: $DOTENV_FILE"
+		echo "DATASET_PATH configurado para: $DATASET_PATH_VALUE"
+		return 0
+	fi
+
+	return 1
+}
 
 if [ ! -d "$SUPERVISED_DIR" ]; then
 	echo "Pasta 'supervised' não encontrada em: $SUPERVISED_DIR"
 	echo "Nada para descompactar."
+	if write_dotenv_if_dataset_exists; then
+		echo "Processo finalizado."
+	fi
 	exit 0
 fi
 
@@ -53,6 +68,13 @@ find "$SUPERVISED_DIR" -maxdepth 1 -type f -name "*.tar.gz" > "$tar_list_file"
 
 if [ ! -s "$tar_list_file" ]; then
 	echo "Nenhum arquivo .tar.gz encontrado em: $SUPERVISED_DIR"
+	if write_dotenv_if_dataset_exists; then
+		echo "Dataset já parece estar descompactado."
+		echo "Processo finalizado."
+	else
+		echo "Aviso: diretório esperado não encontrado: $DATASET_PATH_VALUE"
+		echo "Arquivo .env não foi gerado."
+	fi
 	exit 0
 fi
 
@@ -81,6 +103,9 @@ case "$user_answer" in
 		;;
 	*)
 		echo "Descompactação cancelada pelo usuário."
+		if write_dotenv_if_dataset_exists; then
+			echo "Processo finalizado."
+		fi
 		exit 0
 		;;
 esac
@@ -99,12 +124,8 @@ while IFS= read -r tar_file; do
 	fi
 done < "$tar_list_file"
 
-DATASET_PATH_VALUE="$SUPERVISED_DIR/Agriculture-Vision-2021"
-
-if [ -d "$DATASET_PATH_VALUE" ]; then
-	printf 'DATASET_PATH=%s\n' "$DATASET_PATH_VALUE" > "$DOTENV_FILE"
-	echo "Arquivo .env gerado em: $DOTENV_FILE"
-	echo "DATASET_PATH configurado para: $DATASET_PATH_VALUE"
+if write_dotenv_if_dataset_exists; then
+:
 else
 	echo "Aviso: diretório esperado não encontrado após descompactação: $DATASET_PATH_VALUE"
 	echo "Arquivo .env não foi gerado."
