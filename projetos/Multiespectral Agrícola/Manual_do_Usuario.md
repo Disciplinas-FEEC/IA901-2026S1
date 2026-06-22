@@ -56,10 +56,9 @@ mIoU, medindo o impacto dos canais NIR (n), NDVI (v) + NDWI (w).
 
 ## 2. Estrutura do repositório
 
-<<<<<<< HEAD
 ```
 Multiespectral Agrícola/
-├── config.yaml                  # ⚙️  ÚNICO arquivo que você edita para configurar tudo
+├── config.yaml                  # ÚNICO arquivo que você edita para configurar tudo
 ├── pyproject.toml               # dependências do projeto (gerenciadas pelo uv)
 ├── uv.lock                      # versões travadas das dependências
 ├── README.md                    # fundamentação teórica, metodologia, referências
@@ -71,7 +70,7 @@ Multiespectral Agrícola/
 │   ├── model.py                 # FPN_ResNet50_Segmentation
 │   ├── metrics.py               # ModifiedMIoU
 │   ├── train_utils.py           # loss ponderada, poly-LR, checkpoint, loop de avaliação
-│   ├── main.py                  # 🚀 script de TREINAMENTO (rodado via torchrun)
+│   ├── main.py                  # script de TREINAMENTO (rodado via torchrun)
 │   ├── utils.py                 # visualização de amostras/predições + evaluate_model/test_model
 │   └── scripts/
 │       └── load_dataset.sh      # baixa e descompacta o dataset a partir do S3
@@ -155,7 +154,6 @@ chmod +x src/scripts/load_dataset.sh
 ./src/scripts/load_dataset.sh
 ```
 
-<<<<<<< HEAD
 O script baixa para `data/dataset/` e descompacta em `data/dataset/supervised/`. Ele pede
 confirmação antes de descompactar (mostrando o espaço necessário). Ao final, você terá a
 estrutura esperada do dataset:
@@ -269,10 +267,6 @@ O treino é feito por [src/main.py](src/main.py), que **só roda via `torchrun`*
 as variáveis de ambiente do DDP, como `LOCAL_RANK`).
 
 **Com 2 GPUs** (configuração original):
-=======
-Ao final, o script irá gerar o arquivo `.env` na raiz do projeto apontando para o diretório descompactado do dataset.
-
->>>>>>> 762e79244d7d8a614872c4122df924c018eec5fd
 
 ```bash
 uv run torchrun --nproc_per_node=2 --standalone src/main.py
@@ -337,7 +331,7 @@ Os checkpoints (`best.pth`, ~153 MB cada) estão disponíveis no Google Drive. B
 [`/checkpoints`](https://drive.google.com/drive/folders/1HBQtmesh3hLN6IZ8VZoPl_A3FrqNhkD4?usp=sharing)
 e coloque em `experiments/` no projeto.
 
-> ⚠️ **Atenção ao caminho dos pesos.** O notebook monta o caminho como
+> **Atenção ao caminho dos pesos.** O notebook monta o caminho como
 > `../experiments/checkpoints/{INPUT_CHANNELS}/best.pth`, **enquanto o treino salva em**
 > `experiments/checkpoints/{INPUT_CHANNELS}/`. Se você acabou de treinar, garanta que a
 > pasta usada pelo notebook bata com a pasta gerada — renomeie a pasta ou ajuste a string do
