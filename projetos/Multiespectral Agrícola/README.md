@@ -144,7 +144,7 @@ As seguintes ferramentas e bibliotecas foram utilizadas para viabilizar o pipeli
 
 ## Workflow
 
-![Diagrama de Workflow do Projeto](assets/Diagrama_Projeto.png)
+![Diagrama de Workflow do Projeto](assets/workflow.png)
 
 
 ## Experimentos e Resultados preliminares
