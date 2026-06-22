@@ -106,7 +106,7 @@ $$
 N_{\text{colônias}} = \sum_{k \geq 1} \mathbf{1}(A_k > A_{\min})
 $$
 
-em que $A_k$ representa a área do componente associado ao rótulo $k$, $A_{\min}$ é a área mínima aceitável e $\#$ denota a quantidade de componentes válidos do conjunto, isto é, o número de componentes que satisfazem o critério de área mínima.
+em que $A_k$ representa a área do componente associado ao rótulo $k$, $A_{\min}$ corresponde à área mínima admissível e $\mathbf{1}(\cdot)$ denota a função indicadora. Assim, cada componente contribui com uma unidade para a soma apenas quando sua área excede o limiar estabelecido, resultando na contagem total de colônias válidas.
 
 ### 8. Avaliação: algoritmo vs. duas referências humanas
 
