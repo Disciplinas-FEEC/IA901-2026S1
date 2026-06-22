@@ -221,8 +221,7 @@ O resultado é salvo em data/processed, preservando o nome original de cada arqu
 | **HoughCircles** | dp=1.2, minDist=100, param1=50, param2=30, minRadius=200, maxRadius=400 |
 | **Raio da máscara final** | 86% do raio detectado |
 
-![Detecção da placa por Hough Circles](assets/experimentos/04_preprocesamiento.png)
-![Detecção da placa por Hough Circles](assets/experimentos/02_hough_roi.png)
+![Detecção da placa por Hough Circles](assets/experimentos/04_preprocesamento.png)
 
 ### 2. Detecção e contagem de colônias 
 
@@ -238,8 +237,8 @@ Com as imagens pré-processadas, foi implementado o pipeline de contagem baseado
   * Rotulagem dos marcadores e aplicação do Watershed.
 * **Contagem final:** Feita por componentes conectados, com filtro de área mínima (> 8 px) para descartar ruídos residuais, e desenho do contorno de cada colônia detectada na imagem de saída.
 
-> **Exemplo de execução em imagem única (`IMG_0636.jpg`):** 8 colônias contadas .
-> inserir aqui o print com as 3 imagens lado a lado (original / máscara / detecção com contagem)
+
+![Exemplo de execução em imagem única (`IMG_0636.jpg`8 colônias contadas)](assets/experimentos/01_deteccaocolonias.png)
 
 
 
