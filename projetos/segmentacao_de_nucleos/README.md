@@ -23,19 +23,84 @@ Para isso, serão utilizados três datasets públicos amplamente utilizados na l
 
 ## Metodologia
 
-O projeto está sendo desenvolvido seguindo um pipeline dividido em etapas de:
+O projeto segue um pipeline completo de processamento de imagem e treinamento de modelos de deep learning, estruturado em cinco etapas principais:
 
-- **instalação**, onde os datasets são obtidos automaticamente a partir de suas fontes públicas e organizados em diferentes diretórios seguindo uma estrutura de reprodutibilidade composta pelas pastas raw, interim e processed;
+### 1. Instalação e Estruturação de Dados
 
-- **pré-processamento**, responsável pela padronização dos dados provenientes dos diferentes datasets. Essa etapa inclui carregamento das imagens histológicas, conversão e organização das máscaras de segmentação, leitura de arquivos XML, além da visualização das amostras para utilização posterior no treinamento das redes neurais;
+Os datasets são obtidos automaticamente a partir de suas fontes públicas e organizados em uma estrutura padrão de reprodutibilidade:
+- **raw**: dados brutos originais de cada dataset
+- **interim**: dados convertidos para formato intermediário uniforme
+- **processed**: dados prontos para treinamento com patches e transformações aplicadas
 
-- **treinamento**, onde os experimentos de segmentação serão realizados utilizando arquiteturas de deep learning voltadas para imagens médicas, incluindo modelos baseados em U-Net e suas variantes;
+### 2. Pré-processamento
 
-- **teste**, onde o modelo treinado será aplicado a um conjunto de dados ainda não visto;
+Responsável pela padronização e preparação dos dados de diferentes datasets:
 
-- **avaliação e análise dos resultados**, que será realizada utilizando métricas quantitativas de segmentação, como Dice Score, IoU, Recall e F1-score. Também está prevista a utilização de métricas complementares relacionadas à qualidade de borda e sobreposição entre máscaras. Além disso, pretende-se realizar análises qualitativas das segmentações produzidas pelos modelos.
+**Conversão de formatos:**
+- **MoNuSeg**: Converte imagens TIFF (1000×1000×3) em patches de 256×256 em formato NPY; máscaras em XML são convertidas para arrays NumPy binários
+- **PanNuke**: Imagens já em NPY são mantidas; máscaras com 6 canais (5 tipos celulares + background) são agregadas em máscara binária única
+- **NuInSeg**: Imagens e máscaras PNG (512×512) são convertidas para NPY e divididas em patches de 256×256
 
-## Bases de Dados e Evolução
+**Divisão dos dados:** Cada dataset é dividido em três conjuntos:
+- Treinamento: 70%
+- Validação: 15%
+- Teste: 15%
+
+**Transformações de dados:**
+- Normalização de intensidade (ScaleIntensity)
+- Flips aleatórios (50% probabilidade em cada eixo espacial) aplicados apenas ao conjunto de treinamento
+
+### 3. Otimização de Hiperparâmetros
+
+Utiliza a framework Optuna para busca automática dos melhores hiperparâmetros:
+- **Métrica otimizada**: Dice Score na validação
+- **Número de trials**: 15 por combinação modelo-dataset
+- **Hiperparâmetros testados**:
+  - Learning Rate: $10^{-4}$ a $10^{-3}$ (escala logarítmica)
+  - Otimizador: Adam
+  - Batch Size: 16
+- **Épocas por trial**: 15
+
+Os learning rates otimizados para cada arquitetura e dataset são consolidados para o treinamento final.
+
+### 4. Treinamento
+
+Modelos são treinados com os hiperparâmetros otimizados:
+
+**Configuração:**
+- **Modelos**: UNet, AttentionUnet e UNETR (fornecidos pelo MONAI)
+- **Loss**: DiceCELoss (combinação de Dice Loss e Cross Entropy, com sigmoid ativação)
+- **Otimizador**: Adam com learning rates específicos por modelo e dataset
+- **Batch Size**: 16
+- **Épocas**: 50
+- **Critério de parada**: Melhor modelo é salvo baseado na métrica Dice na validação
+
+**Arquiteturas:**
+- **UNet**: Canais (16, 32, 64, 128, 256), strides (2, 2, 2, 2), 2 unidades residuais por nível
+- **AttentionUnet**: Mesma estrutura da UNet com mecanismos de atenção
+- **UNETR**: Vision Transformer com entrada/saída adaptadas para 256×256 e segmentação binária
+
+### 5. Teste e Avaliação
+
+**Estratégias de teste:**
+
+a) **Teste em domínio**: Modelo treinado em um dataset é testado em seu próprio conjunto de teste
+
+b) **Teste cross-dataset**: Modelo treinado em um dataset é testado em todos os datasets (para avaliar generalização e efeitos de adaptação de domínio)
+
+c) **Few-shot learning**: Ajuste fino com poucas amostras (K=5) do MoNuSeg usando modelo pré-treinado em PanNuke
+
+**Métricas de avaliação:**
+- **Dice Score**: Métrica principal de segmentação (média agregada da validação)
+- Resultados armazenados por imagem em CSVs para análise posterior
+- **Análise qualitativa**: Visualizações lado-a-lado de imagens originais, ground truth e predições
+
+**Experimentos:**
+- Cada modelo é treinado e testado em cada dataset
+- Matriz de generalização cross-dataset (3 datasets × 3 modelos = 9 combinações treino, testadas em 3 datasets = 27 cenários)
+- Few-shot learning para avaliar efetividade da transferência de domínio com dados limitados
+
+## Bases de Dados
 
 Base de Dados | Endereço na Web | Resumo descritivo
 ----- | ----- | -----
@@ -47,27 +112,49 @@ O detalhamento sobre os datasets utilizados pode ser encontrado no [datasheet de
 
 ## Ferramentas
 
-O projeto está sendo desenvolvido em Python, utilizando bibliotecas voltadas para manipulação de dados, processamento de imagens e treinamento de modelos de deep learning.
+O projeto está sendo desenvolvido em Python, utilizando bibliotecas voltadas para manipulação de dados, processamento de imagens e treinamento de modelos de deep learning. As ferramentas estão organizadas por função dentro do pipeline:
 
-Entre as principais bibliotecas utilizadas até o momento, destacam-se:
+### Gerenciamento de Dados e Ambiente
 
-- **NumPy**: operações matriciais e manipulação eficiente de arrays.
+- **Pathlib** e **os**: Gerenciamento de diretórios e estrutura de arquivos.
+- **gdown**: Download de datasets a partir de URLs do Google Drive (utilizado para PanNuke e NuInSeg)
+- **zipfile** e **shutil**: Extração e organização automatizada de arquivos dos datasets
 
-- **Pandas**: organização e leitura de tabelas e metadados dos datasets.
+### Processamento e Manipulação de Dados
 
-- **Pathlib** e **os**: gerenciamento de diretórios e estrutura de arquivos.
+- **NumPy**: Operações matriciais e manipulação eficiente de arrays multidimensionais para imagens e máscaras
+- **Pandas**: Organização, leitura e manipulação de metadados dos datasets (CSVs com informações de treino/validação/teste)
+- **xml.etree.ElementTree**: Processamento de anotações em formato XML presentes no dataset MoNuSeg (parsing de contornos de núcleos)
 
-- **gdown**, **zipfile** e **shutil**: download, extração e organização automatizada dos datasets.
+### Processamento de Imagens
 
-- **PIL** e **scikit-image**: leitura e manipulação de imagens histológicas.
+- **PIL (Pillow)**: Leitura e carregamento de imagens nos formatos PNG e TIFF
+- **scikit-image**: Manipulação avançada de imagens (conversão de anotações XML para máscaras binárias, operações morfológicas)
 
-- **xml.etree.ElementTree**: processamento das anotações em formato XML presentes no MoNuSeg.
+### Visualização
 
-- **Matplotlib**: visualização de imagens e máscaras de segmentação.
+- **Matplotlib**: Visualização de imagens, máscaras de segmentação e resultados de predições
+- **Seaborn**: Visualizações estatísticas de resultados (boxplots, distribuições de Dice Score)
 
-- **PyTorch**: desenvolvimento e treinamento das redes neurais.
+### Deep Learning e Redes Neurais
 
-- **MONAI**: framework especializado em aplicações de deep learning para imagens médicas, utilizado para implementação das arquiteturas de segmentação.
+- **PyTorch**: Framework principal para desenvolvimento e treinamento das redes neurais
+  - Gestão de tensores e computação em GPU/CPU
+  - Otimizadores (Adam, AdamW)
+  - Utilitários de training loop e inferência
+
+- **MONAI (Medical Open Network for AI)**: Framework especializado em deep learning para imagens médicas
+  - Implementação das arquiteturas: UNet, AttentionUnet e UNETR
+  - DataLoaders e transformações específicas para dados médicos (LoadImaged, EnsureChannelFirstd, ScaleIntensityd, RandFlipd)
+  - Métricas de segmentação: DiceMetric
+  - Loss functions: DiceCELoss (combinação de Dice Loss e Cross Entropy)
+
+### Otimização e Ajuste de Hiperparâmetros
+
+- **Optuna**: Framework de otimização bayesiana para busca automática de hiperparâmetros
+  - Busca em espaço contínuo para Learning Rate
+  - Amostragem categórica para Otimizador e Batch Size
+  - Pruning de trials não promissores para economia computacional
 
 ## Workflow
 
@@ -89,7 +176,7 @@ Aplicou-se os mesmos hiperparâmetros para todos os tipos de redes utilizados, i
 - Batch Size: 16
 - Número de épocas: 50
 
-#### Resultados preliminares
+#### Resultados
 Com as redes treinadas em cada dataset, obteve-se, nos respectivos conjuntos de teste, os seguintes DICES médios:
 
 | Dataset | UNET | AttentionUnet | UNETR |
@@ -98,24 +185,15 @@ Com as redes treinadas em cada dataset, obteve-se, nos respectivos conjuntos de 
 | **PanNuke** | $0.81 \pm 0.18$ | $0.82 \pm 0.18$ | $0.80 \pm 0.18$ |
 | **NuInSeg** | $0.74 \pm 0.22$ | $0.77 \pm 0.22$ | $0.73 \pm 0.22$ |
 
-## Próximos passos
-Essa etapa do projeto consistiu na criação de sua estrutura e testes iniciais das ferramentas e datasets utilizados. Para a conclusão do projeto, os próximos passos focam na melhoria do treinamento, além de testes com aplicação mais focada em seu objetivo inicial.
-
-Passo | Descrição | Período de realização
----- | ---- | ----
-Inclusão de métricas            | Estudar mais a fundo e incluir no projeto métricas de avaliação de borda, como a Distância de Hausdorff Média ou a Distância de Superfície Simétrica, com o objetvo de complementar o DICE (métrica de sobreposição). | Semana 1
-Refinamento do treinamento      | Refinar o treinamento e ajustar hiperparâmetros utilizando métodos de otimização, além da análise das métricas de avaliação | Semanas 2 e 3
-Testes em diferentes datasets   | Realizar testes dos modelos com dados de bases não introduzidas em seu treinamento (utilizando o MoNuSeg como conjunto de teste de um modelo treinado e validado no PanNuke por exemplo) | Semanas 2 e 3
-Análise final                   | Análisar os resultados finais para preparar a entrega final | Semana 4
-Organização para a entrega      | Organizar dados sobre o desenvolvimento e execução do projeto no formato esperado para a entrega final | Semana 4
-
-
 ## Uso de IA Generativa
 - Implementação de script para geração de samples: O Claude foi utilizado para gerar um script base de geração da pasta '*\data\samples'. Foram feitas diversas adaptações em cima desse script base, para que essa geração se adequasse ao projeto.
     - Prompt Utilizado: "baseado no notebook (00_installation.ipynb), implemente um script que gere samples para os dados dos datasets"
 
 - Interpretação inicial dos artigos referenciados no projeto: O NotebookLM foi utilizado para auxílio na síntese de informações presentes nos artigos sobre os datasets e sobre estruturação de datasheets para datasets.
     - Prompt Utilizado: "com base na estrutura de um datasheet sugerida pelo artigo Datasheets for Datasets, busque nos artigos dos datasets as informações necessárias para o preenchimento das seções"
+
+- Melhoria de escrita: O Claude foi utilizado em algumas ocasiões para melhorar algumas partes do texto.
+    - Prompts Utilizados: variações de "melhore essa frase/parte do texto"
 
 ## Referências
 
