@@ -254,13 +254,13 @@ Utilizou-se o [Gemini](https://gemini.google/us/about/?hl=en) a fim de avaliar a
 ### Auxílio na criação dos códigos
 Utilizou-se o [Gemini](https://gemini.google/us/about/?hl=en) a fim de verificar se a mIoU modificada que o dataset sugere foi codificada corretamente, além disso foi utilizada para colaborar em como seria executar o treinamento em duas GPUs.
 O prompt utilizado para a mIoU foi:
-> "Veja se a mIoU do code "<code>" está de acordo com a screenshot. (A screenshot possuiaDado os seguintes diretórios escreva um código que permita acessar as imagens presentes nas pastas.".
+> Sobre o treinamento em paralelo, foram utilizados múltiplos prompts que envolvessem o DDP.
+> "Veja se a mIoU do code "<code>" está de acordo com a screenshot. (A screenshot possuiaDado os seguintes diretórios escreva um código que permita acessar as imagens presentes nas pastas.". Vide Figura 9.
 
 <div align="center">
-  <img src="assets/print_mIoU_modificada.png" alt="Loss RGBNVW" width="900">
-  
+  <img src="assets/print_mIoU_modificada.png" alt="Loss RGBNVW" width="900">  
   <p>
-    <b>Figura 9:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RGBNVW.
+    <b>Figura 9:</b> Screenshot da mIoU modificada.
     <br>
   </p>
 </div>
