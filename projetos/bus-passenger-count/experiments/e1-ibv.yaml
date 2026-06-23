@@ -1,0 +1,22 @@
+# E1 - Single-domain baseline: train only on inside-bus-view.
+# Tests whether the larger public in-bus dataset transfers to the other domains.
+experiment_id: e1-ibv
+strategy: direct
+weights: yolo11m.pt
+dataset_stage: processed
+train_datasets:
+  - inside-bus-view
+eval_datasets:
+  - passenger-detection-bus
+  - inside-bus-view
+  - passenger-deakin
+  - onibus-unicamp-private
+train_config:
+  epochs: 100
+  patience: 20
+  batch: 16
+  imgsz: 640
+  workers: 4
+  amp: true
+  seed: 42
+  deterministic: true

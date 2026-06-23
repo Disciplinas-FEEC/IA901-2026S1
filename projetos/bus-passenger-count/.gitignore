@@ -9,12 +9,16 @@ __pycache__/
 # Run artefacts
 runs/
 wandb/
+data/**
+!data/**/*.md
 
 # Downloaded model weights (pulled on demand by ultralytics / SAM)
 yolo*.pt
 sam*.pt
 
 # Downloaded dataset payloads; keep only the per-folder readmes.
+data/interim/*/*
+!data/interim/*/readme.md
 data/processed/*/*
 !data/processed/*/readme.md
 

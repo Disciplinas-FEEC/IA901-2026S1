@@ -1,0 +1,23 @@
+# E2 - Two-public-dataset training with default Ultralytics augmentation.
+# Compares against e1-public-noaug to estimate the value of regular YOLO aug.
+experiment_id: e2-public-default
+strategy: direct
+weights: yolo11m.pt
+dataset_stage: processed
+train_datasets:
+  - passenger-deakin
+  - inside-bus-view
+eval_datasets:
+  - passenger-detection-bus
+  - inside-bus-view
+  - passenger-deakin
+  - onibus-unicamp-private
+train_config:
+  epochs: 100
+  patience: 20
+  batch: 16
+  imgsz: 640
+  workers: 4
+  amp: true
+  seed: 42
+  deterministic: true

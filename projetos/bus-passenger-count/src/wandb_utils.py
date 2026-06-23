@@ -1,114 +1,144 @@
-"""Small wandb wrapper used by train/eval modules."""
-
-from __future__ import annotations
+"""Wandb wrapper used by train/eval modules."""
 
 import os
 import random
 from pathlib import Path
-from typing import Any, Iterable
+from uuid import uuid4
 
 import yaml
 
-import config
+from src import config
+
+try:
+    import wandb
+except ImportError:
+    wandb = None
+
 
 def _active_run():
-    try:
-        import wandb
-        return wandb.run
-    except Exception:
-        return None
+    return wandb.run if wandb is not None else None
 
 
-def init_run(
-    wandb_config: dict[str, Any],
-    run_name: str,
-    run_dir: str | Path,
-    notes: str | None = None,
-    tags: list[str] | None = None,
-) -> bool:
+def disable_ultralytics_autolog():
+    """Turn off Ultralytics' built-in W&B callback so we log once, on epochs."""
+    from ultralytics import settings
+    if settings.get("wandb"):
+        settings.update({"wandb": False})
+        print("wandb:    disabled Ultralytics built-in W&B logging")
+
+
+def init_run(wandb_config, run_name, run_dir, notes=None, tags=None):
     """Start a wandb run; returns False if wandb is unavailable."""
-    try:
-        import wandb
-        project = os.environ.get("WANDB_PROJECT") or config.WANDB_PROJECT
-        entity = os.environ.get("WANDB_ENTITY") or config.WANDB_ENTITY
-        if entity and "/" in entity:
-            # Common mistake: passing "entity/project" in WANDB_ENTITY.
-            entity = entity.split("/", 1)[0].strip()
-            print(f"wandb:    normalized entity to '{entity}' from WANDB_ENTITY")
-
-        run_dir = Path(run_dir)
-        run_dir.mkdir(parents=True, exist_ok=True)
-        run = wandb.init(
-            project = project,
-            entity  = entity,
-            name    = run_name,
-            config  = wandb_config,
-            dir     = str(run_dir),
-            notes   = notes,
-            tags    = tags,
-            reinit  = "finish_previous",
-        )
-        print(f"wandb:    run '{run_name}' -> {run.url}")
-        return True
-    except Exception as e:
-        print(f"wandb:    init failed ({e}) — continuing without WandB")
+    if wandb is None:
         return False
+    project = os.environ.get("WANDB_PROJECT") or config.WANDB_PROJECT
+    entity  = os.environ.get("WANDB_ENTITY")  or config.WANDB_ENTITY
+    if entity and "/" in entity:
+        entity = entity.split("/", 1)[0].strip()
+        print(f"wandb:    normalized entity to '{entity}' from WANDB_ENTITY")
+
+    run_dir = Path(run_dir)
+    run_dir.mkdir(parents=True, exist_ok=True)
+    run = wandb.init(
+        project = project,
+        entity  = entity,
+        name    = run_name,
+        config  = wandb_config,
+        dir     = str(run_dir),
+        notes   = notes,
+        tags    = tags,
+        reinit  = "finish_previous",
+    )
+    # Use epoch as the x-axis for every metric so curves from datasets with
+    # different #steps overlay cleanly.
+    wandb.define_metric("epoch")
+    wandb.define_metric("*", step_metric="epoch")
+    print(f"wandb:    run '{run_name}' -> {run.url}")
+    return True
 
 
-def is_active() -> bool:
+def is_active():
     return _active_run() is not None
 
 
-def log_metrics(metrics: dict[str, Any], step: int | None = None) -> None:
+def log_metrics(metrics, step=None):
     if not is_active():
         return
-    try:
-        import wandb
-        payload = {k: v for k, v in metrics.items() if v is not None}
-        if step is None:
-            wandb.log(payload)
-        else:
-            wandb.log(payload, step=step)
-    except Exception as e:
-        print(f"wandb:    log_metrics failed ({e})")
+    payload = {k: v for k, v in metrics.items() if v is not None}
+    if step is None:
+        wandb.log(payload)
+    else:
+        wandb.log(payload, step=step)
 
 
-def finish_run(summary: dict[str, Any] | None = None) -> None:
+def finish_run(summary=None):
     run = _active_run()
     if run is None:
         return
-    try:
-        import wandb
-        if summary:
-            final = {f"final/{k}": v for k, v in summary.items()
-                     if isinstance(v, (int, float)) and not isinstance(v, bool)}
-            if final:
-                wandb.log(final)
-                for k, v in final.items():
-                    run.summary[k] = v
-        wandb.finish()
-        print("wandb:    run finished")
-    except Exception as e:
-        print(f"wandb:    finish failed ({e})")
+    # Store headline values once, as run summary (shown in the runs table for
+    # cross-run comparison). No redundant `final/` chart section.
+    if summary:
+        for k, v in summary.items():
+            if isinstance(v, (int, float)) and not isinstance(v, bool):
+                run.summary[k] = v
+    wandb.finish()
+    print("wandb:    run finished")
 
 
-def _read_yolo_labels(label_path: Path) -> list[tuple[int, float, float, float, float]]:
-    """Parse a YOLO label file into normalized box tuples."""
+def log_image(path, key):
+    """Upload a single image (e.g. a PR/F1 curve PNG) to wandb."""
+    if not is_active():
+        return
+    wandb.log({key: wandb.Image(str(path))})
+
+
+def log_summary_table(rows, columns, key="test/summary"):
+    """Log one slide-ready table (one row per dataset)."""
+    if not is_active():
+        return
+    wandb.log({key: wandb.Table(columns=list(columns), data=rows)})
+
+
+def _read_yolo_labels(label_path):
     if not label_path.exists():
         return []
-    out: list[tuple[int, float, float, float, float]] = []
+
+    def _parse_label_xywh(parts):
+        coords = [float(v) for v in parts[1:]]
+
+        if len(coords) == 4:
+            return coords
+
+        if len(coords) >= 6 and len(coords) % 2 == 0:
+            xs = coords[0::2]
+            ys = coords[1::2]
+            min_x, max_x = min(xs), max(xs)
+            min_y, max_y = min(ys), max(ys)
+            w = max_x - min_x
+            h = max_y - min_y
+            if w <= 0 or h <= 0:
+                return None
+            cx = min_x + (w / 2.0)
+            cy = min_y + (h / 2.0)
+            return [cx, cy, w, h]
+
+        return None
+
+    out = []
     for line in label_path.read_text().splitlines():
         parts = line.strip().split()
         if len(parts) < 5:
             continue
         c = int(parts[0])
-        x, y, w, h = (float(v) for v in parts[1:5])
+        xywh = _parse_label_xywh(parts)
+        if xywh is None:
+            continue
+        x, y, w, h = xywh
         out.append((c, x, y, w, h))
     return out
 
 
-def _yolo_to_minmax(x: float, y: float, w: float, h: float) -> dict:
-    """Convert normalized YOLO center boxes to wandb min/max boxes."""
+def _yolo_to_minmax(x, y, w, h):
     return {
         "minX": max(x - w / 2.0, 0.0),
         "maxX": min(x + w / 2.0, 1.0),
@@ -117,144 +147,231 @@ def _yolo_to_minmax(x: float, y: float, w: float, h: float) -> dict:
     }
 
 
-def _resolve_test_image_dir(data_yaml: Path) -> Path:
-    """Resolve the test image directory from a YOLO dataset yaml."""
-    data_yaml = Path(data_yaml)
-    with data_yaml.open() as f:
-        spec = yaml.safe_load(f)
+def _resolve_test_image_dir(data_spec):
+    if isinstance(data_spec, dict):
+        spec = data_spec
+        base_dir = Path.cwd()
+    else:
+        data_yaml = Path(data_spec)
+        with data_yaml.open() as f:
+            spec = yaml.safe_load(f)
+        base_dir = data_yaml.parent
 
-    split_dir = spec.get("test") or spec.get("val")
-    if split_dir is None:
-        raise FileNotFoundError(f"{data_yaml} defines neither 'test' nor 'val' split")
+    split_dirs = spec.get("test") or spec.get("val")
+    if split_dirs is None:
+        raise FileNotFoundError("Data spec defines neither 'test' nor 'val' split")
+    if not isinstance(split_dirs, list):
+        split_dirs = [split_dirs]
 
-    p = Path(split_dir)
-    if p.is_absolute() and p.exists():
-        return p
+    def _resolve_one(split_dir):
+        p = Path(split_dir)
+        if p.is_absolute() and p.exists():
+            return p.resolve()
 
-    candidates: list[Path] = []
+        candidates = []
 
-    # Candidate 1: Ultralytics-style resolution using optional `path`.
-    base = Path(spec.get("path", data_yaml.parent))
-    if not base.is_absolute():
-        base = (data_yaml.parent / base).resolve()
-    candidates.append((base / p).resolve())
+        base = Path(spec.get("path", base_dir))
+        if not base.is_absolute():
+            base = (base_dir / base).resolve()
+        candidates.append((base / p).resolve())
 
-    # Candidate 2: direct relative to data.yaml directory.
-    candidates.append((data_yaml.parent / p).resolve())
+        candidates.append((base_dir / p).resolve())
 
-    # Candidate 3: sanitize leading ".." segments that some exports include.
-    normalized_parts = [part for part in p.parts if part not in ("..", ".")]
-    if normalized_parts:
-        candidates.append((data_yaml.parent / Path(*normalized_parts)).resolve())
+        normalized_parts = [part for part in p.parts if part not in ("..", ".")]
+        if normalized_parts:
+            candidates.append((base_dir / Path(*normalized_parts)).resolve())
 
-    for c in candidates:
-        if c.exists():
-            return c
+        for c in candidates:
+            if c.exists():
+                return c
+        return None
+
+    tried = []
+    for split_dir in split_dirs:
+        resolved = _resolve_one(split_dir)
+        tried.append(str(split_dir))
+        if resolved is not None:
+            return resolved
 
     raise FileNotFoundError(
-        f"Could not resolve split directory '{split_dir}' from {data_yaml}. "
-        f"Tried: {[str(c) for c in candidates]}"
+        f"Could not resolve split directories {tried}"
     )
 
 
-def _to_wandb_image_source(result_obj, fallback_path: Path):
-    """Return an RGB image source for wandb.Image."""
+def _resolve_label_dir(img_dir):
+    img_dir = Path(img_dir)
+
+    if img_dir.name.lower() == "images":
+        split_dir = img_dir.parent
+        if split_dir.name.lower() in ("train", "valid", "val", "test"):
+            candidate = split_dir / "labels"
+            if candidate.exists():
+                return candidate
+
+    parts = list(img_dir.parts)
+    for i in range(len(parts) - 1, -1, -1):
+        if parts[i].lower() != "images":
+            continue
+        candidate = Path(*parts[:i], "labels", *parts[i + 1:])
+        if candidate.exists():
+            return candidate
+
+    return img_dir.parent / "labels"
+
+
+def _to_wandb_image_source(result_obj, fallback_path):
     img = getattr(result_obj, "orig_img", None)
     if img is None:
         return str(fallback_path)
-    try:
-        if getattr(img, "ndim", 0) == 3 and img.shape[2] == 3:
-            # Ultralytics/OpenCV images are usually BGR; wandb expects RGB.
-            return img[:, :, ::-1].copy()
-    except Exception:
-        pass
+    if hasattr(img, "ndim") and img.ndim == 3 and img.shape[2] == 3:
+        return img[:, :, ::-1].copy()
     return img
 
 
-def log_test_predictions(
-    predictor,
-    data_yaml: str | Path,
-    n: int = 10,
-    names: dict[int, str] | None = None,
-    conf: float = 0.25,
-    panel_key: str = "test/predictions",
-    seed: int = 0,
-) -> None:
+def _downscale_for_wandb(image_source, max_side):
+    """Reduce very large images before upload to avoid quota blowups."""
+    if max_side <= 0:
+        return image_source
+    if isinstance(image_source, str):
+        return image_source
+    if not hasattr(image_source, "shape") or len(image_source.shape) < 2:
+        return image_source
+
+    h, w = image_source.shape[:2]
+    longest = max(h, w)
+    if longest <= max_side:
+        return image_source
+
+    # Fast integer-step downsampling keeps dependencies minimal.
+    step = (longest + max_side - 1) // max_side
+    return image_source[::step, ::step].copy()
+
+
+def _jpeg_for_wandb(image_source, quality):
+    """Materialize as JPEG so wandb media is much smaller than PNG."""
+    if quality >= 100:
+        return image_source
+    run = _active_run()
+    if run is None:
+        return image_source
+
+    try:
+        import cv2
+    except ImportError:
+        return image_source
+
+    if isinstance(image_source, str):
+        bgr = cv2.imread(image_source, cv2.IMREAD_COLOR)
+        if bgr is None:
+            return image_source
+    else:
+        if not hasattr(image_source, "shape"):
+            return image_source
+        if len(image_source.shape) == 2:
+            bgr = image_source
+        elif len(image_source.shape) == 3 and image_source.shape[2] == 3:
+            bgr = image_source[:, :, ::-1].copy()
+        else:
+            return image_source
+
+    cache_dir = Path(run.dir) / "media_jpeg_cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    out_path = cache_dir / f"{uuid4().hex}.jpg"
+    ok = cv2.imwrite(
+        str(out_path),
+        bgr,
+        [int(cv2.IMWRITE_JPEG_QUALITY), int(quality)],
+    )
+    return str(out_path) if ok else image_source
+
+
+def log_test_predictions(predictor, data_spec, n=10, names=None,
+                         conf=None, iou=None, panel_key="test/predictions", seed=0):
     """Upload a sample of test images with prediction and GT boxes."""
     if not is_active():
         print("wandb:    no active run — skipping test prediction panel")
         return
 
-    try:
-        import wandb
-    except ImportError:
-        print("wandb:    not installed — skipping log_test_predictions")
+    conf = config.VIZ_CONF if conf is None else conf
+    iou  = config.VIZ_IOU if iou is None else iou
+
+    img_dir   = _resolve_test_image_dir(data_spec)
+    label_dir = _resolve_label_dir(img_dir)
+
+    all_imgs = sorted(
+        [p for p in img_dir.iterdir()
+         if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".bmp", ".webp")]
+    )
+    if not all_imgs:
+        print(f"wandb:    no images found in {img_dir} — skipping prediction panel")
         return
 
-    try:
-        data_yaml = Path(data_yaml)
-        with data_yaml.open() as f:
-            spec = yaml.safe_load(f)
-        class_names = names or (
-            spec["names"] if isinstance(spec.get("names"), dict)
-            else {i: n for i, n in enumerate(spec.get("names", []))}
+    rng    = random.Random(seed)
+    labeled_imgs = [
+        p for p in all_imgs
+        if (label_dir / f"{p.stem}.txt").exists()
+    ]
+    pool = labeled_imgs if labeled_imgs else all_imgs
+    sample = rng.sample(pool, min(n, len(pool)))
+    print(
+        f"wandb:    uploading {len(sample)} test predictions from {img_dir} "
+        f"(labeled images: {len(labeled_imgs)}/{len(all_imgs)})"
+    )
+
+    wandb_images = []
+    for img_path in sample:
+        results = predictor.predict(
+            source=str(img_path), conf=conf, iou=iou,
+            classes=[config.PERSON_CLASS_ID],
+            agnostic_nms=config.VIZ_AGNOSTIC_NMS, verbose=False,
         )
+        if not results:
+            continue
+        r = results[0]
 
-        img_dir   = _resolve_test_image_dir(data_yaml)
-        label_dir = img_dir.parent / "labels"
-
-        all_imgs = sorted(
-            [p for p in img_dir.iterdir()
-             if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".bmp", ".webp")]
-        )
-        if not all_imgs:
-            print(f"wandb:    no images found in {img_dir} — skipping prediction panel")
-            return
-
-        rng = random.Random(seed)
-        sample = rng.sample(all_imgs, min(n, len(all_imgs)))
-        print(f"wandb:    uploading {len(sample)} test predictions from {img_dir}")
-
-        wandb_images: list[Any] = []
-        for img_path in sample:
-            results = predictor.predict(source=str(img_path), conf=conf, verbose=False)
-            if not results:
-                continue
-            r = results[0]
-
-            pred_boxes: list[dict] = []
-            if r.boxes is not None and len(r.boxes) > 0:
-                xywhn = r.boxes.xywhn.cpu().numpy()
-                clses = r.boxes.cls.cpu().numpy().astype(int)
-                confs = r.boxes.conf.cpu().numpy()
-                for (x, y, w, h), c, p in zip(xywhn, clses, confs):
-                    pred_boxes.append({
-                        "position":    _yolo_to_minmax(float(x), float(y), float(w), float(h)),
-                        "class_id":    int(c),
-                        "box_caption": f"{class_names.get(int(c), c)} {p:.2f}",
-                        "scores":      {"conf": float(p)},
-                    })
-
-            gt_boxes: list[dict] = []
-            label_path = label_dir / f"{img_path.stem}.txt"
-            for c, x, y, w, h in _read_yolo_labels(label_path):
-                gt_boxes.append({
-                    "position":    _yolo_to_minmax(x, y, w, h),
-                    "class_id":    int(c),
-                    "box_caption": class_names.get(int(c), str(c)),
+        pred_boxes = []
+        if r.boxes is not None and len(r.boxes) > 0:
+            xywhn = r.boxes.xywhn.cpu().numpy()
+            clses = r.boxes.cls.cpu().numpy().astype(int)
+            confs = r.boxes.conf.cpu().numpy()
+            for (x, y, w, h), c, p in zip(xywhn, clses, confs):
+                pred_boxes.append({
+                    "position":    _yolo_to_minmax(float(x), float(y), float(w), float(h)),
+                    "class_id":    0,
+                    "box_caption": f"person_pred {p:.2f}",
+                    "scores":      {"conf": float(p)},
                 })
 
-            wandb_images.append(wandb.Image(
-                _to_wandb_image_source(r, img_path),
-                boxes = {
-                    "predictions":  {"box_data": pred_boxes,  "class_labels": class_names},
-                    "ground_truth": {"box_data": gt_boxes,    "class_labels": class_names},
-                },
-                caption = img_path.name,
-            ))
+        gt_boxes = []
+        label_path = label_dir / f"{img_path.stem}.txt"
+        for c, x, y, w, h in _read_yolo_labels(label_path):
+            gt_boxes.append({
+                "position":    _yolo_to_minmax(x, y, w, h),
+                "class_id":    1,
+                "box_caption": "GT_ref",
+            })
 
-        if wandb_images:
-            wandb.log({panel_key: wandb_images})
-            print(f"wandb:    logged {len(wandb_images)} images under '{panel_key}'")
-    except Exception as e:
-        print(f"wandb:    log_test_predictions failed ({e})")
+        image_source = _to_wandb_image_source(r, img_path)
+        image_source = _downscale_for_wandb(
+            image_source=image_source,
+            max_side=config.WANDB_MAX_IMAGE_SIDE,
+        )
+        image_source = _jpeg_for_wandb(
+            image_source=image_source,
+            quality=config.WANDB_IMAGE_JPEG_QUALITY,
+        )
+        wandb_images.append(wandb.Image(
+            image_source,
+            boxes={
+                "person_pred": {"box_data": pred_boxes, "class_labels": {0: "person_pred"}},
+                "gt_ref": {"box_data": gt_boxes, "class_labels": {1: "GT_ref"}},
+            },
+            caption=img_path.name,
+        ))
+
+    if wandb_images:
+        wandb.log({panel_key: wandb_images})
+        print(
+            f"wandb:    logged {len(wandb_images)} images under '{panel_key}' "
+            "(single combined panel: person_pred + gt_ref)"
+        )
