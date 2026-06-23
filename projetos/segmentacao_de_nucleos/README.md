@@ -246,7 +246,7 @@ O projeto foi desenvolvido em Python, utilizando bibliotecas voltadas para manip
 ### Gerenciamento de Dados e Ambiente
 
 - **Pathlib** e **os**: Gerenciamento de diretórios e estrutura de arquivos.
-- **gdown**: Download de datasets a partir de URLs do Google Drive (utilizado para PanNuke e NuInSeg)
+- **gdown**: Download dos datasets a partir de URLs do Google Drive.
 - **zipfile** e **shutil**: Extração e organização automatizada de arquivos dos datasets
 
 ### Processamento e Manipulação de Dados
@@ -258,7 +258,7 @@ O projeto foi desenvolvido em Python, utilizando bibliotecas voltadas para manip
 ### Processamento de Imagens
 
 - **PIL (Pillow)**: Leitura e carregamento de imagens nos formatos PNG e TIFF
-- **scikit-image**: Manipulação avançada de imagens (conversão de anotações XML para máscaras binárias, operações morfológicas)
+- **scikit-image**: Manipulação de imagens 
 
 ### Visualização
 
@@ -269,7 +269,7 @@ O projeto foi desenvolvido em Python, utilizando bibliotecas voltadas para manip
 
 - **PyTorch**: Framework principal para desenvolvimento e treinamento das redes neurais
   - Gestão de tensores e computação em GPU/CPU
-  - Otimizadores (Adam, AdamW)
+  - Otimizadores (Adam)
   - Utilitários de training loop e inferência
 
 - **MONAI (Medical Open Network for AI)**: Framework especializado em deep learning para imagens médicas
@@ -282,7 +282,6 @@ O projeto foi desenvolvido em Python, utilizando bibliotecas voltadas para manip
 
 - **Optuna**: Framework de otimização bayesiana para busca automática de hiperparâmetros
   - Busca em espaço contínuo para Learning Rate
-  - Amostragem categórica para Otimizador e Batch Size
   - Pruning de trials não promissores para economia computacional
 
 ## Workflow
@@ -293,13 +292,31 @@ O workflow atual do projeto segue a estrutura ilustrada abaixo:
 
 ## Experimentos, Resultados e Discussão
 
+### Otimização de Hiperparâmetros
+
+A otimização com Optuna (15 trials por combinação modelo-dataset) revelou learning rates específicos para cada arquitetura e dataset:
+
+- **UNET**: Learning rates variaram entre $2.44 \times 10^{-4}$ (PanNuke) e $8.61 \times 10^{-4}$ (MoNuSeg)
+- **AttentionUnet**: Learning rates entre $4.65 \times 10^{-4}$ (PanNuke) e $7.44 \times 10^{-4}$ (NuInSeg)
+- **UNETR**: Learning rates entre $1.19 \times 10^{-4}$ (NuInSeg) e $2.44 \times 10^{-4}$ (MoNuSeg)
+
+Estes valores reforçam que diferentes arquiteturas e datasets requerem configurações de otimizador adaptadas para máxima eficiência.
+
+
 ### Desempenho em Domínio
 
-Os modelos foram treinados e testados no mesmo dataset, refletindo a capacidade de cada arquitetura em se adaptar a características específicas de cada domínio. A tabela abaixo apresenta os Dice Scores médios obtidos no conjunto de teste de cada dataset:
+Os modelos foram treinados e testados no mesmo dataset, refletindo a capacidade de cada arquitetura em se adaptar a características específicas de cada domínio. A tabela e gráfico abaixo apresentam os Dice Scores médios obtidos no conjunto de teste de cada dataset:
+
 
 ![Heatmap de Performance em Domínio](assets/results/heatmap_performance_in_domain.png)
 
 A figura acima visualiza a performance média de cada modelo por dataset através de um heatmap, facilitando a comparação entre arquiteturas.
+
+### Comparação de Arquiteturas
+
+![Comparação de Performance - Todas as Arquiteturas](assets/results/comparison_architectures.png)
+
+O gráfico acima apresenta uma comparação agregada do desempenho de cada arquitetura em todos os datasets, facilitando a identificação de padrões de desempenho.
 
 **Observações:**
 
@@ -308,6 +325,16 @@ A figura acima visualiza a performance média de cada modelo por dataset atravé
 - **PanNuke**: Alcançou os maiores Dice Scores em média, com AttentionUnet ligeiramente superior ($0.82 \pm 0.18$). Porém, o desvio padrão elevado ($0.18$) indica maior variabilidade entre amostras, refletindo a diversidade de tecidos e tipos celulares presentes no dataset.
 
 - **NuInSeg**: Apresentou os menores desempenhos e maior variabilidade ($0.22$). UNETR obteve o menor Dice neste dataset ($0.73 \pm 0.22$), enquanto AttentionUnet mostrou-se mais robusto ($0.77 \pm 0.22$).
+
+**Distribuição de Variância**
+A análise da distribuição de Dice Scores entre amostras revelou:
+
+- **Menor variância**: MoNuSeg apresenta patches mais homogêneos em qualidade de segmentação (desvio padrão ~0.09-0.10)
+- **Maior variância**: NuInSeg apresenta heterogeneidade significativa nas dificuldades de segmentação por amostra (desvio padrão ~0.22)
+- **Intermediária**: PanNuke com variância moderada a alta (~0.18), refletindo sua diversidade de tecidos
+
+![Heatmap de Variância](assets/results/heatmap_variance.png)
+
 
 ### Generalização Cross-Dataset
 
@@ -329,34 +356,15 @@ As figuras abaixo mostram a variabilidade das performances, comparando quando o 
 
 ![Performance de Generalização - UNETR](assets/results/perf_gen_unetr.png)
 
-### Otimização de Hiperparâmetros
-
-A otimização com Optuna (15 trials por combinação modelo-dataset) revelou learning rates ótimos específicos para cada arquitetura e dataset:
-
-- **UNET**: Learning rates variaram entre $2.44 \times 10^{-4}$ (PanNuke) e $8.61 \times 10^{-4}$ (MoNuSeg)
-- **AttentionUnet**: Learning rates entre $4.65 \times 10^{-4}$ (PanNuke) e $7.44 \times 10^{-4}$ (NuInSeg)
-- **UNETR**: Learning rates entre $1.19 \times 10^{-4}$ (NuInSeg) e $2.44 \times 10^{-4}$ (MoNuSeg)
-
-Estes valores reforçam que diferentes arquiteturas e datasets requerem configurações de otimizador adaptadas para máxima eficiência.
-
 ### Few-Shot Learning
 
 Modelos pré-treinados em PanNuke foram submetidos a fine-tuning com apenas K=5 amostras de NuInSeg. Este experimento simula cenários práticos onde dados anotados do domínio alvo são escassos.
 
 **Resultados:** O fine-tuning com poucas amostras demonstrou a viabilidade de adaptação rápida de modelos, reduzindo a necessidade de anotações extensivas do novo domínio. Porém, a qualidade das segmentações permaneceu inferior às do modelo treinado exclusivamente em domínio.
-No teste realizado, a performance após few-shot learning apenas não aumentou na arquitetura AttentionUnet.
+No teste realizado, a performance após few-shot learning não aumentou apenas na arquitetura AttentionUnet.
 
 ![Few-Shot Learning PanNuke](assets/results/few_shot_comparison.png)
 
-### Distribuição de Variância
-
-A análise da distribuição de Dice Scores entre amostras revelou:
-
-- **Menor variância**: MoNuSeg apresenta patches mais homogêneos em qualidade de segmentação (desvio padrão ~0.09-0.10)
-- **Maior variância**: NuInSeg apresenta heterogeneidade significativa nas dificuldades de segmentação por amostra (desvio padrão ~0.22)
-- **Intermediária**: PanNuke com variância moderada a alta (~0.18), refletindo sua diversidade de tecidos
-
-![Heatmap de Variância](assets/results/heatmap_variance.png)
 
 ### Observações
 
@@ -370,27 +378,23 @@ A análise da distribuição de Dice Scores entre amostras revelou:
 
 ### Exemplos Visuais de Segmentação
 
-As figuras abaixo apresentam exemplos visuais do desempenho de segmentação para cada dataset, mostrando a imagem original, a anotação manual (ground truth) e a predição do melhor modelo para o dataset:
+As figuras abaixo apresentam exemplos visuais do desempenho de segmentação para cada dataset, mostrando a imagem original, a anotação manual (ground truth) e a predição da AttentionUnet para o dataset:
 
-#### PanNuke - Exemplos de Segmentação
+#### MoNuSeg - Exemplo de Segmentação
+![Exemplos de Segmentação - MoNuSeg](assets/results/Examples_MoNuSeg.png)
+Exemplo de segmentação de imagem do MoNuSeg utilizando a AttentionUnet, Dice médio de 0.77 nesse modelo.
+
+#### PanNuke - Exemplo de Segmentação
 ![Exemplos de Segmentação - PanNuke](assets/results/Examples_PanNuke.png)
 
-Os exemplos de PanNuke mostram a capacidade do AttentionUnet em segmentar núcleos em imagens com diversidade de tipos celulares e tecidos, obtendo Dice Score médio de 0.82.
+Exemplo de segmentação de imagem no PanNuke, utilizando a AttentionUnet, obtendo Dice Score médio de 0.82.
 
-#### NuInSeg - Exemplos de Segmentação
+#### NuInSeg - Exemplo de Segmentação
 ![Exemplos de Segmentação - NuInSeg](assets/results/Examples_NuInSeg.png)
 
-Os exemplos de NuInSeg demonstram os desafios encontrados neste dataset, onde o AttentionUnet obteve desempenho de 0.77, refletindo a complexidade e variabilidade das imagens.
-
-### Comparação de Arquiteturas
-
-![Comparação de Performance - Todas as Arquiteturas](assets/results/comparison_architectures.png)
-
-O gráfico acima apresenta uma comparação agregada do desempenho de cada arquitetura em todos os datasets, facilitando a identificação de padrões de desempenho.
-
+Exemplo de segmentação de imagem no NuinSeg, onde o AttentionUnet obteve o Dice médio de 0.77.
 
 ## Conclusão
-
 ### Principais Conclusões
 
 O presente projeto demonstrou que a segmentação de núcleos em imagens histológicas apresenta desafios substanciais quando abordada sob a perspectiva de adaptação de domínio. As principais conclusões obtidas são:
@@ -407,7 +411,7 @@ O presente projeto demonstrou que a segmentação de núcleos em imagens histol�
 
 ### Principais Desafios Enfrentados
 
-- **Heterogeneidade de Formatos**: Datasets originários de diferentes fontes apresentavam formatos, dimensões e anotações heterogêneas (XML para MoNuSeg, NPY para PanNuke, PNG para NuInSeg), exigindo pipeline de pré-processamento robusto e flexível.
+- **Heterogeneidade de Formatos**: Datasets originários de diferentes fontes apresentavam formatos, dimensões e anotações heterogêneas (XML para MoNuSeg, NPY para PanNuke, PNG para NuInSeg), exigindo pipeline de pré-processamento que garantisse a padronização.
 
 - **Desbalanceamento Computacional**: A otimização de hiperparâmetros com Optuna, treinamento de múltiplas arquiteturas e testes cross-dataset em 27 cenários demandou recursos computacionais significativos, limitando a exploração mais extensiva de estratégias de adaptação.
 
@@ -425,7 +429,7 @@ O presente projeto demonstrou que a segmentação de núcleos em imagens histol�
 
 ## Trabalhos Futuros
 
-Para trabalhos futuros, uma melhoria seria a inclusão de métricas de avaliação focadas nos contornos das segmentações, como a Distância de Hausdorff Média e a Distância de Superfície Simétrica. Atualmente, a avaliação do projeto apoia-se fortemente no Coeficiente de Dice, que é excelente para medir a sobreposição de área. Contudo, quantificar o erro exato dos contornos forneceria uma análise mais robusta sobre a capacidade geométrica dos modelos ao operarem em imagens não vistas.
+Para trabalhos futuros, uma melhoria seria a inclusão de métricas de avaliação focadas nos contornos das segmentações, como a Distância de Hausdorff Média e a Distância de Superfície Simétrica. Atualmente, a avaliação do projeto apoia-se no Coeficiente de Dice, que é excelente para medir a sobreposição de área. Contudo, quantificar o erro exato dos contornos forneceria uma análise mais robusta sobre a capacidade geométrica dos modelos ao operarem em imagens não vistas.
 
 Além disso, embora o projeto tenha utilizado uma estratégia de transferência e fine-tuning com suporte reduzido (Few-Shot do tipo TransFT), a exploração de metodologias avançadas de Few-Shot Learning⁵, como no artigo referenciado e que foi descoberto durante a revisão do estado-da-arte, representaria um avanço significativo.
 
