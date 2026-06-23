@@ -1,72 +1,311 @@
-# IA901 - Projeto - Segunda Entrega (E2)
+# IA901 — Segmentação de Tumores Cerebrais com ACU-Net 2.5D
 
-## Instruções Gerais
+## Descrição do projeto
 
-O objetivo do projeto no contexto desta disciplina é fazer com que os alunos tentem resolver um problema real utilizando técnicas de processamento de imagens e reconhecimento de padrões.
+Este projeto propõe a segmentação automática de tumores cerebrais em imagens de ressonância magnética multimodal. A solução utiliza uma arquitetura **ACU-Net 2.5D** implementada em PyTorch.
 
-Para fazer esta entrega pelo github, siga as seguintes instruções atentamente:
- * Garanta que cada membro da equipe tenha uma conta github (serão monitoradas as contribuições de cada membro).
- * Faça fork deste repositório.
- * No seu fork, dentro da pasta de `projetos`, *crie uma nova pasta* com o *nome do seu projeto*.
- * Faça o commit dos arquivos associados a esta entrega, conforme descrito a seguir.
- * Quando tudo estiver pronto para entrega, crie uma tag de release no repositório identificada como `IA901_E2`.
- * Até a data de submissão estabelecida, crie um pull request para este repositório.
+O modelo recebe imagens das modalidades:
 
+* T1;
+* T1CE;
+* T2;
+* FLAIR.
 
+Para prever uma fatia central, o modelo utiliza também a fatia anterior e a posterior. Dessa forma, cada entrada possui:
 
-## Estrutura do repositório
+```text
+3 fatias consecutivas × 4 modalidades = 12 canais
+```
 
-A fim de uniformizar os repositórios de projetos da disciplina, os diretórios de seu repositório deverão ser nomeados e utilizados segundo a estrutura sugerida a seguir.
+A saída da rede corresponde a três regiões tumorais:
 
-Note que nem todos os diretórios ou arquivos serão necessários para todos os projetos. Foque em seguir o padrão para os diretórios que forem necessários. Não crie diretórios que não serão utilizados.
+* **WT — Whole Tumor:** tumor inteiro;
+* **TC — Tumor Core:** núcleo tumoral;
+* **ET — Enhancing Tumor:** região realçada por contraste.
 
+---
 
-~~~
-├── README.md          <- apresentação do projeto
+## Estrutura do projeto
+
+```text
+segmentacao-tumores-2.5D/
+├── README.md
 │
-├── data
-│   ├── processed      <- dados finais usados para a modelagem
-│   ├── interim        <- dados intermediários, e.g., resultado de transformação
-│   └── raw            <- dados originais sem modificações
+├── assets/
+│   └── artigo-base.pdf
 │
-├── notebooks          <- Jupyter notebooks ou equivalentes
+├── data/
+│   ├── interim/
+│   ├── processed/
+│   └── raw/
+│       └── datasheets_for_datasets_207726_298997.pdf
 │
-├── src                <- fonte em linguagem de programação (e.g., C++)
-│   └── README.md      <- instruções básicas de instalação/execução
+├── notebooks/
+│   └── ACU_Net_2.5D-Parcial.ipynb
 │
-└── assets             <- mídias usadas no projeto
-~~~
+└── src/
+```
 
-## `README.md`
+---
 
-Para a entrega E2, o README.md do repositório deve ser formatado [segundo o modelo disponibilizado neste link](https://github.com/Disciplinas-FEEC/IA901-2026S1/blob/main/templates/ia901-E2-template.md).
+## Organização das pastas
 
-Caso não tenha experiência com edição em Markdown, vide referência: [Mastering Markdown](https://guides.github.com/features/mastering-markdown/).
-Existem também múltiplas ferramentas para edição de Markdown como, por exemplo, [StackEdit](https://stackedit.io/).
+### `README.md`
 
-## `data`
+Arquivo principal de documentação do projeto. Contém a descrição da proposta, estrutura do repositório, bases utilizadas, instruções de execução e informações sobre reprodutibilidade.
 
-Dados utilizados no projeto respeitadas as possíveis implicações éticas, se você tiver licença para tal e se o volume for suportado pelo Github. Você pode optar por colocar um subconjunto ilustrativo dos dados.
+### `assets/`
 
-É importante que sejam colocados os dados originais (se for possível) para garantir a reprodutibilidade do processo. Os originais são colocados na subpasta `raw`. Dados intermediários devem ser colocados na pasta `interim`. Coloque os dados finais que serviram de entrada para as suas análises na subpasta `processed`.
+Contém materiais de apoio utilizados no projeto.
 
-Ainda, você deve criar um "datasheet" para os datasets utilizados e colocá-lo na pasta `data`.
+Atualmente, esta pasta contém:
 
-## `notebooks`
+```text
+artigo-base.pdf
+```
 
-Código do seu projeto que pode ser executado online sem instalação de software, tal como um notebook em Jupyter ou equivalente.
+Esse arquivo corresponde ao artigo utilizado como referência conceitual para a arquitetura ACU-Net e para a segmentação de tumores cerebrais em MRI multimodal.
 
-## `src`
+### `data/`
 
-Código em alguma linguagem ou projeto em Orange, Weka e similares.
+Armazena informações e arquivos relacionados aos datasets utilizados.
 
-Se for código em linguagem de programação, tente organizá-lo de forma que seja simples a sua execução por terceiros, por exemplo, acrescente as bibliotecas necessárias etc. Acrescente na raiz um arquivo `README.md` com as instruções básicas de instalação e execução.
+#### `data/raw/`
 
-## `assets`
+Diretório destinado aos dados originais, sem modificações.
 
-Qualquer mídia usada no seu projeto: vídeo, ilustrações, arquivos PDF etc.
+Os volumes completos das bases BraTS não são armazenados diretamente no repositório devido ao grande volume dos arquivos e às regras de distribuição dos datasets. O download dos dados é realizado pelo notebook por meio da Kaggle API.
 
-Note que nem todos os diretórios ou arquivos serão necessários para todos os projetos. Foque em seguir o padrão para os diretórios que forem necessários. Não crie diretórios que não serão utilizados.
+Atualmente, a pasta contém:
 
+```text
+datasheets_for_datasets_207726_298997.pdf
+```
 
-> Tudo o que aparecer neste modo de citação se refere a algo que deve ser substituído pelo indicado. 
+Esse documento descreve características, origem, composição e limitações dos datasets utilizados.
+
+#### `data/interim/`
+
+Diretório destinado a dados intermediários gerados durante o pré-processamento, tais como:
+
+* imagens normalizadas com Brain-Only Z-Score;
+* máscaras convertidas para WT, TC e ET;
+* imagens recortadas;
+* fatias utilizadas na estratégia 2.5D;
+* resultados temporários de processamento.
+
+Os dados intermediários completos não são versionados no GitHub devido ao tamanho. Eles podem ser gerados novamente pela execução do notebook.
+
+#### `data/processed/`
+
+Diretório destinado aos dados finais utilizados pelo modelo.
+
+No projeto, esses dados correspondem principalmente a tensores contendo:
+
+```text
+Entrada:
+3 fatias consecutivas × 4 modalidades = 12 canais
+
+Saída:
+WT, TC e ET = 3 canais
+```
+
+Os tensores são produzidos dinamicamente durante o treinamento e não são mantidos no repositório devido ao volume de armazenamento necessário.
+
+### `notebooks/`
+
+Contém o notebook principal do projeto:
+
+```text
+ACU_Net_2.5D-Parcial.ipynb
+```
+
+O notebook realiza as seguintes etapas:
+
+1. configuração das credenciais da Kaggle API;
+2. download das bases BraTS;
+3. leitura dos arquivos NIfTI;
+4. visualização das modalidades T1, T1CE, T2 e FLAIR;
+5. normalização Brain-Only Z-Score;
+6. conversão da máscara `SEG` para WT, TC e ET;
+7. criação das entradas 2.5D;
+8. definição da arquitetura ACU-Net em PyTorch;
+9. treinamento com Dice Loss e otimizador Adam;
+10. avaliação por Dice Score e matrizes de confusão;
+11. visualização de máscaras reais e previstas.
+
+### `src/`
+
+Diretório reservado para códigos-fonte organizados em módulos Python.
+
+No estágio atual do projeto, a implementação principal está concentrada no notebook do diretório `notebooks/`. Futuramente, funções de pré-processamento, geração de lotes, treinamento e avaliação podem ser separadas em arquivos Python dentro desta pasta.
+
+---
+
+## Bases de dados
+
+O projeto utiliza as bases BraTS 2018 e BraTS 2020.
+
+| Base de Dados | Características                                                                                                                                     | Uso no projeto                                                                           |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| BraTS 2018    | Imagens de ressonância magnética multimodal T1, T1CE, T2 e FLAIR, além da máscara clínica `SEG`. Inclui casos de gliomas de alto e baixo grau.      | Utilizada como parte do conjunto de treinamento e validação da ACU-Net 2.5D.             |
+| BraTS 2020    | Base posterior com maior diversidade de pacientes e condições de aquisição. Mantém as modalidades T1, T1CE, T2, FLAIR e as máscaras de segmentação. | Complementa a BraTS 2018, aumentando a diversidade dos pacientes utilizados pelo modelo. |
+
+Os pacientes são combinados e separados por paciente em:
+
+```text
+80% → treinamento
+20% → validação
+```
+
+---
+
+## Tecnologias utilizadas
+
+* Python;
+* Google Colab;
+* Kaggle API;
+* PyTorch;
+* CUDA, quando disponível;
+* NiBabel;
+* SimpleITK;
+* NumPy;
+* Matplotlib;
+* Pandas;
+* Seaborn;
+* Scikit-learn.
+
+---
+
+# Como executar o projeto no Google Colab
+
+## 1. Abrir o notebook
+
+No GitHub, acesse o arquivo:
+
+```text
+projetos/segmentacao-tumores-2.5D/notebooks/ACU_Net_2.5D-Parcial.ipynb
+```
+
+Em seguida, utilize uma das opções:
+
+* clicar em **Open in Colab**, caso o botão esteja disponível;
+* baixar o notebook e enviá-lo manualmente para o Google Colab;
+* abrir o Google Colab e selecionar **Arquivo → Fazer upload do notebook**.
+
+---
+
+## 2. Ativar GPU
+
+No Google Colab, acesse:
+
+```text
+Ambiente de execução
+→ Alterar tipo de ambiente de execução
+→ Acelerador de hardware
+→ GPU
+```
+
+O notebook utiliza GPU automaticamente quando o CUDA estiver disponível.
+
+---
+
+## 3. Configurar as credenciais da Kaggle API
+
+O notebook utiliza a Kaggle API para baixar os datasets BraTS.
+
+Na sua conta Kaggle, obtenha as credenciais:
+
+```text
+KAGGLE_USERNAME
+KAGGLE_KEY
+```
+
+No Google Colab:
+
+1. clique no ícone de chave na barra lateral;
+2. crie o segredo `KAGGLE_USERNAME`;
+3. crie o segredo `KAGGLE_KEY`;
+4. permita que o notebook acesse esses segredos.
+
+O notebook recupera essas informações utilizando o mecanismo de segredos do Colab.
+
+---
+
+## 4. Executar o notebook
+
+Execute as células na ordem em que aparecem.
+
+O fluxo de execução é:
+
+```text
+Configuração de bibliotecas
+↓
+Configuração da Kaggle API
+↓
+Download dos datasets
+↓
+Pré-processamento das imagens
+↓
+Geração das entradas 2.5D
+↓
+Treinamento da ACU-Net
+↓
+Avaliação e visualização dos resultados
+```
+
+Os datasets são baixados temporariamente no ambiente do Google Colab. Após a extração, os arquivos compactados podem ser removidos para economizar espaço.
+
+---
+
+## Parâmetros principais do treinamento
+
+| Parâmetro             |                Valor |
+| --------------------- | -------------------: |
+| Estratégia de entrada |                 2.5D |
+| Modalidades           | T1, T1CE, T2 e FLAIR |
+| Canais de entrada     |                   12 |
+| Classes de saída      |                    3 |
+| Classes previstas     |          WT, TC e ET |
+| Tamanho do lote       |                    8 |
+| Lotes por paciente    |                    5 |
+| Passos por época      |                  100 |
+| Número de épocas      |                  100 |
+| Otimizador            |                 Adam |
+| Taxa de aprendizado   |               `5e-5` |
+| Função de perda       |            Dice Loss |
+| Tamanho após recorte  |          `160 × 192` |
+
+---
+
+## Reprodutibilidade
+
+Para favorecer a reprodução dos experimentos, o projeto documenta:
+
+* utilização das bases BraTS 2018 e BraTS 2020;
+* divisão dos pacientes entre treino e validação;
+* normalização Brain-Only Z-Score;
+* estratégia de entrada 2.5D;
+* arquitetura ACU-Net;
+* hiperparâmetros de treinamento;
+* versões das bibliotecas;
+* informações de GPU e CUDA;
+* uso de semente aleatória fixa.
+
+Os resultados podem variar entre execuções devido a diferenças de ambiente, GPU, CUDA, versões de bibliotecas, aumento de dados e operações não determinísticas.
+
+---
+
+## Observações importantes
+
+* O modelo possui finalidade acadêmica e experimental.
+* Os resultados não substituem a avaliação de profissionais da área da saúde.
+* A correção N4 Bias Field Correction foi demonstrada no notebook, mas não foi integrada ao pipeline final de treinamento.
+* A arquitetura é uma adaptação 2.5D da ACU-Net, não uma reprodução literal de uma arquitetura completamente 3D.
+* Os volumes completos do BraTS não são incluídos no repositório devido ao tamanho e às regras de distribuição dos datasets.
+
+---
+
+## Uso dos dados
+
+Os datasets BraTS devem ser utilizados de acordo com os termos estabelecidos pelos seus responsáveis. Os dados são empregados neste projeto exclusivamente para fins acadêmicos e experimentais.
