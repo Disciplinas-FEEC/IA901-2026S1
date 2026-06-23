@@ -87,9 +87,9 @@ A saída de cada conexão lateral e do respectivo módulo de *upsampling* são s
 Porém esse mapa semântico obtido tem tamanho diferente dos labels. Enquanto o mapa semântico possui $128 \times 128 \times K$, o tensor do label tem 512 \times 512 \times K. Desta forma, adicionou-se por iniciativa própria a adição de uma interpolação bilinear para aumentar a resolução do mapa semântico.
 
 ### Métodos de avaliação
-A avaliação dos resultados foi realizada de forma quantitativa e qualitativa. A forma quantitativa foi através do mIoU (sigla) e a qualitativa através da visualização das segmentações.
+A avaliação do desempenho do modelo foi realizada através de duas abordagens: (i) **análise quantitativa** baseada na métrica *Mean Intersection over Union* ($mIoU$) descrita na equação (3), comumente utilizada para mensurar a acurácia de sobreposição por classe, e (ii) **análise qualitativa** por meio da inspeção visual e comparativa das máscaras de segmentação geradas pelo modelo em relação ao *ground-truth* das imagens agrícolas. 
 
-A avaliação do desempenho do modelo foi feita de forma quantitativa e qualitativa. A análise quantitativa baseou-se na métrica *Mean Intersection over Union* ($mIoU$) descrita na equação (3), comumente utilizada para mensurar a acurácia de sobreposição por classe. Além disso, a avaliação qualitativa foi realizada por meio da inspeção visual e comparativa das máscaras de segmentação geradas pelo modelo face ao *ground-truth* das imagens agrícolas. O $mIoU$ calcula a média da razão entre a área de interseção e a área de união entre as predições do modelo e as anotações reais, estendida a todas as 8 classes e o *background*.
+A métrica $mIoU$ calcula a média da razão entre a área de interseção e a área de união entre as predições do modelo e as anotações reais, computada sobre todas as 8 classes de anomalia e a classe de *background*.
 
 $$
 \begin{array}{cc}
