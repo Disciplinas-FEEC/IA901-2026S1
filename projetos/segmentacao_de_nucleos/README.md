@@ -69,8 +69,8 @@ Modelos são treinados com os hiperparâmetros otimizados:
 
 **Configuração:**
 - **Modelos**: UNet, AttentionUnet e UNETR (fornecidos pelo MONAI)
-- **Loss**: DiceCELoss (combinação de Dice Loss e Cross Entropy, com sigmoid ativação)
-- **Otimizador**: Adam com learning rates específicos por modelo e dataset
+- **Loss**: DiceCELoss (combinação de Dice Loss e Cross Entropy, com ativação sigmoide)
+- **Otimizador**: ADAM com learning rates específicos por modelo e dataset
 - **Batch Size**: 16
 - **Épocas**: 50
 - **Critério de parada**: Melhor modelo é salvo baseado na métrica Dice na validação
@@ -88,7 +88,7 @@ a) **Teste em domínio**: Modelo treinado em um dataset é testado em seu própr
 
 b) **Teste cross-dataset**: Modelo treinado em um dataset é testado em todos os datasets (para avaliar generalização e efeitos de adaptação de domínio)
 
-c) **Few-shot learning**: Ajuste fino com poucas amostras (K=5) do MoNuSeg usando modelo pré-treinado em PanNuke
+c) **Few-shot learning**: Ajuste fino com poucas amostras (K=5) do NuInSeg usando modelo pré-treinado em PanNuke
 
 **Métricas de avaliação:**
 - **Dice Score**: Métrica principal de segmentação (média agregada da validação)
@@ -112,7 +112,7 @@ O detalhamento sobre os datasets utilizados pode ser encontrado no [datasheet de
 
 ## Ferramentas
 
-O projeto está sendo desenvolvido em Python, utilizando bibliotecas voltadas para manipulação de dados, processamento de imagens e treinamento de modelos de deep learning. As ferramentas estão organizadas por função dentro do pipeline:
+O projeto foi desenvolvido em Python, utilizando bibliotecas voltadas para manipulação de dados, processamento de imagens e treinamento de modelos de deep learning. As ferramentas estão organizadas por função dentro do pipeline:
 
 ### Gerenciamento de Dados e Ambiente
 
