@@ -175,20 +175,20 @@ A primeira estratégia foi utilizar como entrada do modelo apenas os canais RGB,
   <img src="assets/loss_rgb.png" alt="Loss RGB" width="900">
   
   <p>
-    <b>Figura 5:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RBG.
+    <b>Figura 5:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RGB.
     <br>
   </p>
 </div>
 
 ### RGB com Weight Loss (*Red, Green, Blue* + *Weight Loss*)
 
-A segunda estratégia manteve o espaço de entrada restrito aos canais visíveis (RGB), mas introduziu a aplicação de pesos na função de custo (Weighted Loss). O objetivo fundamental deste experimento é avaliar a capacidade do modelo em lidar com o severo desbalanceamento de classes inerente às imagens agrícolas, onde a área correspondente ao cultivo saudável (background) domina massivamente os pixels em relação às áreas com anomalias. A utilização da weighted loss atua diretamente na correção desse viés, aplicando multiplicadores de penalidade significativamente maiores aos falsos negativos das classes minoritárias. Isso força o modelo a priorizar a extração de características discriminantes dos padrões raros, em vez de negligenciá-los. Por exemplo, isso significa que se uma anomalia (como "erva daninha") aparece em apenas 1% dos pixels, o peso dela será em torno de 99. Isso força a rede a levar um erro de falso negativo dessa classe 99 vezes mais a sério do que um erro em uma classe muito frequente. Na Figura 7 é ilustrado o comportamento da loss de treino e validação durante o treinamento.
+A segunda estratégia manteve o espaço de entrada restrito aos canais visíveis (RGB), mas introduziu a aplicação de pesos na função de custo (Weighted Loss). O objetivo fundamental deste experimento é avaliar a capacidade do modelo em lidar com o severo desbalanceamento de classes inerente às imagens agrícolas, onde a área correspondente ao cultivo saudável (background) domina massivamente os pixels em relação às áreas com anomalias. A utilização da weighted loss atua diretamente na correção desse viés, aplicando multiplicadores de penalidade significativamente maiores aos falsos negativos das classes minoritárias. Isso força o modelo a priorizar a extração de características discriminantes dos padrões raros, em vez de negligenciá-los. Por exemplo, isso significa que se uma anomalia (como "erva daninha") aparece em apenas 1% dos pixels, o peso dela será em torno de 99. Isso força a rede a levar um erro de falso negativo dessa classe 99 vezes mais a sério do que um erro em uma classe muito frequente. Na Figura 6, é ilustrado o comportamento da loss de treino e validação durante o treinamento.
 
 <div align="center">
   <img src="assets/loss_rgb.png" alt="Loss RGB" width="900">
   
   <p>
-    <b>Figura 6:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RBG com Weight Loss.
+    <b>Figura 6:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RGB com Weight Loss.
     <br>
   </p>
 </div>
