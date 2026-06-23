@@ -259,9 +259,9 @@ Em relação aos principais desafios enfrentados, o alto desequilíbrio na distr
 Como lições aprendidas a primeira é que a engenharia envolvida nos canais de entrada provou ser decisiva para o desempenho final. Em cenários agrícolas multiespectrais, estruturar o espaço de entrada combinando o dado original com subespaços semânticos de sensoriamento remoto mostrou-se muito mais proveitoso do que delegar à rede o aprendizado autônomo de relações não lineares a partir das bandas brutas, evidenciando o valor do conhecimento de domínio dos dados. Além disso, a busca por compensar o desbalanceamento de classes exige estratégias que combinem mais de uma técnica durante o treinamento. Intervenções isoladas, como o ajuste estático de pesos na função de perda , mostraram-se pouco suficientes e geraram *trade-offs* que prejudicaram outras classes.
 
 ## Trabalhos Futuros
-> Ler outros trabalhos que utilizem o Agriculture Vision dataset a fim de avaliar soluções que possam ser úteis pra nos aprofundar em melhores modelos, indo além do baseline. (O desenvolvimento de baseline foi bom para nos inteirar sobre o desafio tratado.)
+* Ler outros trabalhos que utilizem o Agriculture Vision dataset a fim de avaliar soluções que possam ser úteis pra nos aprofundar em melhores modelos, indo além do baseline. (O desenvolvimento de baseline foi bom para nos inteirar sobre o desafio tratado.)
 
-> Explorar losses que compensem o desbalanceamento do dataset, como a aplicada aqui, a weighted loss.
+* Explorar losses que compensem o desbalanceamento do dataset, como a aplicada aqui, a weighted loss.
 
 ## Uso de IA Generativa
 Utilizou-se o [Gemini](https://gemini.google/us/about/?hl=en) a fim de avaliar a coesão e concordância dos textos redigidos. O prompt utilizado foi:
