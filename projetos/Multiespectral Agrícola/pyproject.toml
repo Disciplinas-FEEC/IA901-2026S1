@@ -8,7 +8,7 @@ packages = ["src"]
 [project]
 name = "multiespectral-agricola"
 version = "0.1.0"
-description = "Add your description here"
+description = "Segmentacao semantica de imagens agricolas com fusao RGB, NIR, NDVI e NDWI para deteccao de anomalias"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
