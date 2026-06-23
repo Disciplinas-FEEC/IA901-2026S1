@@ -3,11 +3,17 @@
 raw_data
 ICBHI_final_database
 
-data_raw/
-data_preprocessed/
+raw*/
+interim*/
+preprocessed*/
 logs/
+results/
 checkpoints/
 *.ckpt
-
-pycache__/
+*.png
+__pycache__/
 *.pyc
+*.keras
+/home/rafaelsantos/Documentos/IA901_Project/notebooks/temp_test_mel_db
+/home/rafaelsantos/Documentos/IA901_Project/notebooks/temp_train_mel_db
+*/home/rafaelsantos/Documentos/data
