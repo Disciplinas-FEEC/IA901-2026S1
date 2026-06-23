@@ -157,7 +157,10 @@ Observando a Figura 4 é notório o grande desbalanceamento de classes, um dos p
 [Link para o datasheet do dataset](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/data/Datasheet___Agriculture_Vision.pdf)
 
 ## Ferramentas
-> Panorama das ferramentas utilizadas incluindo uma breve discussão sobre o uso das mesmas.
+* Ambiente Virtual com uv: Gerenciador de pacotes utilizado para garantir a instalação extremamente rápida de dependências e a reprodutibilidade isolada do ambiente de desenvolvimento.
+* PyTorch: Framework de Deep Learning empregado na construção, treinamento e manipulação dos tensores multidimensionais dos modelos de segmentação, com suporte nativo a aceleração por GPU.
+* TensorBoard: Plataforma de visualização utilizada para o monitoramento em tempo real das curvas de *loss* e da evolução da métrica $mIoU$ durante as iterações de treino e validação.
+* OpenCV e Pillow (PIL): Bibliotecas fundamentais de processamento digital de imagens aplicadas na manipulação, leitura das bandas espectrais e geração visual das máscaras de predição.
 
 ## Workflow
 
