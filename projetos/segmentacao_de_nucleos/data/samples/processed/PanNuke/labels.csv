@@ -1,0 +1,16 @@
+FileName,Type,split
+4913,Skin,train
+4900,Prostate,test
+2301,Ovarian,test
+6953,Colon,val
+3528,Esophagus,train
+1650,Bile-duct,train
+4168,Breast,val
+503,Breast,val
+7332,Kidney,train
+676,Breast,train
+7602,Stomach,train
+6552,Colon,train
+6129,Lung,train
+5952,Colon,train
+533,Breast,train

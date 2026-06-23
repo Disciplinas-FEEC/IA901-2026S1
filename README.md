@@ -1,6 +1,4 @@
-# IA901-2026S1
-IA901 - Análise de Imagens e Reconhecimento de Padrões
+# IA901 - Projeto
 
-Profa. Leticia Rittner
+O objetivo do projeto no contexto desta disciplina é fazer com que os alunos tentem resolver um problema real utilizando técnicas de processamento de imagens e reconhecimento de padrões.
 
-1o. Semestre de 2026

@@ -1,0 +1,11 @@
+FileName,split
+mouse_heart_15_0,train
+human_cardia_5_0,train
+human_placenta_27_3,val
+human_testis_4_3,train
+human_salivory_21_3,train
+human_oesophagus_11_2,train
+human_tongue_18_2,train
+mouse_heart_27_3,train
+human_cerebellum_5_1,train
+human_liver_36_1,test

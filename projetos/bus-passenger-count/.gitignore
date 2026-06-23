@@ -1,0 +1,26 @@
+# Secrets
+.env
+
+# uv / venv
+.venv/
+__pycache__/
+*.pyc
+
+# Run artefacts
+runs/
+wandb/
+
+# Downloaded model weights (pulled on demand by ultralytics / SAM)
+yolo*.pt
+sam*.pt
+
+# Downloaded dataset payloads; keep only the per-folder readmes.
+data/processed/*/*
+!data/processed/*/readme.md
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db
