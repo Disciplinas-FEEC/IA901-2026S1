@@ -76,10 +76,8 @@ Multiespectral Agrícola/
 │       └── load_dataset.sh      # baixa e descompacta o dataset a partir do S3
 │
 ├── notebooks/
-│   ├── exploratory-data-analysis_eda.ipynb   # análise exploratória (EDA)
-│   ├── model_eval.ipynb                        # inspeção visual + mIoU no teste
-│   └── NDVI and NDWI generation/
-│       └── nvdi_ndwi.ipynb                     # geração standalone das imagens NDVI/NDWI
+│   ├── exploratory-data-analysis_eda.ipynb   # análise exploratória (EDA) 
+│   └── model_eval.ipynb                        # inspeção visual + mIoU no teste
 │
 ├── data/
 │   ├── dataset/                 # (criado pelo load_dataset.sh) — o dataset fica aqui
@@ -255,13 +253,9 @@ Há dois caminhos típicos, dependendo do seu objetivo:
 1. **Instalação** (seções 4 e 5) — ambiente + dataset + `config.yaml`.
 2. **EDA** — abra [notebooks/exploratory-data-analysis_eda.ipynb](notebooks/exploratory-data-analysis_eda.ipynb)
    para entender o dataset, a distribuição de classes e validar que o split está funcionando.
-3. *(Opcional/informativo)* **Geração de NDVI/NDWI** —
-   [notebooks/NDVI and NDWI generation/nvdi_ndwi.ipynb](notebooks/NDVI%20and%20NDWI%20generation/nvdi_ndwi.ipynb)
-   gera e visualiza imagens dos índices. **Não é necessário para treinar**: o treino calcula
-   NDVI/NDWI internamente. Esse notebook serve para inspeção visual dos índices.
-4. **Treinamento** (seção 7).
-5. **Acompanhamento** com TensorBoard (seção 8), em paralelo ao treino.
-6. **Avaliação** e visualização (seção 9).
+3. **Treinamento** (seção 7).
+4. **Acompanhamento** com TensorBoard (seção 8), em paralelo ao treino.
+5. **Avaliação** e visualização (seção 9).
 
 > **Rodando os notebooks:** use o kernel do ambiente `.venv` (o `ipykernel` já é instalado
 > pelo `uv sync`). Os notebooks importam `from src... import ...` e montam caminhos relativos
