@@ -41,5 +41,6 @@ data/raw/
 data/processed/
 data/interim/
 notebooks/results/
+notebooks/results/predictions/**/*.npy
 # Trained models
 *.pth
