@@ -277,7 +277,7 @@ O prompt utilizado para a mIoU foi:
 <div align="center">
   <img src="assets/print_mIoU_modificada.png" alt="mIoU modificada" width="900">  
   <p>
-    <b>Figura 9:</b> Screenshot da mIoU modificada.
+    <b>Figura 10:</b> Screenshot da mIoU modificada.
     <br>
   </p>
 </div>
