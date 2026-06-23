@@ -222,12 +222,18 @@ A última estratégia introduz a fusão completa de recursos ao concatenar os ca
 
 Com o fim do treinamento os valores de $IoU$ para os dados de validação foram validados e estão presentes na Tabela 2. Ao analisar os resultados numéricos obtidos nos experimentos demonstram que a progressiva expansão do tensor de entrada e a aplicação de funções de perda ponderadas alteraram significativamente a capacidade de convergência e a acurácia de sobreposição por classe nas redes de segmentação semântica.
 
+<div align="center">
+
+<b>Tabela 2:</b> Valores de IoU para as estratégias abordadas.
+
 | | mIoU (%) | Background | Double plant | Drydown | Endrow | Nutrient deficiency | Planter skip | Water | Waterway | Weed cluster |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | RGB | 0,3693 | 0,7189 | 0,2289 | 0,5057 | 0,0942 | 0,2803 | **0,3006** | 0,7028 | 0,2288 | 0,263 |
 | RGB + Weighted Loss | 0,3706 | 0,7196 | 0,2211 | 0,5081 | 0,0962 | 0,2783 | 0,2861 | 0,713 | 0,237 | **0,2763** |
 | RGBN | 0,3756 | 0,7291 | 0,2024 | 0,4996 | **0,1133** | 0,3554 | 0,276 | 0,7068 | 0,2564 | 0,2418 |
 | RGBNVW | **0,3836** | **0,7326** | **0,2308** | **0,5215** | 0,1033 | **0,3512** | 0,2709 | **0,7194** | **0,2757** | 0,247 |
+
+</div>
 
 A análise quantitativa dos experimentos revela que a progressiva adição de informação espectral impactou diretamente a capacidade de generalização do modelo. O arranjo RGBNVW (RGB + NIR + NDVI + NDWI) atingiu o melhor desempenho global do projeto, estabelecendo o pico de $mIoU$ em 38,36%. A inclusão explícita dos subespaços baseados em índices forneceu ao modelo um forte indutor de características, o que permitiu obter os melhores resultados nas classes estruturais complexas do dataset *Agriculture-Vision*, como *double plant* (23,08%) e *drydown* (52,15%), superando o uso da informação espectral bruta isolada. Além disso, a inserção do NDWI na entrada impulsionou significativamente a detecção de dinâmicas hídricas, alcançando os maiores índices de acerto nas classes *water* (71,94%) e *waterway* (27,57%).
 
