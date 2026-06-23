@@ -1,7 +1,7 @@
 dataset_path: '${DATASET_PATH:-data/dataset/supervised/Agriculture-Vision-2021}'
 
 
-input_channels: 'rgbn' # 'rgb', 'rgbn', 'rgbnvw'
+input_channels: 'rgbnvw' # 'rgb', 'rgbn', 'rgbnvw'
 
 
 classes_to_evaluate:
@@ -24,4 +24,4 @@ model_hyperparameters:
   name: resnet50
   pretrained: true
   batch_size: 20
-  is_weighted_loss: true
+  is_weighted_loss: false
