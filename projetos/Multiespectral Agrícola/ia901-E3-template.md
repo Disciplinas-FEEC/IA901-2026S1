@@ -185,7 +185,7 @@ A primeira estratégia foi utilizar como entrada do modelo apenas os canais RGB,
 A segunda estratégia manteve o espaço de entrada restrito aos canais visíveis (RGB), mas introduziu a aplicação de pesos na função de custo (Weighted Loss). O objetivo fundamental deste experimento é avaliar a capacidade do modelo em lidar com o severo desbalanceamento de classes inerente às imagens agrícolas, onde a área correspondente ao cultivo saudável (background) domina massivamente os pixels em relação às áreas com anomalias. A utilização da weighted loss atua diretamente na correção desse viés, aplicando multiplicadores de penalidade significativamente maiores aos falsos negativos das classes minoritárias. Isso força o modelo a priorizar a extração de características discriminantes dos padrões raros, em vez de negligenciá-los. Por exemplo, isso significa que se uma anomalia (como *weed cluster*) aparece em apenas 1% dos pixels, o peso dela será em torno de 99. Isso força a rede a levar um erro de falso negativo dessa classe 99 vezes mais a sério do que um erro em uma classe muito frequente. Na Figura 6, é ilustrado o comportamento da loss de treino e validação durante o treinamento.
 
 <div align="center">
-  <img src="assets/loss_rgb.png" alt="Loss RGB" width="900">
+  <img src="assets/loss_rgb.png" alt="Loss RGB Weighted" width="900">
   
   <p>
     <b>Figura 6:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RGB com Weight Loss.
@@ -254,11 +254,13 @@ Utilizou-se o [Gemini](https://gemini.google/us/about/?hl=en) a fim de avaliar a
 ### Auxílio na criação dos códigos
 Utilizou-se o [Gemini](https://gemini.google/us/about/?hl=en) a fim de verificar se a mIoU modificada que o dataset sugere foi codificada corretamente, além disso foi utilizada para colaborar em como seria executar o treinamento em duas GPUs.
 O prompt utilizado para a mIoU foi:
+
 > Sobre o treinamento em paralelo, foram utilizados múltiplos prompts que envolvessem o DDP.
+
 > "Veja se a mIoU do code "<code>" está de acordo com a screenshot. (A screenshot possuiaDado os seguintes diretórios escreva um código que permita acessar as imagens presentes nas pastas.". Vide Figura 9.
 
 <div align="center">
-  <img src="assets/print_mIoU_modificada.png" alt="Loss RGBNVW" width="900">  
+  <img src="assets/print_mIoU_modificada.png" alt="mIoU modificada" width="900">  
   <p>
     <b>Figura 9:</b> Screenshot da mIoU modificada.
     <br>
