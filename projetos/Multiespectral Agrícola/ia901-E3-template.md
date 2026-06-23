@@ -103,8 +103,6 @@ Onde:
 * **$FP_i$** (*False Positives*): Falsos Positivos da classe $i$.
 * **$FN_i$** (*False Negatives*): Falsos Negativos da classe $i$.
 
-> Abordagem adotada pelo projeto na busca pela resposta às perguntas de pesquisa. Justificar teoricamente, sempre que possível, a metodologia adotada.
-
 ## Bases de Dados
 O dataset utilizado é o Agriculture-Vision 2022, disponível em: [Agriculture-Vision Challenge 2022](https://www.agriculture-vision.com/agriculture-vision-2022/prize-challenge-2022/agriculture-vision-challenge-2022).
 
@@ -233,6 +231,19 @@ A análise quantitativa dos experimentos revela que a progressiva adição de in
 Por outro lado, a transição do espectro visível (RGB) para o espectro multiespectral bruto (RGBN) gerou um ganho imediato, elevando o $mIoU$ global de 36,93% para 37,56%. O canal NIR bruto isolado provou-se eficiente em delimitar áreas de transição mecânica e falhas de borda no campo, fazendo com que a classe *endrow* atingisse o seu ápice de desempenho com 11,33%. A resposta física da clorofila na banda do infravermelho próximo também reduziu de forma expressiva as ambiguidades visuais na identificação de distúrbios metabólicos na lavoura, fazendo a métrica da classe *nutrient deficiency* dar um salto de 28,03% para 35,54% de $mIoU$.
 
 Em paralelo, a aplicação da estratégia RGB + Weighted Loss introduziu uma dinâmica importante para tentar mitigar o desbalanceamento de classes do dataset. Ao alterar a penalização dos erros na função de custo, a abordagem conseguiu um ganho focado na classe *weed cluster* que, apesar de ser a terceira mais frequente do *dataset*, alcançou o seu melhor resultado histórico com 27,63% de $mIoU$. Contudo, essa estratégia mostrou-se pouco suficiente para resolver o problema de maneira ampla, uma vez que o ganho no $mIoU$ global foi pouco e gerou um relativo *trade-off* ao degradar o desempenho em anomalias menos frequentes e de geometria linear perfeita, como *planter skip*, que decaiu de 30,06% para 28,61%. Esse comportamento evidencia que apenas ajustar os pesos na função de perda não basta para compensar as complexidades do dataset sem prejudicar o aprendizado de feições geométricas específicas e menos representadas.
+
+Ao analisar a Figura 9, que grande parte da imagem pertence a classe *drydown* algo que todas as abordagens conseguiram satisfatoriamente segmentar. No entanto, analisando detalhadamente é revelado que com exceção do RGBN, todas as outras estratégias apresentaram predições incorretas da classe *weed cluster* em uma região específica com vegetação mais clara. Esse comportamento demonstra que apenas a inserção da banda bruta NIR forneceu o contraste espectral necessário para diferenciar essa ambiguidade visual, impedindo que o modelo gerasse falsos positivos induzidos por variações locais de coloração.
+
+<div align="center">
+  <img src="assets/analise_qualitativa.png" alt="Avaliacao" width="1000">
+  
+  <p>
+    <b>Figura 9:</b> Comparação do <i>Ground-truth</i> com (b) RGB, (c) RGB + WeightLoss, (d) RGBN, (e) RGBNVW.
+    <br>
+  </p>
+</div>
+
+Além disso, um importante detalhe é que o RGB e RGBN foram capazes de preservar a separação física entre as três áreas distintas de *drydown*. Em contrapartida, as outras estratégias agruparam essas regiões, demonstrando que o ganho de sensibilidade nesse caso possivelmente gerou um viés adaptativo que prioriza a continuidade da classe majoritária, sacrificando a precisão morfológica.
 
 Portanto, os limites encontrados neste *pipeline* indicam que são necessários trabalhos mais profundos para superar o teto de desempenho imposto pelo desbalanceamento crítico e pela complexidade geométrica do dataset *Agriculture-Vision*, além disso, é necessário fazer um maior refino nos canais utilizados, testando várias possibilidades, algo que costuma trazer melhores resultados em outras pesquisas da área.
 
