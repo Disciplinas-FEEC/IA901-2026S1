@@ -112,6 +112,11 @@ Multiespectral Agrícola/
   usou **2× TITAN Xp (12 GB)**, i7-7700, 32 GB RAM.
 * **Disco:** ~21 GB — dataset
 
+> [!WARNING]
+> A etapa de descompactação exige espaço temporário adicional.
+> Garanta que haja pelo menos **2x o tamanho dos arquivos compactados** disponível em disco durante o processo.
+
+
 ---
 
 ## 4. Instalação passo-a-passo
@@ -161,7 +166,10 @@ estrutura esperada do dataset:
 ```
 data/dataset/supervised/Agriculture-Vision-2021/
 ├── train/
-│   ├── images/{rgb,nir}/   ├── masks/   ├── boundaries/   └── labels/<classe>/
+│   ├── images/{rgb,nir}/   
+│   ├── masks/   
+│   ├── boundaries/   
+│   └── labels/<classe>/
 ├── val/   (mesma estrutura, com labels)
 └── test/  (mesma estrutura, sem labels)
 ```

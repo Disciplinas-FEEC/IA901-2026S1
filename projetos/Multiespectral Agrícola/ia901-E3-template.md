@@ -158,15 +158,6 @@ Observando a Figura 4 é notório o grande desbalanceamento de classes, um dos p
 
 [Link para o datasheet do dataset](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/data/Datasheet___Agriculture_Vision.pdf)
 
-> Elencar as bases de dados utilizadas no projeto.
-
-> Faça uma descrição sobre o que o grupo concluiu sobre esta base. Sugere-se que respondam perguntas ou forneçam informações indicadas a seguir:
-> * Qual o formato dessa base, tamanho, tipo de anotação?
-> * Quais as transformações e tratamentos feitos? Limpeza, reanotação, etc.
-> * Utilize tabelas e/ou gráficos que descrevam os aspectos principais da base que são relevantes para o projeto.
-
-> Forneça também o link para o "datasheet" criado para os datasets (anexado na pasta `data`, como indicado nas [instruções E2](https://github.com/Disciplinas-FEEC/IA901-2026S1/blob/main/templates/ia901-E2-instructions.md)), contendo informações mais detalhadas e sistematizadas sobre as bases de dados.
-
 ## Ferramentas
 > Panorama das ferramentas utilizadas incluindo uma breve discussão sobre o uso das mesmas.
 
