@@ -11,6 +11,8 @@ O presente projeto foi originado no contexto das atividades da disciplina de pó
 | Letícia Lopes Mendes Da Silva | 184423 | Graduação em Engenharia de Computação |
 | Sofia Ballerini de Vasconcellos | 299904 | Doutorado em Engenharia Elétrica |
 
+> NOTA: O repositório no qual o projeto foi desenvolvido está disponível em <https://github.com/RafaelGAT108/IA901_Project>.
+
 ## Descrição do Projeto
 
 As doenças respiratórias estão entre as principais causas de morbidade e mortalidade no mundo. Segundo a World Health Organization, enfermidades como pneumonia, doença pulmonar obstrutiva crônica (DPOC) e asma afetam milhões de pessoas anualmente, impactando diretamente o sistema de saúde. O diagnóstico precoce dessas condições é fundamental para melhorar o prognóstico dos pacientes e reduzir complicações.
