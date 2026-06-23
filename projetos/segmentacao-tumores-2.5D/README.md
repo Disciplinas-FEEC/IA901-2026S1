@@ -304,10 +304,23 @@ Kaggle API: utilizada para realizar o download automatizado dos conjuntos BraTS 
 > 
 > Fluxograma planejado (2.5D): [Volumes NIfTI] -> [Otsu Mask & N4 Bias Correction] -> [Brain-Only Z-Score] -> [DataGenerator: Extração de Blocos 2.5D (12 canais)] -> [ACU-Net: Encoder -> Attention Gate -> Decoder] -> [Máscaras Preditivas WT, TC, ET] -> [Avaliação: Dice Coefficient].
 
-## Experimentos e Resultados preliminares
+## Experimentos e Resultados
 
+## Discussão
 
-## Próximos passos
+## Conclusão
+
+Este trabalho apresentou a implementação de um pipeline para segmentação automática de tumores cerebrais em imagens de ressonância magnética multimodal das bases BraTS 2018 e BraTS 2020. O fluxo desenvolvido contempla o carregamento de volumes NIfTI, a normalização Brain-Only Z-Score, a transformação das máscaras clínicas SEG nas regiões Whole Tumor (WT), Tumor Core (TC) e Enhancing Tumor (ET), a geração de entradas 2.5D e o treinamento de uma arquitetura ACU-Net implementada em PyTorch.
+
+A adoção da estratégia 2.5D permitiu utilizar informações espaciais de fatias vizinhas, combinando as modalidades T1, T1CE, T2 e FLAIR em uma entrada de 12 canais. Essa abordagem representa um compromisso entre o uso de contexto tridimensional e a redução do consumo de memória computacional, tornando o treinamento mais viável em ambientes com recursos limitados.
+
+A arquitetura ACU-Net combinou blocos convolucionais, conexões de atalho e Attention Gates. Os mecanismos de atenção foram empregados para filtrar informações menos relevantes nas skip connections e favorecer características relacionadas às regiões tumorais, auxiliando o decoder na reconstrução das máscaras WT, TC e ET.
+
+A utilização da Dice Loss mostrou-se adequada para o problema, pois as regiões tumorais ocupam uma parcela reduzida da imagem quando comparadas ao fundo e ao tecido cerebral saudável. Dessa forma, a função de perda privilegia a sobreposição entre a predição e a máscara clínica, sendo mais apropriada que métricas simples de acurácia para tarefas de segmentação médica.
+
+Apesar dos avanços, o projeto possui limitações. A avaliação ainda deve ser ampliada para todos os pacientes do conjunto de validação, com métricas por classe e análise mais robusta da generalização. Além disso, a etapa de aumento de dados precisa ser validada cuidadosamente para garantir que os espelhamentos ocorram apenas nos eixos espaciais, sem alterar a ordem das modalidades ou das classes tumorais.
+
+Conclui-se que a implementação desenvolvida demonstra a viabilidade de uma ACU-Net 2.5D para segmentação de tumores cerebrais em MRI multimodal. O modelo deve ser compreendido como uma ferramenta experimental de apoio à análise de imagens médicas, sendo necessários estudos adicionais, validação externa e comparação com outras arquiteturas antes de qualquer utilização em contexto clínico.
 
 **Sobre a modelagem em 3D inicial:**
 
@@ -317,12 +330,145 @@ Entretanto, essas etapas foram interrompidas devido às restrições de tempo di
 
 Dessa forma, optou-se pela estratégia 2.5D, que preserva parte do contexto espacial entre fatias vizinhas e reduz significativamente o consumo de memória em comparação com convoluções totalmente 3D. As etapas não concluídas permanecem como possibilidades de evolução futura do projeto.
 
-**Migração Estratégica para Modelagem 2.5D:**
+## Trabalhos Futuros
 
-Devido aos severos gargalos de hardware e problemas de *Out of Memory* (OOM) encontrados nas convoluções tridimensionais, os próximos passos visam otimizar a extração das características espaciais:
-- Substituição das funções `Conv3D` pesadas por convoluções `Conv2D` hiper-profundas (12 canais de entrada), permitindo que a rede avalie simultaneamente o contexto da fatia $z-1$, $z$ e $z+1$.
-- Execução do Bucle de Treinamento em PyTorch utilizando ambiente acelerado por GPU (Colab T4), injetando os lotes 2.5D dinamicamente.
-- Avaliação comparativa do *Dice Loss* entre a arquitetura 3D original e a nova estrutura 2.5D.
+A continuidade do projeto pode envolver melhorias no pré-processamento, na estratégia de treinamento, na avaliação experimental e na arquitetura empregada. As principais possibilidades são apresentadas a seguir.
+
+#### 1. Correção e aperfeiçoamento do aumento de dados
+
+Uma melhoria imediata consiste em revisar o procedimento de aumento de dados. No formato utilizado antes da transposição para PyTorch, os lotes possuem a estrutura:
+
+```text
+(Batch, Altura, Largura, Canais)
+```
+
+Portanto, os espelhamentos devem ocorrer apenas nos eixos espaciais de altura e largura. O uso de `axis=-1` pode inverter a ordem dos canais, alterando incorretamente as modalidades T1, T1CE, T2 e FLAIR ou as classes WT, TC e ET.
+
+Após essa correção, podem ser avaliadas novas transformações, como rotações leves, zoom, deformações elásticas e ajustes de contraste, desde que imagens e máscaras permaneçam alinhadas.
+
+#### 2. Integração e avaliação do N4 Bias Field Correction
+
+A correção N4 foi demonstrada no notebook por meio da biblioteca SimpleITK, mas não foi integrada ao pipeline oficial de treinamento.
+
+Como trabalho futuro, pode-se criar uma comparação experimental entre:
+
+```text
+Treinamento apenas com Brain-Only Z-Score
+vs.
+Treinamento com N4 Bias Field Correction + Brain-Only Z-Score
+```
+
+Essa análise permitiria verificar se a correção de variações de intensidade melhora a segmentação das regiões WT, TC e ET.
+
+#### 3. Amostragem balanceada de fatias tumorais
+
+O gerador atual seleciona fatias ao longo do volume do paciente. Como muitas fatias não possuem tumor, o modelo pode receber grande quantidade de exemplos contendo apenas tecido saudável.
+
+Uma evolução seria implementar uma estratégia de amostragem balanceada, garantindo maior presença de fatias com regiões tumorais durante o treinamento. Isso pode melhorar principalmente a identificação de regiões pequenas, como o tumor realçado (ET).
+
+#### 4. Ajuste de hiperparâmetros
+
+Podem ser realizados experimentos com diferentes configurações de treinamento, incluindo:
+
+* tamanho do lote;
+* taxa de aprendizado;
+* número de épocas;
+* passos por época;
+* tamanho do recorte anatômico;
+* número de fatias utilizadas na entrada 2.5D;
+* quantidade de filtros da ACU-Net;
+* intensidade e tipos de aumento de dados.
+
+Esses testes podem ajudar a encontrar uma configuração com melhor equilíbrio entre desempenho, tempo de treinamento e consumo de memória.
+
+#### 5. Comparação entre arquiteturas
+
+A arquitetura atual utiliza uma ACU-Net 2.5D com Attention Gates. Como evolução, podem ser comparadas diferentes alternativas:
+
+```text
+U-Net 2D convencional
+U-Net 2.5D sem Attention Gate
+ACU-Net 2.5D com Attention Gate
+Arquitetura 3D completa, quando houver recursos computacionais suficientes
+```
+
+Essa comparação permitiria medir a contribuição real da estratégia 2.5D e dos mecanismos de atenção.
+
+#### 6. Avaliação mais robusta
+
+Atualmente, a avaliação visual utiliza pacientes do conjunto de validação e fatias contendo tumor. Como trabalho futuro, recomenda-se avaliar sistematicamente todos os pacientes do conjunto de validação, considerando todas as fatias relevantes.
+
+Também podem ser adicionadas métricas complementares:
+
+* Dice Score por classe;
+* sensibilidade;
+* precisão;
+* especificidade;
+* Hausdorff Distance 95% (HD95);
+* volume tumoral previsto;
+* intervalo de confiança das métricas.
+
+Além disso, a validação cruzada por paciente pode fornecer uma análise mais robusta da estabilidade do modelo.
+
+#### 7. Avaliação entre BraTS 2018 e BraTS 2020
+
+Uma possibilidade importante é testar a capacidade de generalização entre bases. Por exemplo:
+
+```text
+Treinar com BraTS 2018 e validar com BraTS 2020
+Treinar com BraTS 2020 e validar com BraTS 2018
+Treinar com ambas as bases e avaliar separadamente cada uma
+```
+
+Essa análise ajudaria a identificar se o modelo mantém desempenho diante de diferentes pacientes, *scanners* e condições de aquisição.
+
+#### 8. Pós-processamento das máscaras previstas
+
+Após a inferência, podem ser aplicadas técnicas para reduzir falsos positivos, como:
+
+* remoção de pequenas regiões isoladas;
+* análise de componentes conectados;
+* ajuste do limiar de decisão;
+* imposição de consistência entre WT, TC e ET.
+
+Como as regiões possuem relação hierárquica, uma restrição útil seria garantir que:
+
+```text
+ET esteja contido em TC
+TC esteja contido em WT
+```
+
+Isso pode tornar as máscaras previstas mais coerentes.
+
+#### 9. Interpretabilidade do modelo
+
+Outra evolução seria gerar mapas de atenção e visualizações que mostrem quais regiões foram mais relevantes para a decisão da ACU-Net.
+
+Essas visualizações podem ajudar a analisar:
+
+* onde os Attention Gates concentraram atenção;
+* quais áreas influenciaram a previsão;
+* quando o modelo confundiu tecido saudável com tumor;
+* quais modalidades foram mais úteis em determinadas regiões.
+
+#### 10. Reprodutibilidade experimental
+
+Para aumentar a confiabilidade do estudo, recomenda-se:
+
+* fixar sementes do Python, NumPy e PyTorch;
+* registrar as versões das bibliotecas;
+* salvar a lista de pacientes de treino e validação;
+* salvar pesos finais e *checkpoints*;
+* registrar métricas por época;
+* disponibilizar um arquivo `requirements.txt`;
+* documentar configurações de GPU e CUDA.
+
+#### 11. Aplicação clínica e validação externa
+
+Por fim, uma etapa futura mais avançada seria avaliar o modelo em dados externos aos conjuntos BraTS. Essa etapa permitiria verificar se a arquitetura mantém desempenho em exames de outras instituições, *scanners* e protocolos de aquisição.
+
+Entretanto, essa validação deve ser conduzida com bases independentes e acompanhamento de especialistas, pois o modelo atual deve ser entendido como uma ferramenta experimental de apoio à análise de imagens médicas, e não como substituto da avaliação clínica.
+
 
 ## Uso de IA Generativa
 
@@ -335,6 +481,7 @@ Utilizamos ChatGPT para:
 - Prompt exemplo: “Crie um modelo de segmentação 3D para tumores cerebrais usando Keras/TensorFlow. O modelo deve ser baseado em U-Net com atenção (ACU-Net), receber 4 modalidades de imagem (FLAIR, T1, T1CE, T2) com tamanho 128x128x64, e gerar 3 classes de saída (WT, TC, ET). Inclua: camadas Conv3D, BatchNormalization, MaxPooling3D, Dropout, Attention, Conv3DTranspose e concatenations necessárias. Mostre o resumo completo do modelo (model.summary()).”
 
 Utilizamos o Gemini para:
+
 - Desconstruir o fluxo matemático da rede ACU-Net e traduzir sua lógica orientada a objetos para o PyTorch (criando os módulos `DoubleConv` e `AttentionGate`).
 - Estruturar o rigor do pré-processamento focado na remoção de viés magnético (N4 Bias Correction via SimpleITK).
 
