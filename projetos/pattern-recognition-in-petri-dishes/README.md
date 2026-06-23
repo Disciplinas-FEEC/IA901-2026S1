@@ -9,10 +9,8 @@
 
 ## Apresentação
 
-O presente projeto foi originado no contexto das atividades da disciplina de pós-graduação *IA901 - Análise de Imagens e Reconhecimento de Padrões*, 
+O presente projeto foi originado no contexto das atividades da disciplina de pós-graduação *IA901 - Análise de Imagens e Reconhecimento de Padrões*,
 oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dra. Leticia Rittner, do Departamento de Engenharia de Computação e Automação (DCA) da Faculdade de Engenharia Elétrica e de Computação (FEEC).
-
-
 
 > |Nome  | RA | Curso|
 > |--|--|--|
@@ -20,9 +18,7 @@ oferecida no primeiro semestre de 2026, na Unicamp, sob supervisão da Profa. Dr
 > | Laura Vieira Malachias   | 299117  | Mestranda em Tecnologia|
 > | Gabriela Morales Soto  | 299213  | Mestranda em Ciência da Computação|
 
-
-
-Este projeto é dedicado ao exploracão de metodologias de reconhecimento de padrões para a contagem automatizada de colônias de bactérias em placas de Petri, utilizando técnicas clássicas de Processamento Digital de Imagens e Técnicas de Deep Learning.
+Este projeto é dedicado à exploração de um pipeline clássico de Processamento Digital de Imagens para a contagem automatizada de colônias de bactérias em placas de Petri do dataset CNPEM, e à avaliação rigorosa desse pipeline contra duas referências humanas independentes para a mesma placa.
 
 ---
 
@@ -33,387 +29,289 @@ Este projeto é dedicado ao exploracão de metodologias de reconhecimento de pad
 
 ### Objetivo geral
 
-Desenvolver e avaliar um pipeline de ponta a ponta para **segmentação, detecção e contagem automática de colônias em placas de Petri**, reduzindo a dependência da contagem manual.
+Desenvolver e avaliar um pipeline de detecção e contagem automática de colônias em placas de Petri do dataset CNPEM, utilizando técnicas clássicas de visão computacional, e verificar se o erro do método automático em relação à contagem humana mais cuidadosa (CVAT - Computer Vision Annotation Tool) é compatível com a própria divergência observada entre dois contadores humanos da mesma placa (`staff` vs. `cvat`).
 
 ### Objetivos específicos
 
-- Preparar imagens de diferentes formatos e resoluções para análise computacional.
+- Realizar pré-processamento das imagens para a análise computacional.
 - Detectar automaticamente a região de interesse correspondente à placa de Petri.
-- Testar métodos clássicos de segmentação e contagem de colônias.
-- Treinar modelos de aprendizado profundo para detecção e segmentação.
-- Comparar métodos clássicos e modelos deep learning quanto a desempenho, robustez e limitações.
-- Investigar estratégias de adaptação de domínio entre os datasets AGAR e CNPEM.
+- Separar colônias parcialmente sobrepostas usando.
+- Quantificar o erro do pipeline (MAE, RMSE, MAPE) contra duas referências de contagem humana — `staff` (contagem original do analista) e `cvat` (recontagem feita com apoio de anotação de instâncias no CVAT) - e comparar essas duas métricas de erro entre si.
+
+### Metodologia
+
+A metodologia segue a linha de um pipeline clássico de visão computacional para contagem de colônias bacterianas, inspirado no método descrito por Chiang et al. (2015), que combina conversão de cor baseada em componentes principais, limiarização e separação de objetos sobrepostos por meio da Transformada de Distância e do algoritmo Watershed.
+
+A implementação foi organizada em dois notebooks principais. O notebook `1_preprocessamento_imagens.ipynb` realiza as etapas de pré-processamento descritas nas Seções 1 a 3, incluindo a preparação e o realce das imagens para a segmentação. Em seguida, o notebook `2_pipeline_contagem_colonias_cnpem.ipynb` executa o procedimento de segmentação e contagem das colônias, além da análise estatística dos resultados obtidos. O raciocínio de cada etapa é descrito a seguir, na ordem em que é executado no pipeline.
+
+### 1. Aquisição dos dados
+
+O conjunto de dados utilizado é o CNPEM (Centro Nacional de Pesquisa em Energia e Materiais), composto por imagens de placas de Petri adquiridas sob condições padronizadas de captura. As fotografias foram obtidas com um iPhone 16, posicionado a 20 cm acima da placa, utilizando zoom de 2,5×. Durante a aquisição, as placas foram colocadas sobre uma placa iluminadora com intensidade luminosa de aproximadamente 16.000 lux, garantindo iluminação uniforme e reprodutível.
+
+Cada imagem possui duas contagens humanas de referência associadas: **`staff`**, correspondente à contagem original realizada pelo analista no momento do experimento, e **`cvat`**, uma recontagem posterior mais criteriosa, apoiada pela anotação manual de instâncias na ferramenta CVAT (Computer Vision Annotation Tool). A disponibilidade dessas duas referências humanas independentes para uma mesma placa permite avaliar o desempenho do algoritmo em relação à variabilidade inerente ao processo de contagem manual, comparando o erro do método automático com a divergência naturalmente observada entre diferentes avaliadores.
 
 
-##  Metodologia
-A metodologia proposta combina técnicas clássicas de processamento digital de imagens com abordagens baseadas em aprendizado profundo para a detecção, segmentação e contagem automática de colônias bacterianas em placas de Petri. Para isso, o desenvolvimento foi organizado em três frentes complementares: pipelines clássicos de visão computacional, métodos de segmentação morfológica e modelos de deep learning voltados à detecção e segmentação de instâncias.
+### 2. Pré-processamento: conversão para escala de cinza via PCA
 
-## 1. Aquisição e preparação dos dados
+A conversão clássica de RGB para escala de cinza usa uma combinação fixa e pré-definida dos canais R, G e B (aproximadamente `0.299R + 0.587G + 0.114B`), calibrada para a percepção visual humana, não para maximizar o contraste entre objetos de interesse. Em imagens de placas de Petri, esse contraste pode estar concentrado de forma desigual entre os canais, por exemplo, colônias amareladas sobre ágar avermelhado, de modo que ao combinar sinal e ruído de maneira inadequada, a fórmula fixa pode mascarar colônias de baixo contraste.
 
-Inicialmente, foram utilizados dois conjuntos de dados distintos. O primeiro corresponde ao dataset AGAR (*AGAR: a microbial colony dataset for deep learning detection*), originalmente composto por aproximadamente 18 mil imagens anotadas com *bounding boxes*.
+Para contornar essa limitação, o pipeline converte cada imagem para escala de cinza projetando os pixels RGB sobre a sua primeira componente principal (PCA), em vez de usar pesos fixos. Como colônia e fundo são, por definição, as duas regiões de maior diferença de cor na placa, a direção de máxima variância entre os canais tende a coincidir com a direção que melhor separa colônia de ágar, produzindo uma imagem em escala de cinza com maior contraste relativo entre os dois. Essa abordagem é descrita por Seo & Kim (2013), que propõem a conversão color-to-gray baseada em PCA como alternativa à ponderação fixa de canais justamente para preservar a discriminabilidade entre regiões de cor diferente, e é a mesma lógica de conversão usada por Chiang et al. (2015) como primeira etapa do seu pipeline de contagem de colônias bacterianas, antes da limiarização de Otsu.
 
-Além disso, foi utilizado um segundo conjunto proveniente do CNPEM (*Centro Nacional de Pesquisa em Energia e Materiais*). Nesse caso, um subconjunto contendo 100 imagens foi anotado manualmente com máscaras de segmentação de instâncias, permitindo a realização de experimentos de adaptação de domínio.
+Na prática, a imagem `(H, W, 3)` é reorganizada em uma matriz de pixels `(H·W, 3)`, sobre a qual se ajusta um PCA com uma única componente; a projeção resultante (que pode conter valores negativos ou fora de `[0, 255]`) é normalizada linearmente de volta para uma imagem `uint8` de um canal, compatível com o restante do pipeline em OpenCV.
 
-## 2. Pré-processamento
+### 3. Definição da região de interesse (Transformada de Hough)
 
-### 2.1 Definição da região de interesse
-
-Como etapa inicial de pré-processamento, as imagens foram convertidas para escala de cinza e suavizadas por meio de um filtro de mediana \(5 x 5\), reduzindo ruídos de alta frequência. Em seguida, aplicou-se a Transformada de Hough para detecção da circunferência correspondente à placa de Petri, utilizando a relação:
+Sobre a imagem em escala de cinza (já convertida via PCA) e suavizada por um filtro de mediana, é aplicada a Transformada de Hough para círculos (Hough, 1962), que detecta a circunferência correspondente à borda da placa de Petri:
 
 $$
 (x - a)^2 + (y - b)^2 = r^2
 $$
 
-em que \((a,b)\) representa o centro da circunferência e \(r\) o raio detectado.
+em que $(a,b)$ é o centro da circunferência e $r$ o raio detectado. A partir do círculo encontrado, gera-se uma máscara binária que restringe todo o processamento subsequente à área interna da placa, descartando bancada, sombras e bordas do recipiente, regiões que, se não removidas, produziriam falsos positivos na etapa de segmentação. Quando a Transformada de Hough não encontra um círculo válido, o pipeline usa como fallback uma máscara central de raio fixo, evitando que a ausência de detecção interrompa o processamento em lote.
 
-A partir da circunferência identificada, foi gerada uma máscara binária utilizada para remover regiões externas à placa, restringindo o processamento apenas à área útil da imagem.
+### 4. Realce de colônias via operador morfológico Black-Hat
 
-### 2.2 Seleção de canais e realce de contraste
-
-Após a definição da região de interesse, diferentes espaços de cor foram avaliados, incluindo RGB, HSV, CMYK e CIE Lab. Nos experimentos clássicos realizados sobre o dataset AGAR, observou-se melhor separação das colônias utilizando o canal B do espaço RGB, que passou a ser adotado como canal principal de processamento.
-
-Na sequência, aplicou-se o método CLAHE (*Contrast Limited Adaptive Histogram Equalization*) para realce adaptativo de contraste, favorecendo a distinção entre colônias e fundo da placa.
-
-Adicionalmente, os histogramas dos canais foram utilizados para análise da distribuição de intensidades da imagem, definidos por:
+Dentro da região da placa, aplica-se o operador morfológico Black-Hat sobre a imagem em escala de cinza:
 
 $$
-h(k) = \sum_{i=1}^{M} \sum_{j=1}^{N} \mathbf{1}[I(i,j)=k]
+\text{BlackHat}(f) = (f \bullet B) - f
 $$
 
-onde \(I(i,j)\) representa a intensidade do pixel localizado na posição \((i,j)\).
+em que $f \bullet B$ é o fechamento morfológico de $f$ pelo elemento estruturante $B$, definido como um elemento elíptico de $35\times35$ pixels. 
+O Black-Hat realça estruturas escuras menores que o elemento estruturante sobre um fundo mais claro, que é o padrão esperado de colônias (mais escuras) sobre o ágar (mais claro). Esse tipo de operação morfológica de realce de estruturas locais é descrito por Haralick et al. (1987) como uma das aplicações fundamentais da morfologia matemática em análise de imagens, sendo preferível a um threshold direto sobre a imagem original porque cancela variações lentas e globais de iluminação no fundo, mantendo apenas o sinal de alta frequência associado às colônias.
 
-## 3. Métodos clássicos de segmentação
+### 5. Limiarização e limpeza morfológica
 
-### 3.1 Limiarização
-
-Foram avaliadas diferentes estratégias de limiarização para segmentação das colônias bacterianas. A primeira abordagem utilizou um limiar fixo aplicado diretamente ao canal B da imagem. A operação de binarização é descrita por:
+A imagem realçada pelo Black-Hat é binarizada por um limiar fixo (`sensibilidade_thresh`):
 
 $$
 g(i,j) =
 \begin{cases}
-255, & \text{se } I(i,j) < T \\
+255, & \text{se } \text{BlackHat}(i,j) > T \\
 0, & \text{caso contrário}
 \end{cases}
 $$
 
-onde \(T\) representa o valor do limiar adotado.
+seguida de uma abertura morfológica com kernel $3\times3$ para remover ruído de granulação fina sem apagar colônias pequenas. Como o Black-Hat já normaliza boa parte da variação global de iluminação antes da binarização, um limiar fixo torna-se uma escolha estável nesta etapa, diferente da limiarização direta sobre a imagem em escala de cinza original, em que um único limiar tende a não generalizar entre placas com fundos de tonalidade diferente.
 
-Em seguida, avaliou-se o método de Otsu, responsável por selecionar automaticamente o limiar ótimo a partir da maximização da variância interclasse:
+### 6. Separação de colônias sobrepostas (Transformada de Distância + Watershed)
 
-$$
-\sigma_B^2(T) = \omega_0(T)\omega_1(T)[\mu_0(T)-\mu_1(T)]^2
-$$
+Colônias que se sobrepõem parcialmente aparecem na máscara binária como um único componente conectado, levando à subcontagem se não forem tratadas. Para separá-las, o pipeline aplica a Transformada de Distância sobre a máscara limpa, atribuindo a cada pixel de colônia a distância até o pixel de fundo mais próximo. Picos dessa transformada correspondem aos centros prováveis de cada colônia individual e são usados como marcadores (`sure_fg`) para o algoritmo Watershed (Beucher & Meyer, 1993), que propaga fronteiras a partir desses marcadores até as regiões de incerteza entre eles, separando colônias adjacentes em rótulos distintos. Essa combinação (distância + watershed) é a mesma estratégia empregada por Chiang et al. (2015) para dividir colônias clusterizadas após a segmentação por PCA e Otsu, e também aparece em Wong et al. (2016) como melhoria sobre limiarização simples para casos de colônias parcialmente fundidas.
 
-de modo que:
+### 7. Contagem por componentes conectados e filtro de área
 
-$$
-T^* = \arg\max_T \sigma_B^2(T)
-$$
-
-Por fim, foi empregada a limiarização adaptativa gaussiana, na qual o limiar é calculado localmente para cada região da imagem:
+Cada rótulo distinto produzido pelo algoritmo Watershed é interpretado como uma colônia candidata. Em seguida, aplica-se um filtro de área mínima (`área > 8` pixels) para remover pequenos fragmentos residuais, geralmente associados a ruído de textura do ágar ou a imperfeições remanescentes da segmentação. Não foi necessário empregar filtros adicionais baseados em forma, uma vez que as etapas anteriores de realce por Black-Hat e limpeza morfológica já eliminam a maior parte dos artefatos não circulares. Assim, a contagem final de colônias corresponde ao número de componentes rotulados que satisfazem o critério de área mínima:
 
 $$
-T(i,j) = \mu_{\text{local}}(i,j) - C
+N_{\text{colônias}} = \sum_{k \geq 1} \mathbf{1}(A_k > A_{\min})
 $$
 
-em que $\mu_{\text{local}}(i,j)$ corresponde à média local ponderada e \(C\) representa uma constante de ajuste.
+em que $A_k$ representa a área do componente associado ao rótulo $k$, $A_{\min}$ corresponde à área mínima admissível e $\mathbf{1}(\cdot)$ denota a função indicadora. Assim, cada componente contribui com uma unidade para a soma apenas quando sua área excede o limiar estabelecido, resultando na contagem total de colônias válidas.
 
-### 3.2 Top-Hat morfológico
+### 8. Avaliação: algoritmo vs. duas referências humanas
 
-Além das técnicas de limiarização, utilizou-se o operador morfológico Top-Hat aplicado sobre a versão invertida do canal B. Para isso, foi empregado um elemento estruturante elíptico de \(15 x 15\) pixels.
+A avaliação não compara o algoritmo contra um único "ground truth", pois não existe, estritamente, uma contagem manual isenta de erro: `staff` e `cvat` são duas estimativas humanas independentes da mesma quantidade real de colônias, e a literatura de contagem manual de colônias (Chiang et al., 2015) já reconhece a contagem visual como tarefa sujeita a fadiga e inconsistência entre repetições. Por isso, o notebook primeiro quantifica a divergência entre `staff` e `cvat` (MAE, RMSE, MAPE) como uma linha de base de "erro humano", e só então compara o algoritmo contra cada uma das duas referências separadamente, usando as mesmas métricas, acrescidas de viés médio e correlação de Pearson/R² para capturar tendência sistemática de sub ou sobrecontagem. Se o erro do algoritmo em relação a `cvat` for da mesma ordem de grandeza do erro entre `staff` e `cvat`, isso sustenta o argumento de que parte do "erro" do método automático reflete a ambiguidade inerente à tarefa de contagem visual, e não exclusivamente uma falha do método.
 
-A operação é definida por:
-
-$$
-\text{TopHat}(f) = f - (f \circ B)
-$$
-
-onde \(f \circ B\) representa a abertura morfológica:
-
-$$
-f \circ B = (f \ominus B) \oplus B
-$$
-
-Após a aplicação do operador, a imagem resultante foi segmentada utilizando limiarização automática por Otsu.
-
-### 3.3 Subtração de fundo por estimativa gaussiana
-
-Também foi utilizada a subtração de fundo utilizando filtros gaussianos de grandes dimensões, com kernels de \(151 x 151\) e \(71 x 71\) pixels. Inicialmente, o fundo estimado foi obtido pela convolução da imagem com um kernel gaussiano:
-
-$$
-\hat{B}(i,j) = (I * G_\sigma)(i,j)
-$$
-
-onde:
-
-$$
-G_\sigma(m,n) =
-\frac{1}{2\pi\sigma^2}
-\exp\left(
--\frac{m^2+n^2}{2\sigma^2}
-\right)
-$$
-
-Posteriormente, calculou-se a imagem diferencial:
-
-$$
-D(i,j)=|\hat{B}(i,j)-I(i,j)|
-$$
-
-A imagem resultante foi então normalizada para o intervalo \([0,255]\):
-
-$$
-D_{\text{norm}}(i,j)=
-255\cdot
-\frac{D(i,j)-D_{\min}}
-{D_{\max}-D_{\min}}
-$$
-
-E posteriormente, aplicou-se o método de Otsu para obtenção da máscara binária segmentada.
-
-### 3.4 Clusterização K-Means
-
-Também foi feita uma clusterização K-Means utilizando quatro grupos distintos. Nesse caso, os canais \(L\) e \(b\) do espaço Lab foram utilizados após aplicação de CLAHE. Após a convergência do algoritmo, o agrupamento correspondente às colônias foi selecionado com base nos valores de luminosidade dos centróides obtidos.
-
-## 4. Separação de colônias sobrepostas
-
-Considerando a ocorrência frequente de colônias conectadas ou parcialmente sobrepostas, aplicou-se o algoritmo Watershed associado à transformada de distância para separação das regiões segmentadas.
-
-Inicialmente, os máximos locais da transformada de distância foram utilizados como marcadores internos para propagação das fronteiras entre objetos adjacentes. Em seguida, realizou-se um pós-processamento morfológico por fechamento utilizando um kernel \(5 x 5\), reduzindo pequenas descontinuidades nas máscaras segmentadas.
-
-O fechamento morfológico é definido por:
-
-$$
-f \bullet B = (f \oplus B) \ominus B
-$$
-
-em que \(f\) representa a imagem de entrada, \(B\) o elemento estruturante, \(\oplus\) a operação de dilatação e \(\ominus\) a operação de erosão.
-
-Essa operação consiste na aplicação sequencial de uma dilatação seguida de uma erosão utilizando o mesmo elemento estruturante, sendo empregada para preencher pequenas lacunas, conectar regiões próximas e suavizar contornos sem alterar significativamente a forma original dos objetos.
-
-## 5. Contagem baseada em filtros geométricos
-
-Após a segmentação, a contagem das colônias foi realizada por meio da rotulagem de componentes conectados presentes na máscara binária.
-
-Na sequência, aplicaram-se filtros geométricos baseados em área, circularidade e solidez, permitindo remover artefatos e componentes incompatíveis com o formato esperado das colônias.
-
-A contagem final foi definida por:
-
-$$
-N_{\text{colônias}} = \# \{ k \geq 1 : A_k \geq A_{\min} \}
-$$
-
-onde $A_k$ representa a área do componente conectado.
-
-Além disso, a circularidade utilizada nos filtros geométricos foi calculada por:
-
-$$
-C =
-\frac{
-4\pi \times \text{área}
-}{
-\text{perímetro}^2
-}
-$$
-
-## 6. Métodos de aprendizado profundo
-
-### 6.1 Aumento de dados
-
-Com o objetivo de aumentar a variabilidade do conjunto de treinamento e reduzir efeitos de sobreajuste, foram aplicadas técnicas de aumento de dados sobre o dataset AGAR. Entre as transformações empregadas destacam-se rotações, espelhamento horizontal, alterações de brilho e contraste, modificações de cor e aplicação de desfoque gaussiano.
-
-### 6.2 Detecção com YOLOv5s
-
-Inicialmente foi empregado o modelo YOLOv5s pré-treinado no ImageNet. O modelo foi submetido a *fine-tuning* utilizando o dataset AGAR previamente processado.
-
-O treinamento foi realizado durante 100 épocas, utilizando *batch size* igual a 32 e imagens redimensionadas para \(640 x 640\) pixels.
-
-### 6.3 Adaptação de domínio com segmentação
-
-Posteriormente, o backbone treinado na etapa anterior foi utilizado como ponto de partida para um modelo de segmentação de instâncias baseado em YOLOv5s-seg.
-
-Isso permitiu realizar adaptação de domínio utilizando as imagens anotadas manualmente no CNPEM, adequando o modelo às condições reais de aquisição presentes no novo conjunto de dados.
-
-### 6.4 Enriquecimento de anotações com SAM 2.1
-
-O modelo SAM 2.1 (*Segment Anything Model*) foi utilizado para geração automática de máscaras de segmentação a partir das *bounding boxes* disponíveis no dataset AGAR.
-
-As máscaras geradas foram posteriormente utilizadas para enriquecimento das anotações destinadas ao treinamento dos modelos de segmentação.
-
-## 7. Avaliação experimental
-
-A avaliação foi feita utilizando os valores de referência disponíveis nos datasets empregados. Já os modelos de aprendizado profundo foram avaliados a partir das métricas de precisão, *recall*, mAP@0.5 e mAP@0.5:0.95 utilizando o conjunto de validação do dataset AGAR.
-
-
-## Bases de Dados e Evolução
-
+## Bases de Dados
 
 O datasheet for datasets pode ser consultado aqui: [Datasheet](IA901-2026S1/projetos/pattern-recognition-in-petri-dishes/assets/datasheet.md)
 
 Base de Dados | Resumo descritivo | Endereço na Web
 ----- | ----- | -----
-AGAR: A Microbial Colony Dataset for Deep Learning Detection | Dataset público composto por aproximadamente 18.000 imagens de placas de Petri, abrangendo cinco microrganismos distintos em culturas isoladas ou mistas. As imagens foram adquiridas sob diferentes condições de iluminação e com duas câmeras distintas. As anotações estão disponíveis em formato JSON e incluem bounding boxes individuais por colônia, classe do microrganismo e contagem total. Distribuído sob licença Creative Commons Attribution-NonCommercial 2.0 Generic.| https://agar.neurosys.com/
-Dataset CNPEM (LNNano) — interno| Dataset coletado por pesquisadores do CNPEM (LNNano), contendo aproximadamente 300 imagens de colônias de bactérias e fungos em placas de Petri. Apresenta variação no meio de cultura, porém com condições padronizadas de aquisição (iluminação fixa e captura por smartphone). As imagens estão originalmente no formato HEIC e as anotações consistem na contagem total de colônias por imagem, sem informação espacial.|https://1drv.ms/f/c/ab5109ec6b881bc2/IgCoHt5JsShGSIm4lrKCn3rvASVMI3zXC6TBj2YiSYWSX78?e=njq0hx
-
+Dataset CNPEM (LNNano) — interno| Dataset coletado por pesquisadores do CNPEM (LNNano), contendo imagens de colônias de bactérias e fungos em placas de Petri, com variação no meio de cultura e condições padronizadas de aquisição. Cada imagem possui duas contagens de referência: `staff` (contagem original do analista) e `cvat` (recontagem mais cuidadosa, apoiada por anotação de instâncias no CVAT).|https://1drv.ms/f/c/ab5109ec6b881bc2/IgCoHt5JsShGSIm4lrKCn3rvASVMI3zXC6TBj2YiSYWSX78?e=njq0hx
 
 ## Ferramentas
-As ferramentas e bibliotecas utilizadas ao longo do projeto estão listadas a seguir:
 
-- **Python 3** — linguagem principal utilizada no desenvolvimento de todos os pipelines
-- **OpenCV** — processamento de imagens, incluindo Transformada de Hough, operações morfológicas, filtros, Watershed e rotulagem de componentes conectados
-- **NumPy / SciPy** — operações matriciais e cálculo da transformada de distância
-- **Pillow / pillow-heif** — leitura e conversão das imagens originais nos formatos HEIC e JPEG para PNG
-- **Matplotlib** — visualização de resultados intermediários e histogramas de intensidade
-- **Ultralytics (YOLOv5 / YOLOv5-seg)** — treinamento, fine-tuning e inferência dos modelos de detecção e segmentação de instâncias
-- **SAM 2.1 (Segment Anything Model — Meta AI)** — geração automática de máscaras de segmentação a partir de bounding boxes para enriquecimento das anotações
-- **CVAT** — ferramenta utilizada para anotação manual das imagens do dataset CNPEM
+As ferramentas e bibliotecas utilizadas no pipeline atual estão listadas a seguir:
+
+- **Python 3** — linguagem principal utilizada no desenvolvimento do pipeline
+- **OpenCV** — Transformada de Hough, operações morfológicas (Black-Hat, abertura), limiarização, Transformada de Distância, Watershed e rotulagem de componentes conectados
+- **scikit-learn** — PCA para conversão da imagem RGB em escala de cinza de contraste otimizado, e métricas de erro (MAE, RMSE, MAPE)
+- **NumPy** — operações matriciais e manipulação dos arrays de imagem
+- **Pandas** — leitura e manipulação da tabela `dataset_cfu_cvat.csv` com as contagens de referência
+- **Matplotlib** — visualização das etapas do pipeline e dos gráficos comparativos staff/cvat/algoritmo
+- **CVAT** — ferramenta utilizada para a recontagem manual mais cuidadosa (`cvat`) usada como referência principal
 
 ## Workflow
 
 O workflow do projeto foi organizado para representar as principais etapas necessárias para reproduzir os experimentos, desde a preparação das bases de dados até a avaliação dos métodos clássicos e baseados em aprendizado profundo.
 
-![Workflow do projeto](assets/Workflow%20IA901%20%E2%80%94%20Pipeline%20Contagem%20de%20Col%C3%B4nias.jpg)
+<!-- ![Workflow do projeto](assets/workflow.png) -->
 
-## Experimentos e Resultados preliminares
+```mermaid
+graph TD
 
-Nesta etapa do projeto, os experimentos foram organizados em três grupos principais: experimentos de pré-processamento, experimentos de segmentação e contagem com métodos clássicos, e experimentos com modelos baseados em aprendizado profundo. Essa organização permite acompanhar a evolução do pipeline desde a preparação das imagens até a avaliação preliminar das abordagens de detecção e segmentação.
+    OBS1["📂 Origem: <br>/data/raw/*.jpg"] -.-> A
+    OBS2["📂  <br>/data/interim/ *.jpg"] -.-> NB2
+    OBS3["📂  <br>/data/processed/ *.jpg"]
 
----
+    A[Entrada:<br>Imagem Original] --> NB1
 
-### 1. Experimentos de pré-processamento
+    %% Primeiro Bloco (Notebook 1) como uma macro-etapa unificada
+    NB1["<b>1_preprocessamento_imagens.ipynb</b><br>• Resize (800px)<br>• Escala de cinza (PCA)<br>• Transformada de Hough"] 
+    
+    %% Decisão da Placa
+    NB1 --> F{Placa<br>Detectada?}
 
-#### 1.1 Conversão, padronização e organização das imagens
-
-As imagens do dataset CNPEM foram inicialmente convertidas para o formato PNG, uma vez que os arquivos originais estavam majoritariamente em formato HEIC. Para isso, foi utilizada a biblioteca `pillow-heif`, enquanto imagens em JPEG foram lidas diretamente com `Pillow`. Após a conversão, os arquivos foram renomeados sequencialmente, seguindo o padrão `1.png`, `2.png`, etc. Essa etapa foi necessária para padronizar o acesso às imagens durante os experimentos e evitar problemas de leitura em diferentes bibliotecas de processamento de imagens.
-
-
-#### 1.2 Definição da região de interesse com Transformada de Hough
-
-Após a padronização dos arquivos, foi realizada a definição automática da região de interesse. Como as imagens contêm não apenas a placa de Petri, mas também partes do ambiente de aquisição, aplicou-se a Transformada de Hough para círculos sobre a imagem em escala de cinza suavizada. A partir do círculo detectado, foi criada uma máscara binária circular, mantendo apenas os pixels internos à placa e zerando a região externa. Em alguns testes, também foi removido um anel externo da placa, pois essa região frequentemente contém bordas, reflexos e anotações manuais que interferem na segmentação das colônias.
-
-![Detecção da placa por Hough Circles](assets/experimentos/02_hough_roi.png)
-
-#### 1.3 Análise de canais de cor e histogramas
-
-Com a região da placa isolada, foram analisados histogramas dos canais RGB e diferentes espaços de cor, como HSV, CMYK e CIE Lab. Essa análise foi importante para observar como as intensidades estavam distribuídas dentro da placa e para identificar quais canais ofereciam melhor separação entre colônias e fundo. O uso de CLAHE também foi testado para realçar o contraste local, tornando mais visíveis algumas colônias que apresentavam baixa diferença de intensidade em relação ao ágar. Nos testes realizados, os canais `L` e `b` do espaço Lab apresentaram boa separação em algumas imagens, mas nenhum canal foi suficientemente robusto para todos os casos.
-
-![Comparação de canais de cor e histogramas](assets/experimentos/03.png)
-![Comparação de canais de cor e histogramas](assets/experimentos/04.png)
-![Comparação de canais de cor e histogramas](assets/experimentos/05.png)
-![Comparação de canais de cor e histogramas](assets/experimentos/06.png)
-
-#### Síntese dos problemas observados no pré-processamento
-
-| Etapa | Problema observado | O que ocasionou o problema | Por que não serviu bem para todas as imagens |
-|---|---|---|---|
-| Conversão e padronização | As imagens continuaram apresentando diferenças visuais relevantes | As bases possuem formatos, resoluções e condições de captura diferentes | A padronização do arquivo resolve a leitura, mas não corrige iluminação, escala ou enquadramento |
-| Hough Circles | Em algumas imagens o círculo detectado não coincidiu perfeitamente com a placa | Variações de distância da câmera, ângulo, borda pouco definida e iluminação irregular | Um erro na ROI afeta todas as etapas seguintes, pois pode cortar colônias ou manter regiões externas indesejadas |
-| Máscara circular | Presença de bordas, escritas e reflexos mesmo após o recorte | Algumas anotações estão dentro ou próximas à área útil da placa | A máscara circular remove o exterior da placa, mas não separa automaticamente colônias de artefatos internos |
-| Seleção de canais | Nenhum canal funcionou de forma universal | Diferenças de cor entre ágar, colônias e microrganismos | Um canal que destaca bem uma imagem pode falhar em outra com contraste ou coloração diferente |
-
----
-
-### 2. Experimentos de segmentação e contagem com métodos clássicos
-
-#### 2.1 Limiarização global, Otsu e limiarização adaptativa
-
-Foram testadas diferentes estratégias de limiarização para separar as colônias do fundo da placa, incluindo limiar fixo, limiarização de Otsu e limiarização adaptativa gaussiana. Esses métodos foram aplicados após a definição da região de interesse e o realce de contraste. A limiarização de Otsu apresentou limitações importantes, pois o histograma das imagens recortadas era fortemente influenciado pelos pixels zerados fora da placa. Como consequência, o limiar calculado automaticamente foi deslocado para valores pouco adequados, reduzindo a sensibilidade para detectar colônias. A limiarização adaptativa apresentou resultados melhores em algumas imagens, mas ainda foi instável diante de variações de iluminação e contraste.
-
-![Resultados da limiarização](assets/experimentos/07.png)
-![Resultados da limiarização](assets/experimentos/08.png)
+    A ~~~ TXT1["📌 Determinação da<br>Região de Interesse (ROI)"]
+    
+    %% Ramificações paralelas
+    F -- Sim --> G[Máscara Automatizada]
+    F -- Não --> H[Máscara Central 0.4 da imagem]
+    
+    %% Convergência para o Segundo Bloco (Notebook 2)
+    G --> OBS2
+    H --> OBS2
 
 
-#### 2.2 Subtração de fundo com filtro Gaussiano
 
-Também foi avaliada uma abordagem baseada em subtração de fundo. Nesse experimento, um filtro Gaussiano com kernel de grande dimensão foi utilizado para estimar a variação lenta de iluminação dentro da placa. Em seguida, calculou-se a diferença absoluta entre a imagem suavizada e o fundo estimado, realçando regiões que se destacavam localmente. O resultado foi normalizado e posteriormente binarizado com Otsu. Essa estratégia funcionou melhor em imagens nas quais o fundo apresentava uma variação suave de iluminação, mas perdeu desempenho quando havia colônias maiores, anotações manuscritas ou mudanças mais intensas na aparência do ágar.
+    %% Segundo Bloco como macro-etapa de Processamento Morfológico
+    NB2["<b>2_pipeline_contagem_colonias_cnpem.ipynb</b><br>• Blackhat Morfológico<br>• Limiarização<br>• Transformada de distância"]
 
-![Subtração de fundo](assets/experimentos/09.png)
+    %% Etapas Finais de Segmentação e Contagem
+    NB2 --> M[Connected components ]
+    M --> N[Watershed]
+    N --> U([Contagem Final dos<br>Marcadores Segmentados])
+    U -.-> OBS3
+
+    %% Estilização baseada na paleta de cores da sua referência
+    style OBS1 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3,color:#1f2937
+    style OBS2 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3,color:#1f2937
+    style OBS3 fill:#f5f5f5,stroke:#d9d9d9,stroke-width:1px,stroke-dasharray: 3 3,color:#1f2937
+    style A fill:#cee2f3,stroke:#4a90e2,stroke-width:1px,color:#1f2937
+    style NB1 fill:#e2f0d9,stroke:#70ad47,stroke-width:1px,color:#1f2937
+    style F fill:#fff2cc,stroke:#ffc000,stroke-width:1px,color:#1f2937
+    style G fill:#fff,stroke:#7f7f7f,stroke-width:1px,color:#1f2937
+    style H fill:#fff,stroke:#7f7f7f,stroke-width:1px,color:#1f2937
+    style NB2 fill:#fce4d6,stroke:#f4b183,stroke-width:1px,color:#1f2937
+    style M fill:#fff,stroke:#7f7f7f,stroke-width:1px,color:#1f2937
+    style N fill:#fff,stroke:#7f7f7f,stroke-width:1px,color:#1f2937
+    style U fill:#f8cbad,stroke:#c65911,stroke-width:2px,color:#1f2937
+    style TXT1 fill:#f8fafc,stroke:#cbd5e1,color:#1f2937
+```
+
+> Arquivos relacionados
+
+- 📓 [Notebook 1](./notebooks/1_preprocessamento_imagens.ipynb)
+- 📓 [Notebook 2](./notebooks/2_pipeline_contagem_colonias_cnpem.ipynb)
+- 📂 [Dados brutos](./data/raw)
+- 📂 [Dados intermediários](./data/interim)
+- 📂 [Dados processados](./data/processed)
+
+## Experimentos e Resultados 
+Nesta etapa do projeto, o pipeline foi consolidado em dois notebooks principais: um notebook de pré-processamento das imagens (`1_preprocessamento_imagens.ipynb`) e um notebook de detecção e contagem de colônias (`2_pipeline_contagem_colonias_cnpem.ipynb`). Juntos, eles implementam um pipeline clássico de visão computacional, desde a padronização das imagens até a avaliação quantitativa do algoritmo contra duas contagens humanas independentes.
+
+### 1. Pré-processamento das imagens 
+
+O objetivo desta etapa é padronizar a entrada visual das imagens do dataset CNPEM, reduzindo variações irrelevantes de fundo, iluminação e escala antes da etapa de contagem.
+
+#### Pipeline implementado:
+* **Padronização de tamanho:** Todas as imagens são redimensionadas para largura fixa de 800 pixels, mantendo a proporção original.
+* **Conversão para escala de cinza via PCA:** Em vez de uma conversão RGB→cinza tradicional, os três canais de cor são condensados em uma única componente principal (PCA), normalizada de volta para 8 bits. Essa abordagem busca realçar o contraste global entre colônias e ágar.
+* **Detecção da placa com HoughCircles:** Aplicada sobre a imagem suavizada (blur mediano) para localizar centro e raio da placa de Petri.
+* **Fallback robusto:** Quando o círculo não é detectado automaticamente, uma máscara circular central padrão é usada no lugar.
+* **Aplicação da máscara circular:** Raio reduzido a 86% do raio detectado para remover a região externa à placa.
+
+O resultado é salvo em data/processed, preservando o nome original de cada arquivo, para ser consumido diretamente pelo notebook de contagem.
+
+| Etapa | Parâmetro |
+| :--- | :--- |
+| **Largura padronizada** | 800 px |
+| **Blur (mediana)** | kernel 21 |
+| **HoughCircles** | dp=1.2, minDist=100, param1=50, param2=30, minRadius=200, maxRadius=400 |
+| **Raio da máscara final** | 86% do raio detectado |
+
+![Detecção da placa por Hough Circles](assets/experimentos/04_preprocesamento.png)
+
+### 2. Detecção e contagem de colônias 
+
+Com as imagens pré-processadas, foi implementado o pipeline de contagem baseado no método de *Chiang et al. (2014)*, utilizando Transformada de Distância e Watershed para separar colônias sobrepostas.
+
+#### Pipeline implementado:
+* **Realce via Black-Hat:** Operação morfológica (kernel elíptico 35×35) que realça estruturas escuras (colônias) sobre fundo claro (ágar).
+* **Binarização:** Threshold fixo (sensibilidade = 12) seguido de limpeza morfológica (abertura, kernel 3×3) para remover ruídos pequenos.
+* **Separação de colônias sobrepostas (Watershed):**
+  * Cálculo da região de fundo certo (dilatação);
+  * Transformada de Distância para localizar centros prováveis das colônias;
+  * Identificação da região de fronteira desconhecida entre colônias próximas;
+  * Rotulagem dos marcadores e aplicação do Watershed.
+* **Contagem final:** Feita por componentes conectados, com filtro de área mínima (> 8 px) para descartar ruídos residuais, e desenho do contorno de cada colônia detectada na imagem de saída.
 
 
-#### 2.3 Clusterização K-Means
+![Exemplo de execução em imagem única (`IMG_0636.jpg`8 colônias contadas)](assets/experimentos/01_deteccaocolonias.png)
 
-Como alternativa aos métodos baseados em limiar, foi aplicado K-Means com `k = 4` sobre os pixels internos da placa, utilizando principalmente os canais `L` e `b` do espaço Lab após CLAHE. Essa abordagem agrupou os pixels por similaridade de cor e luminosidade, reduzindo a dependência de um único limiar global. Em algumas amostras, o K-Means apresentou resultados mais consistentes que a limiarização, especialmente em casos com variação moderada de iluminação. Entretanto, o método continuou apresentando dificuldades quando a tonalidade das colônias era muito próxima à do ágar, pois o cluster correspondente às colônias deixava de ser claramente separável.
 
-![Segmentação com K-Means](assets/experimentos/13.png)
 
-#### 2.5 Separação de colônias sobrepostas com Watershed
+### 3. Avaliação quantitativa: algoritmo vs. contagem humana
 
-Após a obtenção das máscaras binárias, foi aplicado o algoritmo Watershed associado à transformada de distância para separar colônias conectadas ou parcialmente sobrepostas. A transformada de distância permitiu localizar possíveis centros das colônias, que foram usados como marcadores para a propagação das regiões. O método funcionou de forma satisfatória em casos de sobreposição parcial, nos quais ainda havia centros distinguíveis. No entanto, quando as colônias estavam completamente fundidas ou apresentavam contornos pouco definidos, o algoritmo não foi capaz de separar corretamente as instâncias, resultando em subcontagem. Essa limitação também foi observada nas anotações do grupo, especialmente para casos de colônias muito próximas ou confluentes.
+A avaliação foi feita sobre **94 imagens** do dataset CNPEM, comparando o algoritmo contra duas contagens humanas independentes da mesma placa:
+* **staff:** Contagem original do analista, feita durante a rotina de laboratório;
+* **cvat:** Recontagem posterior, mais cuidadosa, realizada com apoio da ferramenta de anotação visual CVAT, colônia a colônia.
 
-![Separação com Watershed](assets/experimentos/11.png)
-
-#### 2.6 Contagem por componentes conectados e filtros geométricos
-
-A etapa de contagem foi realizada a partir da rotulagem de componentes conectados presentes nas máscaras binárias. Cada região branca contígua foi interpretada como uma candidata a colônia. Para reduzir falsos positivos, foram aplicados filtros por área, circularidade e solidez. A circularidade foi usada porque muitas colônias apresentam formato aproximadamente circular, enquanto fragmentos de letras e ruídos tendem a produzir formas alongadas ou irregulares. A solidez ajudou a descartar componentes com contornos muito fragmentados. Essa combinação reduziu falsos positivos, mas a contagem continuou dependente da qualidade da segmentação inicial. Quando a máscara continha colônias unidas, partes de escrita ou regiões mal segmentadas, os filtros geométricos não eram suficientes para corrigir o erro.
-
-![Contagem por componentes conectados](assets/experimentos/12.png)
-
-#### Síntese dos problemas observados nos métodos clássicos
-
-| Experimento | Resultado preliminar | Problema observado | O que ocasionou o problema | Por que não serviu bem para essas imagens |
-|---|---|---|---|---|
-| Limiar fixo | Funcionou apenas em imagens visualmente semelhantes às usadas para calibração | Baixa generalização | Diferenças de iluminação, contraste e cor do ágar | Um único valor de limiar não representa bem todo o conjunto |
-| Otsu | Automatizou a escolha do limiar, mas falhou em várias imagens | Limiar deslocado | Histograma dominado por pixels zerados da máscara e fundo | A separação estatística entre fundo e colônia não ficou bem definida |
-| Limiarização adaptativa | Melhorou alguns casos locais | Resultado inconsistente | Sensibilidade ao tamanho da vizinhança e à iluminação | Detectou ruídos e falhou em regiões com baixo contraste |
-| Subtração de fundo | Realçou colônias em placas com iluminação suave | Erros em colônias grandes e anotações | Escritas, variações fortes de fundo e morfologias diferentes | O método assume que o fundo varia lentamente e que as colônias são pequenas |
-| K-Means | Foi mais estável que limiarização em algumas amostras | Confusão entre colônia e ágar | Tonalidades semelhantes entre classes | Quando as cores se sobrepõem, os clusters deixam de representar objetos reais |
-| Watershed | Separou sobreposições parciais | Não separou colônias fundidas | Ausência de máximos locais bem definidos | Colônias completamente conectadas aparecem como uma única região |
-| Componentes conectados + filtros | Reduziu falsos positivos simples | Não corrigiu erros da segmentação | Máscaras com regiões fundidas, letras ou ruídos | A filtragem geométrica atua depois da segmentação e não recupera objetos perdidos |
-
----
-
-### 3. Experimentos com aprendizado profundo
-
-#### 3.1 Detecção de colônias com YOLOv5s no dataset AGAR
-
-Para avaliar uma abordagem baseada em aprendizado profundo, foi realizado o fine-tuning de um modelo YOLOv5s pré-treinado. O treinamento utilizou o dataset AGAR após a remoção das imagens consideradas incontáveis, resultando em 13.489 imagens. Os dados foram divididos em 70% para treino e 30% para validação, com treinamento por 100 épocas, `batch size = 32` e imagens redimensionadas para `640 x 640`. No conjunto de validação do AGAR, o modelo apresentou bons resultados, com precisão de 98%, recall de 95%, mAP@0.5 de 96% e mAP@0.5:0.95 de 94%. Esses valores indicam que o modelo aprendeu bem o padrão visual do AGAR, mas a inferência direta em imagens do CNPEM apresentou queda de desempenho, evidenciando a diferença de domínio entre as bases. 
+#### 3.1 Divergência entre as duas contagens humanas (staff vs. cvat)
 
 | Métrica | Valor |
-|---|---:|
-| Precisão | 98% |
-| Recall | 95% |
-| mAP@0.5 | 96% |
-| mAP@0.5:0.95 | 94% |
+| :--- | :--- |
+| **MAE** | 13,41 colônias |
+| **RMSE** | 43,23 colônias |
+| **MAPE** | 14,05% |
 
-#### 3.2 Adaptação de domínio com YOLOv5s-seg no dataset CNPEM
+Mesmo entre dois contadores humanos analisando a mesma placa, há uma divergência relevante. Isso é uma evidência de que a contagem manual está sujeita a uma margem de erro própria, decorrente do esforço cognitivo da tarefa, especialmente em placas muito povoadas.
 
-Em seguida, foi testada uma estratégia de adaptação de domínio utilizando imagens do CNPEM anotadas manualmente com máscaras de segmentação. O modelo treinado anteriormente no AGAR foi utilizado como ponto de partida para um modelo de segmentação baseado em YOLOv5s-seg. Mesmo com poucas imagens anotadas, os resultados preliminares mostraram segmentações visualmente razoáveis em algumas imagens do CNPEM. No entanto, as máscaras ainda apresentaram imprecisões nos contornos, principalmente em colônias maiores, regiões de sobreposição e imagens com baixo contraste. Isso indica que a adaptação de domínio é viável, mas depende da ampliação e melhoria das anotações de segmentação.
+#### 3.2 Algoritmo vs. staff e vs. cvat
 
-![Segmentação com YOLOv5s-seg](assets/experimentos/cnpem-saida-yolo.png)
+| Comparação | MAE | RMSE | MAPE |
+| :--- | :---: | :---: | :---: |
+| **Algoritmo vs. staff** | 22,14 | 39,29 | 100,33% |
+| **Algoritmo vs. cvat** | 29,94 | 63,66 | 134,28% |
+| **staff vs. cvat (referência)** | 13,41 | 43,23 | 14,05% |
 
-#### 3.3 Enriquecimento de anotações com SAM 2.1
+O erro do algoritmo em relação a ambas as referências humanas foi maior do que a divergência observada entre as duas contagens humanas entre si. Isso indica que o pipeline clássico atual (Black-Hat + Watershed) ainda não atinge a consistência de um segundo contador humano, subestimando ou superestimando a contagem principalmente nas placas mais povoadas.
 
-Como proposta para melhorar o treinamento dos modelos de segmentação, foi iniciado o uso do SAM 2.1 para gerar máscaras automaticamente a partir das bounding boxes disponíveis no dataset AGAR. Como o AGAR já possui anotações de detecção, o SAM permite transformar parte dessas anotações em máscaras, enriquecendo o conjunto de dados para segmentação de instâncias. Essa etapa ainda precisa ser validada visual e quantitativamente, pois máscaras automáticas incorretas podem introduzir ruído no treinamento. Mesmo assim, a abordagem é promissora para aumentar a quantidade de dados segmentados sem depender exclusivamente de anotação manual.
+#### 3.3 Placas com maior divergência entre staff e cvat
 
-![exemplo 1 de imagem segmentada pelo SAM Automaticamente](data/interim/DeepLearning/6794.png)
+As maiores divergências entre os dois contadores humanos se concentraram justamente nas placas mais povoadas, os casos mais custosos para a contagem manual:
 
-![exemplo 2 de imagem segmentada pelo SAM Automaticamente](data/interim/DeepLearning/6225.png)
+| Imagem | staff | cvat | Diferença |
+| :--- | :---: | :---: | :---: |
+| `IMG_0529.jpg` | 260 | 551 | 291 |
+| `IMG_0561.jpg` | 9 | 174 | 165 |
+| `IMG_0531.jpg` | 170 | 290 | 120 |
+| `IMG_0563.jpg` | 9 | 118 | 109 |
+| `10_3_i.jpg` | 42 | 145 | 103 |
 
-#### Síntese dos problemas observados nos métodos de aprendizado profundo
+#### 3.4 Gráficos comparativos
 
-| Experimento | Resultado preliminar | Problema observado | O que ocasionou o problema | Por que ainda não resolve completamente |
-|---|---|---|---|---|
-| YOLOv5s no AGAR | Alto desempenho no conjunto de validação do AGAR | Queda ao aplicar no CNPEM | Diferença de domínio entre datasets | O modelo aprendeu bem o AGAR, mas não generalizou diretamente para outro protocolo de aquisição |
-| YOLOv5s-seg no CNPEM | Segmentações razoáveis com poucas imagens | Contornos imprecisos | Pouca quantidade de máscaras anotadas | O modelo precisa de mais exemplos para aprender variações de forma, tamanho e sobreposição |
-| SAM 2.1 para máscaras | Geração automática de máscaras a partir de bounding boxes | Necessidade de validação das máscaras | Segmentação automática pode gerar erros | Máscaras incorretas podem prejudicar o treinamento supervisionado |
-| Adaptação de domínio | Estratégia mostrou potencial | Dependência de anotação manual | O CNPEM possui poucas anotações espaciais | A qualidade final depende da ampliação do conjunto anotado |
-## Próximos passos
+Foram gerados dois gráficos de dispersão (índice da imagem × contagem de colônias), conectando os pares de valores comparados por uma linha vertical para facilitar a leitura da magnitude do erro placa a placa:
+* **Staff vs. CVAT:** Evidencia visualmente a divergência entre as duas contagens humanas da mesma placa.
+  ![staff_vs_cvat](assets/experimentos/02_comparacao_staffvsCVAT.png)
 
-Para a conclusão do projeto, as próximas etapas foram organizadas considerando as pendências técnicas, experimentais e de documentação. O foco principal será consolidar os resultados dos métodos clássicos, ampliar a adaptação de domínio para o dataset CNPEM e organizar a análise comparativa final entre as abordagens testadas.
+* **Algoritmo vs. CVAT:** Evidencia visualmente a proximidade (ou distância) entre a predição automática e a recontagem mais cuidadosa.
+  ![algoritmo_vs_cvat](assets/experimentos/03_comparacao_algoritmovsCVAT.png)
 
-| Etapa | Descrição | Entrega esperada |
-|---|---|---|
-| Revisão das anotações do CNPEM | Revisar as máscaras já anotadas manualmente, corrigindo contornos inconsistentes e removendo anotações ambíguas. Essa etapa é necessária porque a qualidade das máscaras influencia diretamente o treinamento do modelo de segmentação. | Conjunto revisado de máscaras do CNPEM |
-| Ampliação do conjunto anotado | Aumentar a quantidade de imagens do CNPEM com máscaras de segmentação, priorizando imagens com colônias maiores, sobrepostas e com diferentes meios de cultura. | Novo subconjunto anotado para fine-tuning |
-| Geração de máscaras com SAM 2.1 | Utilizar o SAM 2.1 para gerar máscaras a partir das bounding boxes do dataset AGAR, avaliando visualmente a qualidade das segmentações geradas automaticamente. | Máscaras geradas automaticamente para parte do AGAR |
-| Validação das máscaras automáticas | Comparar qualitativamente as máscaras geradas pelo SAM 2.1 com exemplos anotados manualmente, identificando erros comuns como vazamento de contorno, segmentação parcial ou inclusão de fundo. | Conjunto filtrado de máscaras consideradas úteis |
-| Novo treinamento com 5s-seg | Realizar novo fine-tuning do modelo de segmentação usando as máscaras revisadas do CNPEM e, se possível, as máscaras enriquecidas do AGAR. Modelo de segmentação atualizado |
-| Consolidação dos métodos clássicos | Selecionar os melhores resultados obtidos com limiarização, subtração de fundo, morfologia, K-Means, Watershed e filtros geométricos. | Tabela comparativa dos métodos clássicos |
-| Avaliação quantitativa final | Calcular métricas de contagem, detecção e segmentação, como MAE, sMAE, precisão, recall, mAP e IoU, conforme a disponibilidade de ground truth em cada base. | Resultados quantitativos finais |
-| Análise crítica dos resultados | Comparar os métodos clássicos e os métodos baseados em deep learning, discutindo vantagens, limitações, capacidade de generalização e custo computacional. | Discussão crítica para o relatório final |
-| Organização das figuras e workflow | Inserir no README as imagens dos experimentos, o workflow do projeto e exemplos visuais dos principais resultados obtidos. | README com figuras organizadas |
-| Escrita e revisão final da entrega | Revisar o texto final, corrigir formatação em Markdown, conferir referências, datasheet, links e seção de uso de IA generativa. | Versão final da Entrega 2 |
 
+### Síntese dos resultados 
+
+| Notebook | O que faz | Resultado obtido |
+| :--- | :--- | :--- |
+| `1_preprocessamento_imagens.ipynb` | Padroniza tamanho, converte para cinza via PCA, detecta a placa com HoughCircles e aplica máscara circular. | Conjunto padronizado de imagens salvo em `data/processed`, pronto para a contagem. |
+| `2_pipeline_contagem_colonias_cnpem.ipynb` | Realça colônias com Black-Hat, binariza, separa sobreposições com Watershed e conta por componentes conectados. | MAE de 22,14 (vs. staff) e 29,94 (vs. cvat) colônias em 94 imagens; erro humano-humano (staff vs. cvat) de 13,41 colônias como referência. |
+
+#### 3.5 Análise crítica dos resultados
+
+Neste estudo, o `cvat` é tratado como a referência mais confiável disponível, por consistir em uma recontagem colônia a colônia com apoio de anotação visual detalhada. O `staff` representa a contagem original realizada em rotina de laboratório, mais rápida e potencialmente menos precisa. Nesse contexto, a divergência entre `staff` e `cvat` reflete a variabilidade associada ao processo humano de contagem sob diferentes níveis de esforço, enquanto o erro do algoritmo em relação ao `cvat` constitui a principal métrica de desempenho.
+
+Os resultados indicam que o algoritmo apresenta erro superior à variabilidade observada entre as duas contagens humanas. O MAE em relação ao `cvat` (29,94 colônias) é mais que o dobro do MAE entre `staff` e `cvat` (13,41 colônias), e o MAE em relação ao `staff` (22,14 colônias) também permanece acima dessa divergência. Isso indica que, mesmo quando comparado a uma contagem humana menos precisa, o pipeline ainda não atinge um nível de concordância equivalente ao observado entre dois operadores humanos em diferentes condições de anotação.
+
+O RMSE reforça essa interpretação. O valor obtido para algoritmo vs. `cvat` (63,66 colônias) é superior ao observado entre `staff` e `cvat` (43,23 colônias), sugerindo a presença de erros de grande magnitude em subconjuntos específicos do dataset. A diferença entre MAE e RMSE em todas as comparações indica distribuição não uniforme do erro, com contribuição desproporcional de poucas placas altamente discrepantes.
+
+Esse comportamento é coerente com os resultados apresentados na Seção 3.3, onde as maiores diferenças entre `staff` e `cvat` ocorrem em placas de alta densidade. Nessas condições, a definição de colônias individuais torna-se ambígua, aumentando a variabilidade humana e também a dificuldade de segmentação automática.
+
+Os valores de MAPE reforçam a diferença de escala entre os métodos. Enquanto a divergência entre `staff` e `cvat` é de 14,05%, o algoritmo apresenta MAPE de 100,33% em relação ao `staff` e 134,28% em relação ao `cvat`. Apesar disso, essa métrica deve ser interpretada com cautela. O MAPE é conhecido por instabilidade em cenários com valores reais baixos, nos quais pequenos erros absolutos produzem grandes variações percentuais. Essa limitação é amplamente discutida na literatura de métricas de erro e previsão, incluindo análises clássicas que recomendam seu uso apenas em conjuntos onde os valores de referência não se aproximam de zero (Makridakis, 1993; Hyndman & Koehler, 2006). Por essa razão, MAE e RMSE são mais adequados como métricas principais neste problema.
+
+Do ponto de vista metodológico, os resultados são consistentes com limitações conhecidas de pipelines baseados em processamento morfológico clássico. Métodos baseados em realce por Black-Hat e segmentação por Watershed dependem fortemente da presença de máximos locais bem definidos e tendem a falhar em cenários com colônias fundidas ou baixa separabilidade estrutural. Isso leva a subsegmentação em regiões de alta densidade e, em alguns casos, a sobresegmentação quando ruídos são interpretados como estruturas válidas. Como as etapas posteriores do pipeline são essencialmente heurísticas e baseadas em filtros geométricos, esses erros não são completamente corrigidos e podem se acumular ao longo da imagem.
+
+Em conjunto, os resultados indicam que o pipeline clássico ainda não atinge consistência equivalente à variabilidade observada entre anotadores humanos. Ao mesmo tempo, a análise evidencia que parte significativa da incerteza do problema está na própria definição de colônia em regiões densas, o que impõe um limite prático também para métodos manuais. Esse cenário sugere que melhorias incrementais no pipeline podem reduzir parte do erro, mas abordagens mais robustas tendem a exigir estratégias de segmentação mais adaptativas, possivelmente baseadas em modelos aprendidos a partir de dados.
 
 ## Uso de IA Generativa
 
@@ -429,11 +327,17 @@ Durante o desenvolvimento do projeto, ferramentas de IA generativa foram utiliza
 
 ## Referências
 
-Beucher, S., & Meyer, F. (1993). *The morphological approach to segmentation: the watershed transformation*. Mathematical Morphology in Image Processing, 34, 433–481.
+  Arous, D., Schrunner, S., Hanson, I., Edin, N. F. J., & Malinen, E. (2022). *Principal component-based image segmentation: a new approach to outline in vitro cell colonies*. Journal of Microscopic Imaging, 18–30. https://doi.org/10.1080/21681163.2022.2035822
+
+  Beucher, S., & Meyer, F. (1993). *The morphological approach to segmentation: the watershed transformation*. Mathematical Morphology in Image Processing, 34, 433–481.
 
   Bradley, D., & Roth, G. (2007). *Adaptive thresholding using the integral image*. Journal of Graphics Tools, 12(2), 13–21. Disponível em: https://www.taylorfrancis.com/chapters/edit/10.1201/9781482277234-12/morphological-approach-segmentation-watershed-transformation-beucher-meyer
 
   Bradski, G., & Kaehler, A. (2008). *Learning OpenCV: Computer Vision with the OpenCV Library*. O'Reilly Media. Disponível em: https://www.hlevkin.com/hlevkin/45MachineDeepLearning/ML/Learning-OpenCV.pdf
+
+  Chen, Q., Yang, X., & Petriu, E. M. (2004). Watershed segmentation for binary images with different distance transforms. In Proceedings of the 3rd IEEE International Workshop on Haptic, Audio and Visual Environments and Their Applications (HAVE) (pp. 111–116). https://doi.org/10.1109/HAVE.2004.1391891
+
+  Chiang, P.-J., Tseng, M.-J., He, Z.-S., & Li, C.-H. (2015). *Automated counting of bacterial colonies by image analysis*. Journal of Microbiological Methods, 108, 74–82. https://doi.org/10.1016/j.mimet.2014.11.009
 
   Dolu, M., Altıntaş, M. E., Duman, E., & Kılıç, G. B. (2025). YOLO-Based Counting of Small and Overlapping Bacterial Colonies: Performance Analysis and Real-Time Mobile Deployment. 2025 10th International Conference on Computer Science and Engineering (UBMK), 1042–1046. https://doi.org/10.1109/UBMK67458.2025.11206979
 
@@ -445,11 +349,17 @@ Beucher, S., & Meyer, F. (1993). *The morphological approach to segmentation: th
 
   He, L., Ren, X., Gao, Q., Zhao, X., Yao, B., & Chao, Y. (2017). *The connected-component labeling problem: A review of state-of-the-art algorithms*. Pattern Recognition, 70, 25–43. Disponível em: https://www.sciencedirect.com/science/article/pii/S0031320317301693
 
+  Heuser, E., Becker, K., & Idelevich, E. A. (2023). Evaluation of an automated system for the counting of microbial colonies. Microbiology Spectrum, 11, e00673-23. https://doi.org/10.1128/spectrum.00673-23
+
   Hough, P. V. C. (1962). *Method and means for recognizing complex patterns*. U.S. Patent 3,069,654.
+
+  Hyndman, R. J., & Koehler, A. B. (2006). *Another look at measures of forecast accuracy*. International Journal of Forecasting, 22(4), 679–688. https://doi.org/10.1016/j.ijforecast.2006.03.001
 
   Jiang, H., Guo, Q., Zhi, X., Li, H., & Chen, Y. (2026). A weakly supervised framework for automated biological assay assessment. Virus Research, 363, 199677. https://doi.org/10.1016/j.virusres.2025.199677
 
   Jocher, G., et al. (2020). *ultralytics/yolov5*. Zenodo. https://doi.org/10.5281/zenodo.3908559
+
+  Makridakis, S. (1993). *Accuracy measures: theoretical and practical concerns*. International Journal of Forecasting, 9(4), 527–529. https://doi.org/10.1016/0169-2070(93)90079-3
 
   Majchrowska, S., Pawłowski, J., Guła, G., Bonus, T., Hanas, A., Loch, A., Pawlak, A., Roszkowiak, J., Golan, T., & Drulis-Kawa, Z. (2021). *AGAR: A microbial colony dataset for deep learning detection*. Disponível em: arXiv. https://arxiv.org/abs/2108.01234
 
@@ -457,8 +367,8 @@ Beucher, S., & Meyer, F. (1993). *The morphological approach to segmentation: th
 
   Ravi, N., et al. (2024). *SAM 2: Segment Anything in Images and Videos*. arXiv:2408.00714. Disponível em: https://arxiv.org/abs/2408.00714 
 
+  Seo, J.-W., & Kim, S.-D. (2013). *Novel PCA-based color-to-gray image conversion*. In 2013 IEEE International Conference on Image Processing (ICIP), pp. 2279–2283. https://doi.org/10.1109/ICIP.2013.6738470
+
   Sezgin, M., & Sankur, B. (2004). *Survey over image thresholding techniques and quantitative performance evaluation*. Journal of Electronic Imaging, 13(1), 146–168.
 
-
-
-
+  Wong, C.-F., Joshua Yi, Y., & Samuel Ken-En, G. (2016). *APD colony counter app: Using Watershed algorithm for improved colony counting*.
