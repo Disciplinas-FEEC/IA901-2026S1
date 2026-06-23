@@ -1,0 +1,100 @@
+INICIANDO OTIMIZAÇÃO DE HIPERPARÂMETROS
+
+============================================================
+ OTIMIZANDO: Modelo UNet | Dataset MoNuSeg
+============================================================
+
+--- Concluído: UNet no MoNuSeg ---
+Melhor Dice Score: 0.8086
+Melhores Hiperparâmetros encontrados:
+    lr: 0.0008609504282625847
+    optimizer: Adam
+    batch_size: 16
+
+============================================================
+ OTIMIZANDO: Modelo AttentionUnet | Dataset MoNuSeg
+============================================================
+
+--- Concluído: AttentionUnet no MoNuSeg ---
+Melhor Dice Score: 0.8150
+Melhores Hiperparâmetros encontrados:
+    lr: 0.0007211141455333722
+    optimizer: Adam
+    batch_size: 16
+
+============================================================
+ OTIMIZANDO: Modelo UNETR | Dataset MoNuSeg
+============================================================
+
+--- Concluído: UNETR no MoNuSeg ---
+Melhor Dice Score: 0.7875
+Melhores Hiperparâmetros encontrados:
+    lr: 0.0002442285941341703
+    optimizer: Adam
+    batch_size: 16
+
+============================================================
+ OTIMIZANDO: Modelo UNet | Dataset PanNuke
+============================================================
+
+--- Concluído: UNet no PanNuke ---
+Melhor Dice Score: 0.8243
+Melhores Hiperparâmetros encontrados:
+    lr: 0.0004776163691151915
+    optimizer: Adam
+    batch_size: 16
+
+============================================================
+ OTIMIZANDO: Modelo AttentionUnet | Dataset PanNuke
+============================================================
+
+--- Concluído: AttentionUnet no PanNuke ---
+Melhor Dice Score: 0.8313
+Melhores Hiperparâmetros encontrados:
+    lr: 0.0004654422789035183
+    optimizer: Adam
+    batch_size: 16
+
+============================================================
+ OTIMIZANDO: Modelo UNETR | Dataset PanNuke
+============================================================
+
+--- Concluído: UNETR no PanNuke ---
+Melhor Dice Score: 0.8064
+Melhores Hiperparâmetros encontrados:
+    lr: 0.00012597703134079882
+    optimizer: Adam
+    batch_size: 16
+
+============================================================
+ OTIMIZANDO: Modelo UNet | Dataset NuInSeg
+============================================================
+
+--- Concluído: UNet no NuInSeg ---
+Melhor Dice Score: 0.7978
+Melhores Hiperparâmetros encontrados:
+    lr: 0.00082587306649585
+    optimizer: Adam
+    batch_size: 16
+
+============================================================
+ OTIMIZANDO: Modelo AttentionUnet | Dataset NuInSeg
+============================================================
+
+--- Concluído: AttentionUnet no NuInSeg ---
+Melhor Dice Score: 0.8021
+Melhores Hiperparâmetros encontrados:
+    lr: 0.0007441284120806255
+    optimizer: Adam
+    batch_size: 16
+
+============================================================
+ OTIMIZANDO: Modelo UNETR | Dataset NuInSeg
+============================================================
+
+--- Concluído: UNETR no NuInSeg ---
+Melhor Dice Score: 0.7827
+Melhores Hiperparâmetros encontrados:
+    lr: 0.00011902255710902422
+    optimizer: Adam
+    batch_size: 16

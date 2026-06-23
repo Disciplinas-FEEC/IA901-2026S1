@@ -19,96 +19,419 @@ A segmentação de núcleos celulares em imagens histológicas é uma tarefa imp
 
 Nesse contexto, o presente projeto busca investigar o comportamento de arquiteturas de segmentação quando aplicadas a datasets histológicos com características distintas. A proposta procura se aproximar de um problema mais realista de adaptação de domínio, avaliando como diferentes modelos se comportam em situações de transferência entre bases de dados.
 
-Para isso, serão utilizados três datasets públicos amplamente utilizados na literatura: MoNuSeg, PanNuke e NuInsSeg. Inicialmente, pretende-se realizar experimentos de treinamento e teste entre diferentes bases, analisando qualitativamente e quantitativamente os resultados obtidos. Posteriormente, também serão exploradas estratégias relacionadas a fine-tuning e adaptação de domínio.
+Para isso, são utilizados três datasets públicos amplamente adotados na literatura: MoNuSeg², NuInsSeg³ e PanNuke⁴. O projeto segue um pipeline completo de processamento de dados e treinamento, incluindo padronização de formatos, geração de patches, normalização e aumento de dados, além de divisão sistemática em conjuntos de treinamento, validação e teste. O treinamento dos modelos é precedido por uma etapa de otimização de hiperparâmetros via Optuna, com foco na maximização do Dice Score na validação.
+
+São investigadas três arquiteturas de segmentação (UNet, Attention UNet e UNETR), treinadas sob configurações otimizadas e avaliadas de forma extensiva. A análise experimental inclui testes dentro do próprio dataset onde foi realizado o treinamento, além de avaliação cross-dataset para medir generalização entre domínios distintos e também experimentos de few-shot learning⁵ para estudar adaptação com poucas amostras. A performance dos modelos é mensurada principalmente pelo Dice Score, complementada por análises quantitativas e qualitativas das predições.
 
 ## Metodologia
 
-O projeto está sendo desenvolvido seguindo um pipeline dividido em etapas de:
+O projeto segue um pipeline completo de processamento de imagem e treinamento de modelos de deep learning, estruturado em cinco etapas principais:
 
-- **instalação**, onde os datasets são obtidos automaticamente a partir de suas fontes públicas e organizados em diferentes diretórios seguindo uma estrutura de reprodutibilidade composta pelas pastas raw, interim e processed;
+### 1. Instalação e Estruturação de Dados
 
-- **pré-processamento**, responsável pela padronização dos dados provenientes dos diferentes datasets. Essa etapa inclui carregamento das imagens histológicas, conversão e organização das máscaras de segmentação, leitura de arquivos XML, além da visualização das amostras para utilização posterior no treinamento das redes neurais;
+Os datasets são obtidos automaticamente a partir de suas fontes públicas e organizados em uma estrutura padrão de reprodutibilidade:
+- **raw**: dados brutos originais de cada dataset
+- **interim**: dados convertidos para formato intermediário uniforme
+- **processed**: dados prontos para treinamento com patches e transformações aplicadas
 
-- **treinamento**, onde os experimentos de segmentação serão realizados utilizando arquiteturas de deep learning voltadas para imagens médicas, incluindo modelos baseados em U-Net e suas variantes;
+Essa etapa foi realizada em [notebook de instalação](projetos/segmentacao_de_nucleos/src/00_Installation.ipynb).
 
-- **teste**, onde o modelo treinado será aplicado a um conjunto de dados ainda não visto;
+### 2. Pré-processamento
 
-- **avaliação e análise dos resultados**, que será realizada utilizando métricas quantitativas de segmentação, como Dice Score, IoU, Recall e F1-score. Também está prevista a utilização de métricas complementares relacionadas à qualidade de borda e sobreposição entre máscaras. Além disso, pretende-se realizar análises qualitativas das segmentações produzidas pelos modelos.
+Responsável pela padronização e preparação dos dados de diferentes datasets:
 
-## Bases de Dados e Evolução
+**Conversão de formatos:**
+- **MoNuSeg**: Converte imagens TIFF (1000×1000×3) em patches de 256×256 em formato NPY; máscaras em XML são convertidas para arrays NumPy binários
+- **PanNuke**: Imagens já em NPY são mantidas; máscaras com 6 canais (5 tipos celulares + background) são agregadas em máscara binária única
+- **NuInSeg**: Imagens e máscaras PNG (512×512) são convertidas para NPY e divididas em patches de 256×256
+
+**Divisão dos dados:** Cada dataset é dividido em três conjuntos:
+- Treinamento: 70%
+- Validação: 15%
+- Teste: 15%
+
+**Transformações de dados:**
+- Normalização de intensidade (ScaleIntensity)
+- Flips aleatórios (50% probabilidade em cada eixo espacial) aplicados apenas ao conjunto de treinamento
+
+Essa etapa foi realizada em [notebook de pré-processamento](projetos/segmentacao_de_nucleos/notebooks/00_Preprocessing.ipynb).
+
+### 3. Otimização de Hiperparâmetros
+
+Utiliza a framework Optuna para busca automática dos melhores hiperparâmetros:
+- **Métrica otimizada**: Dice Score na validação
+- **Número de trials**: 15 por combinação modelo-dataset
+- **Hiperparâmetros testados**:
+  - Learning Rate: $10^{-4}$ a $10^{-3}$ (escala logarítmica)
+  - Otimizador: Adam
+  - Batch Size: 16
+- **Épocas por trial**: 15
+
+Os learning rates otimizados para cada arquitetura e dataset são consolidados para o treinamento final.
+
+Essa etapa foi realizada em [notebook de busca de hiperparâmetros](projetos/segmentacao_de_nucleos/notebooks/01_Hyperparameters_Tuning.ipynb).
+
+### 4. Treinamento
+
+Modelos são treinados com os hiperparâmetros otimizados:
+
+**Configuração:**
+- **Modelos**: UNet, AttentionUnet e UNETR (fornecidos pelo MONAI)
+- **Loss**: DiceCELoss (combinação de Dice Loss e Cross Entropy, com ativação sigmoide)
+- **Otimizador**: ADAM com learning rates específicos por modelo e dataset
+- **Batch Size**: 16
+- **Épocas**: 50
+- **Critério de parada**: Melhor modelo é salvo baseado na métrica Dice na validação
+
+**Arquiteturas:**
+- **UNet**: Canais (16, 32, 64, 128, 256), strides (2, 2, 2, 2), 2 unidades residuais por nível
+- **AttentionUnet**: Mesma estrutura da UNet com mecanismos de atenção
+- **UNETR**: Vision Transformer com entrada/saída adaptadas para 256×256 e segmentação binária.
+
+Essa etapa foi realizada em [notebook de treinamento](projetos/segmentacao_de_nucleos/notebooks/02_Training.ipynb).
+
+### 5. Teste e Avaliação
+
+**Estratégias de teste:**
+
+a) **Teste em domínio**: Modelo treinado em um dataset é testado em seu próprio conjunto de teste
+
+b) **Teste cross-dataset**: Modelo treinado em um dataset é testado em todos os datasets (para avaliar generalização e efeitos de adaptação de domínio)
+
+c) **Few-shot learning**: Ajuste fino com poucas amostras (K=5) do NuInSeg usando modelo pré-treinado em PanNuke
+
+**Métricas de avaliação:**
+- **Dice Score**: Métrica principal de segmentação (média agregada da validação)
+- Resultados armazenados por imagem em CSVs para análise posterior
+- **Análise qualitativa**: Visualizações lado-a-lado de imagens originais, ground truth e predições
+
+**Experimentos:**
+- Cada modelo é treinado e testado em cada dataset
+- Matriz de generalização cross-dataset (3 datasets × 3 modelos = 9 combinações treino, testadas em 3 datasets = 27 cenários)
+- Few-shot learning para avaliar efetividade da transferência de domínio com dados limitados.
+
+Essa etapa foi realizada em [notebook de teste](projetos/segmentacao_de_nucleos/notebooks/03_Testing.ipynb).
+
+## Bases de Dados
+
+O projeto utiliza três datasets públicos amplamente consolidados na comunidade de patologia digital, cada um com características distintas que representam diferentes desafios de segmentação e adaptação de domínio:
+
+### Resumo Geral dos Datasets
 
 Base de Dados | Endereço na Web | Resumo descritivo
 ----- | ----- | -----
-PanNuke | https://warwick.ac.uk/fac/cross_fac/tia/data/pannuke/ | Grande dataset com 7904 amostras de imagens histológicas de diferentes tecidos, além de máscaras de segmentação e anotaçãoe sobre a histologia. Este dataset se destaca pela quantidade e diversidade nas amostras.
+PanNuke | https://warwick.ac.uk/fac/cross_fac/tia/data/pannuke/ | Grande dataset com 7904 amostras de imagens histológicas de diferentes tecidos, além de máscaras de segmentação e anotações sobre a histologia. Este dataset se destaca pela quantidade e diversidade nas amostras.
 NuInsSeg | https://www.kaggle.com/datasets/ipateam/nuinsseg | Dataset com 665 amostras de imagens histológicas anotadas, desenvolvido com foco em treinar e avaliar modelos de segmentação de núcleos celulares em imagens de microscopia.
 MoNuSeg | https://monuseg.grand-challenge.org/Data/ | Dataset com 44 imagens histopatológicas de diversos órgãos em alta resolução com anotações feitas manualmente por especialistas. Criado originalmente para uma competição, se tornou um benchmark frequentemente usado em pesquisas de patologia digital.
 
-O detalhamento sobre os datasets utilizados pode ser encontrado no [datasheet desenvolvido pelo grupo](data/Datasheets.md).
+
+### Características Detalhadas por Dataset
+
+#### **MoNuSeg (Multi-Organ Nucleus Segmentation)**
+
+**Formato e Tamanho:**
+- **Quantidade**: 30 imagens de treinamento + 14 de teste (total: 44 imagens)
+- **Resolução**: 1000×1000 pixels em RGB
+- **Formato original**: TIFF
+- **Tamanho total**: ~500 MB
+
+**Tipo de Anotação:**
+- Formato XML com coordenadas dos contornos nucleares
+- Anotações realizadas manualmente com software Aperio ImageScope
+- Revisão por patologistas experientes
+- Corado com H&E em ampliação 40x
+- Múltiplos órgãos: mama, fígado, rim, próstata, bexiga, pulmão, cérebro e cólon
+- Total: ~28.846 núcleos anotados
+
+**Transformações e Pré-processamento Aplicados:**
+1. **Conversão de formato**: XML → arrays NumPy binários (masks)
+2. **Divisão em patches**: 1000×1000 → patches de 256×256 pixels
+3. **Normalização**: ScaleIntensity (normalização de intensidade)
+4. **Data augmentation (treino)**: Flips aleatórios 50% em cada eixo
+5. **Divisão de dados**: 70% treino / 15% validação / 15% teste
+
+**Características Relevantes:**
+- Imagens de alta resolução original → maior quantidade de contexto por patch
+- Anotações precisas com limites bem definidos
+- Excelente para avaliar generalização entre órgãos
+
+---
+
+#### **PanNuke (Pan-Cancer Dataset)**
+
+**Formato e Tamanho:**
+- **Quantidade**: 7.904 imagens de 256×256 pixels
+- **Resolução**: 256×256 pixels em RGB
+- **Formato original**: NPY (NumPy arrays)
+- **Tamanho total**: ~2.5 GB
+
+**Tipo de Anotação:**
+- Máscaras em formato 6-canais: 5 tipos celulares + background
+- Anotações semi-automáticas com validação por patologistas
+- Provenientes de 455 campos visuais de >20 mil lâminas histológicas inteiras (WSIs)
+- Total: ~216.000 núcleos anotados
+
+**Transformações e Pré-processamento Aplicados:**
+1. **Agregação de máscaras**: 6 canais → máscara binária única (núcleo sim/não)
+2. **Formato mantido**: NPY já é formato intermediário eficiente
+3. **Normalização**: ScaleIntensity
+4. **Data augmentation (treino)**: Flips aleatórios 50%
+5. **Divisão de dados**: 70% treino / 15% validação / 15% teste
+
+**Características Relevantes:**
+- Dataset mais diverso e representativo de cenários clínicos reais
+- Inclui regiões com artefatos, borrões e coloração inadequada
+- Excelente base para pré-treinamento e transfer learning
+- Patches de 256×256 já no tamanho otimizado para redes
+
+---
+
+#### **NuInsSeg (Nuclei Instance Segmentation)**
+
+**Formato e Tamanho:**
+- **Quantidade**: 665 imagens de 512×512 pixels
+- **Resolução**: 512×512 pixels em RGB
+- **Formato original**: PNG
+- **Tamanho total**: ~800 MB
+
+**Tipo de Anotação:**
+- Máscaras binárias e de instância
+- Anotações 100% manuais com software ImageJ
+- Revisão por especialistas
+- Máscaras auxiliares: mapas de distância e pesos de borda
+- **Única característica especial**: máscaras de "áreas ambíguas" (regiões que nem especialistas conseguem delimitar com precisão)
+- Provenientes de 31 órgãos diferentes (humanos e camundongos)
+- Total: ~30.698 núcleos anotados
+
+**Transformações e Pré-processamento Aplicados:**
+1. **Conversão de formato**: PNG → NPY
+2. **Divisão em patches**: 512×512 → patches de 256×256 pixels
+3. **Normalização**: ScaleIntensity
+4. **Data augmentation (treino)**: Flips aleatórios 50%
+5. **Divisão de dados**: 70% treino / 15% validação / 15% teste
+
+**Características Relevantes:**
+- Anotações completamente manuais, sem componentes automáticas
+- Presença de máscaras ambíguas torna tarefas mais desafiadoras e realistas
+- Abrange múltiplos órgãos, testando generalização inter-órgãos
+
+---
+
+### Análise Comparativa e Conclusões sobre os Datasets
+
+| Aspecto | MoNuSeg | PanNuke | NuInsSeg |
+|---|---|---|---|
+| **Tamanho (amostras)** | Pequeno (44) | Grande (7.904) | Médio (665) |
+| **Resolução original** | Alto (1000×1000) | Médio (256×256) | Médio (512×512) |
+| **Tipo anotação** | XML (instância) | NPY (instância + classe) | PNG binária + ambígua |
+| **Homogeneidade** | Homogêneo | Heterogêneo (clínico) | Heterogêneo |
+| **Melhor para** | Benchmark/Generalização | Pré-treinamento | Desafios realistas |
+| **Qualidade esperada** | Consistente | Variável (realista) | Desafiadora |
+
+**Principais Conclusões do Grupo sobre os Datasets:**
+
+1. **Complementaridade**: Os três datasets cobrem espectros distintos — MoNuSeg é um benchmark com núcleos bem-definidos, PanNuke simula cenários clínicos reais com diversidade, e NuInsSeg desafia modelos com ambiguidades inerentes.
+
+2. **Transformações Padronizadas**: Apesar de formatos heterogêneos originais (TIFF, NPY, PNG), o pipeline de pré-processamento ([00_Preprocessing](notebooks/00_Preprocessing.ipynb)) unifica todas as bases em patches de 256×256 em formato NPY, facilitando treinamento consistente.
+
+O detalhamento adicional sobre os datasets utilizados pode ser encontrado no [datasheet desenvolvido pelo grupo](data/Datasheets.md).
+A figura abaixo apresenta uma amostra de cada dataset.
+
+![Amostras](assets/results/amostras.png)
 
 ## Ferramentas
 
-O projeto está sendo desenvolvido em Python, utilizando bibliotecas voltadas para manipulação de dados, processamento de imagens e treinamento de modelos de deep learning.
+O projeto foi desenvolvido em Python, utilizando bibliotecas voltadas para manipulação de dados, processamento de imagens e treinamento de modelos de deep learning. As ferramentas estão organizadas por função dentro do pipeline:
 
-Entre as principais bibliotecas utilizadas até o momento, destacam-se:
+### Gerenciamento de Dados e Ambiente
 
-- **NumPy**: operações matriciais e manipulação eficiente de arrays.
+- **Pathlib** e **os**: Gerenciamento de diretórios e estrutura de arquivos.
+- **gdown**: Download dos datasets a partir de URLs do Google Drive.
+- **zipfile** e **shutil**: Extração e organização automatizada de arquivos dos datasets
 
-- **Pandas**: organização e leitura de tabelas e metadados dos datasets.
+### Processamento e Manipulação de Dados
 
-- **Pathlib** e **os**: gerenciamento de diretórios e estrutura de arquivos.
+- **NumPy**: Operações matriciais e manipulação eficiente de arrays multidimensionais para imagens e máscaras
+- **Pandas**: Organização, leitura e manipulação de metadados dos datasets (CSVs com informações de treino/validação/teste)
+- **xml.etree.ElementTree**: Processamento de anotações em formato XML presentes no dataset MoNuSeg (parsing de contornos de núcleos)
 
-- **gdown**, **zipfile** e **shutil**: download, extração e organização automatizada dos datasets.
+### Processamento de Imagens
 
-- **PIL** e **scikit-image**: leitura e manipulação de imagens histológicas.
+- **PIL (Pillow)**: Leitura e carregamento de imagens nos formatos PNG e TIFF
+- **scikit-image**: Manipulação de imagens 
 
-- **xml.etree.ElementTree**: processamento das anotações em formato XML presentes no MoNuSeg.
+### Visualização
 
-- **Matplotlib**: visualização de imagens e máscaras de segmentação.
+- **Matplotlib**: Visualização de imagens, máscaras de segmentação e resultados de predições
+- **Seaborn**: Visualizações estatísticas de resultados (boxplots, distribuições de Dice Score)
 
-- **PyTorch**: desenvolvimento e treinamento das redes neurais.
+### Deep Learning e Redes Neurais
 
-- **MONAI**: framework especializado em aplicações de deep learning para imagens médicas, utilizado para implementação das arquiteturas de segmentação.
+- **PyTorch**: Framework principal para desenvolvimento e treinamento das redes neurais
+  - Gestão de tensores e computação em GPU/CPU
+  - Otimizadores (Adam)
+  - Utilitários de training loop e inferência
+
+- **MONAI (Medical Open Network for AI)**: Framework especializado em deep learning para imagens médicas
+  - Implementação das arquiteturas: UNet, AttentionUnet e UNETR
+  - DataLoaders e transformações específicas para dados médicos (LoadImaged, EnsureChannelFirstd, ScaleIntensityd, RandFlipd)
+  - Métricas de segmentação: DiceMetric
+  - Loss functions: DiceCELoss (combinação de Dice Loss e Cross Entropy)
+
+### Otimização e Ajuste de Hiperparâmetros
+
+- **Optuna**: Framework de otimização bayesiana para busca automática de hiperparâmetros
+  - Busca em espaço contínuo para Learning Rate
+  - Pruning de trials não promissores para economia computacional
 
 ## Workflow
 
 O workflow atual do projeto segue a estrutura ilustrada abaixo:
 
-![Workflow do projeto](assets/WorkflowE2.png)
+![Workflow do projeto](assets/Workflow_E3.png)
 
-## Experimentos e Resultados preliminares
+## Experimentos, Resultados e Discussão
 
-Para cada dataset, realizou-se o treinamento de três tipos de redes neurais: UNET, AttentionUnet e UNETR, disponíveis no pacote Python MONAI. Os conjunto de treino, validação e teste foram divididos seguindo uma proporção de 70%, 15% e 15%, respectivamente. 
+### Otimização de Hiperparâmetros
 
-#### Transformações aplicadas as imagens e máscaras
-De forma geral, aplicou-se transformações de Normalização de intensidade e rotações aleatórias nas imagens do conjunto de treino.
+A otimização com Optuna (15 trials por combinação modelo-dataset) revelou learning rates específicos para cada arquitetura e dataset:
 
-#### Treinamento
-Aplicou-se os mesmos hiperparâmetros para todos os tipos de redes utilizados, independente do dataset escolhido:
-- Otimizador: ADAM
-- Learning Rate: $10^{-4}$
-- Batch Size: 16
-- Número de épocas: 50
+- **UNET**: Learning rates variaram entre $2.44 \times 10^{-4}$ (PanNuke) e $8.61 \times 10^{-4}$ (MoNuSeg)
+- **AttentionUnet**: Learning rates entre $4.65 \times 10^{-4}$ (PanNuke) e $7.44 \times 10^{-4}$ (NuInSeg)
+- **UNETR**: Learning rates entre $1.19 \times 10^{-4}$ (NuInSeg) e $2.44 \times 10^{-4}$ (MoNuSeg)
 
-#### Resultados preliminares
-Com as redes treinadas em cada dataset, obteve-se, nos respectivos conjuntos de teste, os seguintes DICES médios:
+Estes valores reforçam que diferentes arquiteturas e datasets requerem configurações de otimizador adaptadas para máxima eficiência.
 
-| Dataset | UNET | AttentionUnet | UNETR |
-| --- | --- | --- | --- |
-| **MoNuSeg** | $0.75 \pm 0.10$ | $0.77 \pm 0.09$ | $0.79 \pm 0.07$ |
-| **PanNuke** | $0.81 \pm 0.18$ | $0.82 \pm 0.18$ | $0.80 \pm 0.18$ |
-| **NuInSeg** | $0.74 \pm 0.22$ | $0.77 \pm 0.22$ | $0.73 \pm 0.22$ |
 
-## Próximos passos
-Essa etapa do projeto consistiu na criação de sua estrutura e testes iniciais das ferramentas e datasets utilizados. Para a conclusão do projeto, os próximos passos focam na melhoria do treinamento, além de testes com aplicação mais focada em seu objetivo inicial.
+### Desempenho em Domínio
 
-Passo | Descrição | Período de realização
----- | ---- | ----
-Inclusão de métricas            | Estudar mais a fundo e incluir no projeto métricas de avaliação de borda, como a Distância de Hausdorff Média ou a Distância de Superfície Simétrica, com o objetvo de complementar o DICE (métrica de sobreposição). | Semana 1
-Refinamento do treinamento      | Refinar o treinamento e ajustar hiperparâmetros utilizando métodos de otimização, além da análise das métricas de avaliação | Semanas 2 e 3
-Testes em diferentes datasets   | Realizar testes dos modelos com dados de bases não introduzidas em seu treinamento (utilizando o MoNuSeg como conjunto de teste de um modelo treinado e validado no PanNuke por exemplo) | Semanas 2 e 3
-Análise final                   | Análisar os resultados finais para preparar a entrega final | Semana 4
-Organização para a entrega      | Organizar dados sobre o desenvolvimento e execução do projeto no formato esperado para a entrega final | Semana 4
+Os modelos foram treinados e testados no mesmo dataset, refletindo a capacidade de cada arquitetura em se adaptar a características específicas de cada domínio. A tabela e gráfico abaixo apresentam os Dice Scores médios obtidos no conjunto de teste de cada dataset:
 
+
+![Heatmap de Performance em Domínio](assets/results/heatmap_performance_in_domain.png)
+
+A figura acima visualiza a performance média de cada modelo por dataset através de um heatmap, facilitando a comparação entre arquiteturas.
+
+### Comparação de Arquiteturas
+
+![Comparação de Performance - Todas as Arquiteturas](assets/results/comparison_architectures.png)
+
+O gráfico acima apresenta uma comparação agregada do desempenho de cada arquitetura em todos os datasets, facilitando a identificação de padrões de desempenho.
+
+**Observações:**
+
+- **MoNuSeg**: Todos os modelos apresentaram desempenho relativamente consistente, com UNETR ligeiramente superior ($0.79 \pm 0.07$). O menor desvio padrão observado em UNETR sugere maior estabilidade na segmentação de núcleos em diferentes regiões de interesse.
+
+- **PanNuke**: Alcançou os maiores Dice Scores em média, com AttentionUnet ligeiramente superior ($0.82 \pm 0.18$). Porém, o desvio padrão elevado ($0.18$) indica maior variabilidade entre amostras, refletindo a diversidade de tecidos e tipos celulares presentes no dataset.
+
+- **NuInSeg**: Apresentou os menores desempenhos e maior variabilidade ($0.22$). UNETR obteve o menor Dice neste dataset ($0.73 \pm 0.22$), enquanto AttentionUnet mostrou-se mais robusto ($0.77 \pm 0.22$).
+
+**Distribuição de Variância**
+A análise da distribuição de Dice Scores entre amostras revelou:
+
+- **Menor variância**: MoNuSeg apresenta patches mais homogêneos em qualidade de segmentação (desvio padrão ~0.09-0.10)
+- **Maior variância**: NuInSeg apresenta heterogeneidade significativa nas dificuldades de segmentação por amostra (desvio padrão ~0.22)
+- **Intermediária**: PanNuke com variância moderada a alta (~0.18), refletindo sua diversidade de tecidos
+
+![Heatmap de Variância](assets/results/heatmap_variance.png)
+
+
+### Generalização Cross-Dataset
+
+A generalização entre datasets foi avaliada através de um protocolo de teste cruzado, em que modelos treinados em um dataset foram testados em todos os outros datasets. Foram realizados 27 cenários de teste (9 modelos × 3 datasets).
+
+**Principais achados:**
+
+1. **Degradação de Desempenho em Mudança de Domínio**: Observou-se uma queda significativa no desempenho ao testar modelos em datasets diferentes do utilizado no treinamento. Isso confirma que as características visuais, histológicas e de aquisição de cada dataset impõem desafios na generalização de modelos.
+
+2. **Melhor Transferência**: Modelos treinados em PanNuke apresentaram melhor capacidade de generalização para outros datasets, provavelmente devido à sua maior diversidade de tipos celulares e tecidos (~7900 amostras).
+
+3. **Variabilidade por Arquitetura**: Embora UNETR tenha apresentado desempenho ligeiramente melhor em alguns cenários de teste em domínio, sua transferibilidade mostrou-se menos estável que a de modelos baseados em U-Net quando extrapolados para novos domínios.
+
+As figuras abaixo mostram a variabilidade das performances, comparando quando o teste acontece dentro e fora do domínio de treinamento.
+
+![Performance de Generalização - UNet](assets/results/perf_gen_unet.png)
+
+![Performance de Generalização - AttentionUnet](assets/results/perf_gen_attentionunet.png)
+
+![Performance de Generalização - UNETR](assets/results/perf_gen_unetr.png)
+
+### Few-Shot Learning
+
+Modelos pré-treinados em PanNuke foram submetidos a fine-tuning com apenas K=5 amostras de NuInSeg. Este experimento simula cenários práticos onde dados anotados do domínio alvo são escassos.
+
+**Resultados:** O fine-tuning com poucas amostras demonstrou a viabilidade de adaptação rápida de modelos, reduzindo a necessidade de anotações extensivas do novo domínio. Porém, a qualidade das segmentações permaneceu inferior às do modelo treinado exclusivamente em domínio.
+No teste realizado, a performance após few-shot learning não aumentou apenas na arquitetura AttentionUnet.
+
+![Few-Shot Learning PanNuke](assets/results/few_shot_comparison.png)
+
+
+### Observações
+
+1. **Não há arquitetura universal**: A melhor arquitetura varia por dataset. UNETR foi superior em MoNuSeg, AttentionUnet em PanNuke, e novamente AttentionUnet em NuInSeg.
+
+2. **Transferência de domínio é desafiadora**: A queda de desempenho ao testar cross-dataset confirma que a variabilidade de aquisição e histologia entre bases de dados é substancial.
+
+3. **PanNuke como base**: Sua maior diversidade o torna uma excelente fonte para pré-treinamento, com melhor transferência para outros datasets.
+
+4. **Few-shot promissor**: A capacidade de adaptação com poucas amostras abre caminho para aplicações práticas com dados limitados.
+
+### Exemplos Visuais de Segmentação
+
+As figuras abaixo apresentam exemplos visuais do desempenho de segmentação para cada dataset, mostrando a imagem original, a anotação manual (ground truth) e a predição da AttentionUnet para o dataset:
+
+#### MoNuSeg - Exemplo de Segmentação
+![Exemplos de Segmentação - MoNuSeg](assets/results/Examples_MoNuSeg.png)
+Exemplo de segmentação de imagem do MoNuSeg utilizando a AttentionUnet, Dice médio de 0.77 nesse modelo.
+
+#### PanNuke - Exemplo de Segmentação
+![Exemplos de Segmentação - PanNuke](assets/results/Examples_PanNuke.png)
+
+Exemplo de segmentação de imagem no PanNuke, utilizando a AttentionUnet, obtendo Dice Score médio de 0.82.
+
+#### NuInSeg - Exemplo de Segmentação
+![Exemplos de Segmentação - NuInSeg](assets/results/Examples_NuInSeg.png)
+
+Exemplo de segmentação de imagem no NuinSeg, onde o AttentionUnet obteve o Dice médio de 0.77.
+
+## Conclusão
+### Principais Conclusões
+
+O presente projeto demonstrou que a segmentação de núcleos em imagens histológicas apresenta desafios substanciais quando abordada sob a perspectiva de adaptação de domínio. As principais conclusões obtidas são:
+
+1. **Inexistência de Arquitetura Universal**: Diferentes arquiteturas de deep learning apresentam desempenho variável conforme o dataset. Não existe uma solução única que seja ótima para todos os cenários — UNETR foi superior em MoNuSeg, enquanto AttentionUnet dominou em PanNuke e NuInSeg. Isso indica que as características específicas de cada dataset (resolução, coloração, tipos celulares) exigem ajustes arquiteturais.
+
+2. **Transferabilidade Limitada Entre Datasets**: A queda significativa de performance ao testar modelos em datasets diferentes do treinamento confirma a magnitude do desafio de adaptação de domínio. Modelos treinados em um dataset apresentam degradação substancial quando aplicados a novos domínios, refletindo diferenças fundamentais entre as bases de dados.
+
+3. **PanNuke como Melhor Base para Pré-treinamento**: Devido à sua maior diversidade (~7900 amostras) e variedade de tecidos e tipos celulares, PanNuke se destacou como excelente fonte para pré-treinamento, apresentando melhor capacidade de generalização para outros datasets em comparação com MoNuSeg e NuInSeg.
+
+4. **Variabilidade Intrínseca dos Dados**: Cada dataset apresenta nível diferente de variância nas dificuldades de segmentação. MoNuSeg é mais homogêneo (desvio ~0.09-0.10), NuInSeg altamente heterogêneo (desvio ~0.22), e PanNuke intermediário (~0.18), refletindo diferenças na qualidade de anotação e características visuais.
+
+5. **Few-Shot Learning Viável mas Limitado**: A capacidade de adaptação com apenas K=5 amostras demonstra a viabilidade de ajuste rápido de modelos pré-treinados. Porém, a qualidade das segmentações permanece inferior à de modelos treinados exclusivamente em domínio, indicando que quantidade limitada de dados do domínio-alvo é insuficiente para adaptação completa.
+
+### Principais Desafios Enfrentados
+
+- **Heterogeneidade de Formatos**: Datasets originários de diferentes fontes apresentavam formatos, dimensões e anotações heterogêneas (XML para MoNuSeg, NPY para PanNuke, PNG para NuInSeg), exigindo pipeline de pré-processamento que garantisse a padronização.
+
+- **Desbalanceamento Computacional**: A otimização de hiperparâmetros com Optuna, treinamento de múltiplas arquiteturas e testes cross-dataset em 27 cenários demandou recursos computacionais significativos, limitando a exploração mais extensiva de estratégias de adaptação.
+
+- **Métricas Insuficientes**: O Dice Score, embora amplamente utilizado, não captura todos os aspectos de qualidade de segmentação. Análise qualitativa adicional seria necessária para compreender tipos específicos de erros.
+
+- **Estabilidade de UNETR**: Apesar de desempenho competitivo em domínio, UNETR apresentou comportamento menos previsível na transferência cross-dataset, sugerindo que arquiteturas baseadas em Transformers podem requerer estratégias específicas de regularização ou fine-tuning.
+
+### Lições Aprendidas
+
+1. **Pipeline Modular é Essencial**: Estruturação clara do pipeline (pré-processamento → otimização → treinamento → teste) facilitou experimentação sistemática e reprodutibilidade.
+
+2. **Validação Cruzada Necessária**: A análise cross-dataset revelou informações que não seriam capturados por avaliação em domínio único, destacando a importância de protocolos de teste mais rigorosos em pesquisa de visão computacional médica.
+
+3. **Trade-off Entre Complexidade e Generalização**: Modelos mais simples (UNet) frequentemente apresentaram transferência comparável ou superior a modelos mais complexos (UNETR), sugerindo que simplicidade arquitetural pode favorecer generalização.
+
+## Trabalhos Futuros
+
+Para trabalhos futuros, uma melhoria seria a inclusão de métricas de avaliação focadas nos contornos das segmentações, como a Distância de Hausdorff Média e a Distância de Superfície Simétrica. Atualmente, a avaliação do projeto apoia-se no Coeficiente de Dice, que é excelente para medir a sobreposição de área. Contudo, quantificar o erro exato dos contornos forneceria uma análise mais robusta sobre a capacidade geométrica dos modelos ao operarem em imagens não vistas.
+
+Além disso, embora o projeto tenha utilizado uma estratégia de transferência e fine-tuning com suporte reduzido (Few-Shot do tipo TransFT), a exploração de metodologias avançadas de Few-Shot Learning⁵, como no artigo referenciado e que foi descoberto durante a revisão do estado-da-arte, representaria um avanço significativo.
 
 ## Uso de IA Generativa
 - Implementação de script para geração de samples: O Claude foi utilizado para gerar um script base de geração da pasta '*\data\samples'. Foram feitas diversas adaptações em cima desse script base, para que essa geração se adequasse ao projeto.
@@ -116,6 +439,16 @@ Organização para a entrega      | Organizar dados sobre o desenvolvimento e ex
 
 - Interpretação inicial dos artigos referenciados no projeto: O NotebookLM foi utilizado para auxílio na síntese de informações presentes nos artigos sobre os datasets e sobre estruturação de datasheets para datasets.
     - Prompt Utilizado: "com base na estrutura de um datasheet sugerida pelo artigo Datasheets for Datasets, busque nos artigos dos datasets as informações necessárias para o preenchimento das seções"
+
+- Melhoria de escrita: O Claude foi utilizado em algumas ocasiões para melhorar algumas partes do texto.
+    - Prompts Utilizados: variações de "melhore essa frase/parte do texto"
+
+- Criação do Workflow: O ChatGPT foi utilizado para gerar a imagem do workflow a partir da descrição da metodologia.
+    - Prompt Utilizado: "gere uma imagem para o workflow sobre a seguinte metodologia do projeto"
+
+- Revisão do texto: O GPT foi utilizado para revisar o texto pronto, principalmente em busca de typos e inconsistências
+    - Prompt Utilizado: "aponte typos e inconsistencias no texto"
+
 
 ## Referências
 
@@ -126,3 +459,5 @@ Organização para a entrega      | Organizar dados sobre o desenvolvimento e ex
 ³ LJUBENOVIĆ, M. et al. *NuInsSeg: A Fully Annotated Dataset for Nuclei Instance Segmentation in H&E-Stained Histological Images*. arXiv preprint arXiv:2207.04643, 2022.
 
 ⁴ GAMPER, Jevgenij et al. *PanNuke: An Open Pan-Cancer Histology Dataset for Nuclei Instance Segmentation and Classification*. In: European Congress on Digital Pathology. Springer, 2019. p. 11–19.
+
+⁵ MING, Yu et al. *Few-Shot Learning for Annotation-Efficient Nucleus Instance Segmentation.* IEEE Transactions on Medical Imaging, v. 44, n. 8, 2025

@@ -1,0 +1,10 @@
+gdown==6.1.0
+matplotlib==3.11.0
+monai==1.5.1
+numpy==2.5.0
+optuna==4.9.0
+pandas==3.0.3
+Pillow==12.2.0
+seaborn==0.13.2
+scikit-image
+torch==2.9.1+cu130
