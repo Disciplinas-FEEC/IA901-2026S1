@@ -28,7 +28,7 @@ rodar o pipeline completo e chegar aos mesmos resultados.
 
 ---
 
-## 1. Visão geral em 1 minuto
+## 1. Visão geral
 
 O projeto é um pipeline de **segmentação semântica multi-rótulo** com três etapas:
 
