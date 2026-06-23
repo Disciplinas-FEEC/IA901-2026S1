@@ -34,6 +34,8 @@ Os datasets são obtidos automaticamente a partir de suas fontes públicas e org
 - **interim**: dados convertidos para formato intermediário uniforme
 - **processed**: dados prontos para treinamento com patches e transformações aplicadas
 
+Essa etapa foi realizada em [notebook de instalação](projetos/segmentacao_de_nucleos/src/00_Installation.ipynb).
+
 ### 2. Pré-processamento
 
 Responsável pela padronização e preparação dos dados de diferentes datasets:
@@ -52,6 +54,8 @@ Responsável pela padronização e preparação dos dados de diferentes datasets
 - Normalização de intensidade (ScaleIntensity)
 - Flips aleatórios (50% probabilidade em cada eixo espacial) aplicados apenas ao conjunto de treinamento
 
+Essa etapa foi realizada em [notebook de pré-processamento](projetos/segmentacao_de_nucleos/notebooks/00_Preprocessing.ipynb).
+
 ### 3. Otimização de Hiperparâmetros
 
 Utiliza a framework Optuna para busca automática dos melhores hiperparâmetros:
@@ -64,6 +68,8 @@ Utiliza a framework Optuna para busca automática dos melhores hiperparâmetros:
 - **Épocas por trial**: 15
 
 Os learning rates otimizados para cada arquitetura e dataset são consolidados para o treinamento final.
+
+Essa etapa foi realizada em [notebook de busca de hiperparâmetros](projetos/segmentacao_de_nucleos/notebooks/01_Hyperparameters_Tuning.ipynb).
 
 ### 4. Treinamento
 
@@ -80,7 +86,9 @@ Modelos são treinados com os hiperparâmetros otimizados:
 **Arquiteturas:**
 - **UNet**: Canais (16, 32, 64, 128, 256), strides (2, 2, 2, 2), 2 unidades residuais por nível
 - **AttentionUnet**: Mesma estrutura da UNet com mecanismos de atenção
-- **UNETR**: Vision Transformer com entrada/saída adaptadas para 256×256 e segmentação binária
+- **UNETR**: Vision Transformer com entrada/saída adaptadas para 256×256 e segmentação binária.
+
+Essa etapa foi realizada em [notebook de treinamento](projetos/segmentacao_de_nucleos/notebooks/02_Training.ipynb).
 
 ### 5. Teste e Avaliação
 
@@ -100,7 +108,9 @@ c) **Few-shot learning**: Ajuste fino com poucas amostras (K=5) do NuInSeg usand
 **Experimentos:**
 - Cada modelo é treinado e testado em cada dataset
 - Matriz de generalização cross-dataset (3 datasets × 3 modelos = 9 combinações treino, testadas em 3 datasets = 27 cenários)
-- Few-shot learning para avaliar efetividade da transferência de domínio com dados limitados
+- Few-shot learning para avaliar efetividade da transferência de domínio com dados limitados.
+
+Essa etapa foi realizada em [notebook de teste](projetos/segmentacao_de_nucleos/notebooks/03_Testing.ipynb).
 
 ## Bases de Dados
 
@@ -114,6 +124,7 @@ PanNuke | https://warwick.ac.uk/fac/cross_fac/tia/data/pannuke/ | Grande dataset
 NuInsSeg | https://www.kaggle.com/datasets/ipateam/nuinsseg | Dataset com 665 amostras de imagens histológicas anotadas, desenvolvido com foco em treinar e avaliar modelos de segmentação de núcleos celulares em imagens de microscopia.
 MoNuSeg | https://monuseg.grand-challenge.org/Data/ | Dataset com 44 imagens histopatológicas de diversos órgãos em alta resolução com anotações feitas manualmente por especialistas. Criado originalmente para uma competição, se tornou um benchmark frequentemente usado em pesquisas de patologia digital.
 
+<<<<<<< HEAD
 
 ### Características Detalhadas por Dataset
 
@@ -225,6 +236,13 @@ MoNuSeg | https://monuseg.grand-challenge.org/Data/ | Dataset com 44 imagens his
 2. **Transformações Padronizadas**: Apesar de formatos heterogêneos originais (TIFF, NPY, PNG), o pipeline de pré-processamento ([00_Preprocessing](notebooks/00_Preprocessing.ipynb)) unifica todas as bases em patches de 256×256 em formato NPY, facilitando treinamento consistente.
 
 O detalhamento adicional sobre os datasets utilizados pode ser encontrado no [datasheet desenvolvido pelo grupo](data/Datasheets.md).
+=======
+A figura abaixo apresenta uma amostra de cada dataset.
+
+![Amostras](assets/results/amostras.png)
+
+O detalhamento sobre os datasets utilizados pode ser encontrado no [datasheet desenvolvido pelo grupo](data/Datasheets.md).
+>>>>>>> 609a276 (amostras e links para notebooks)
 
 ## Ferramentas
 
