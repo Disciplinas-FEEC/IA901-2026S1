@@ -21,7 +21,7 @@ Nesse contexto, o presente projeto busca investigar o comportamento de arquitetu
 
 Para isso, são utilizados três datasets públicos amplamente adotados na literatura: MoNuSeg², PanNuke³ e NuInsSeg⁴. O projeto segue um pipeline completo de processamento de dados e treinamento, incluindo padronização de formatos, geração de patches, normalização e aumento de dados, além de divisão sistemática em conjuntos de treinamento, validação e teste. O treinamento dos modelos é precedido por uma etapa de otimização de hiperparâmetros via Optuna, com foco na maximização do Dice Score na validação.
 
-São investigadas três arquiteturas de segmentação (UNet, Attention UNet e UNETR), treinadas sob configurações otimizadas e avaliadas de forma extensiva. A análise experimental inclui testes dentro do próprio dataset onde foi realizado o treinamento, além de avaliação cross-dataset para medir generalização entre domínios distintos e também experimentos de few-shot learning⁵ para estudar adaptação com poucas amostras. A performance dos modelos é mensurada principalmente pelo Dice Score, complementada por análises quantitativas e qualitativas das predições.
+São investigadas três arquiteturas de segmentação (UNet, Attention UNet e UNETR), treinadas sob configurações otimizadas e avaliadas de forma extensiva. A análise experimental inclui testes dentro do próprio dataset onde foi realizado o treinamento, além de avaliação cross-dataset para medir generalização entre domínios distintos e também experimentos de few-shot learning⁵ para estudar adaptação com poucas amostras. A performance dos modelos é mensurada pelo Dice Score, complementada por análises quantitativas e qualitativas das predições.
 
 ## Metodologia
 
