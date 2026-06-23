@@ -649,6 +649,15 @@ class exploratory_data_analysis:
         denominador = nir + red
         numerador   = nir - red
         return np.divide(numerador, denominador, out=np.zeros_like(denominador), where=(denominador != 0))
+    
+    @staticmethod
+    def _calcular_ndwi(rgb_path, nir_path):
+        rgb = mpimg.imread(rgb_path)
+        nir = mpimg.imread(nir_path).astype(float)
+        green = rgb[:, :, 1].astype(float)
+        denominador = nir + green
+        numerador   = nir - green
+        return np.divide(numerador, denominador, out=np.zeros_like(denominador), where=(denominador != 0))
 
     @staticmethod
     def _fusao_labels(name_arquivo, labels_dirs):
@@ -908,7 +917,7 @@ class exploratory_data_analysis:
         paths       = split_dataset.paths
         labels_dirs = split_dataset.labels_dirs
         is_test     = mode.upper() == "TEST"
-        num_cols    = 5 if is_test else 6
+        num_cols    = 6 if is_test else 7
 
         arquivos_rgb = [f.name for f in paths["rgb"].iterdir() if f.is_file()]
         amostras     = random.sample(arquivos_rgb, num_amostras)
@@ -926,6 +935,7 @@ class exploratory_data_analysis:
             img_mask     = np.array(Image.open(mask_path))
             img_boundary = np.array(Image.open(boundary_path))
             ndvi_array   = exploratory_data_analysis._calcular_ndvi(rgb_path, nir_path)
+            ndwi_array   = exploratory_data_analysis._calcular_ndwi(rgb_path, nir_path)
 
             fig, axes = plt.subplots(2, num_cols, figsize=(20, 9))
             fig.suptitle(f"Sample ID: {sample_id} ({mode.upper()})", fontsize=16, fontweight="bold")
@@ -950,6 +960,7 @@ class exploratory_data_analysis:
             axes[0, 3].set_title("Boundary")
 
             col_ndvi = 4 if is_test else 5
+            col_ndwi = col_ndvi + 1
 
             if not is_test:
                 img_labels, lista_classes = exploratory_data_analysis._fusao_labels(f"{sample_id}.png", labels_dirs)
@@ -960,6 +971,10 @@ class exploratory_data_analysis:
             axes[0, col_ndvi].set_title("NDVI (Raw)")
             fig.colorbar(img_ndvi, cax=axes[0, col_ndvi].inset_axes([1.05, 0.0, 0.05, 1.0]))
 
+            img_ndwi = axes[0, col_ndwi].imshow(ndwi_array, cmap="RdYlGn", vmin=-1, vmax=1)
+            axes[0, col_ndwi].set_title("NDWI (Raw)")
+            fig.colorbar(img_ndwi, cax=axes[0, col_ndwi].inset_axes([1.05, 0.0, 0.05, 1.0]))
+
             if is_test:
                 roi = (img_mask > 0) & (img_boundary > 0)
             else:
@@ -968,6 +983,7 @@ class exploratory_data_analysis:
             rgb_recortado  = np.where(np.expand_dims(roi, axis=-1), img_rgb, 0).astype(img_rgb.dtype)
             nir_recortado  = np.where(roi, img_nir, 0).astype(img_nir.dtype)
             ndvi_recortado = np.where(roi, ndvi_array, np.nan)
+            ndwi_recortado = np.where(roi, ndwi_array, np.nan)
 
             axes[1, 0].imshow(rgb_recortado, vmin=0, vmax=255)
             axes[1, 0].set_title("RGB (Region of Interest)")
@@ -978,5 +994,10 @@ class exploratory_data_analysis:
             axes[1, col_ndvi].set_title("NDVI (Region of Interest)")
             fig.colorbar(img_ndvi_r, cax=axes[1, col_ndvi].inset_axes([1.05, 0.0, 0.05, 1.0]))
 
+            img_ndwi_r = axes[1, col_ndwi].imshow(ndwi_recortado, cmap="RdYlGn", vmin=-1, vmax=1)
+            axes[1, col_ndwi].set_title("NDWI (Region of Interest)")
+            fig.colorbar(img_ndwi_r, cax=axes[1, col_ndwi].inset_axes([1.05, 0.0, 0.05, 1.0]))
+
             plt.tight_layout()
             plt.show()
+            
