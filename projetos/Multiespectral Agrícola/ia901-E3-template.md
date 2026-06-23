@@ -176,7 +176,7 @@ Observando a Figura 4 é notório o grande desbalanceamento de classes, um dos p
 > Lembre-se: o objetivo de desenhar o workflow é ajudar a quem quiser reproduzir seus experimentos!!!
 
 ## Experimentos e Resultados
-Neste trabalho abordamos quatro estratégias para avaliar o impacto dos diversos canais de entradas e do desbalanceamento de classes, para cada abordagem os modelos foram treinados em 25.000 iterações e foi utilizado um *batch* de 40 amostras divididos em duas *GTX Titan Xp* (12 GB), onde os pesos em cada GPU são atualizados a cada 2 *batchs* lidos. Foi utilizado o algoritmo SGD com uma taxa de aprendizado base de 0,01 e *weight decay* de $5 \times 10^{-4}$, porém, ao longo das 25.000 iterações, o treinamento inicia com uma etapa de *warmup* de 1.000 iterações, onde a taxa de aprendizado cresce de forma linear entre 0 e 0.01. Na sequência, mantém-se o treinamento por 7.000 iterações sob uma taxa constante de 0.01. Nas últimas 17.000 iterações, a taxa de aprendizado diminui progressivamente até atingir 0, utilizando a regra polinomial.
+Neste trabalho abordamos quatro estratégias para avaliar o impacto dos diversos canais de entradas e do desbalanceamento de classes, para cada abordagem os modelos foram treinados em 25.000 iterações e foi utilizado um *batch* de 40 amostras divididos em duas *GTX Titan Xp* (12 GB), onde os pesos em cada GPU são atualizados a cada 2 *batchs* lidos, sendo que o valor de $Iou$ dos dados de validação era coletado a cada 2.500 iterações. Foi utilizado o algoritmo SGD com uma taxa de aprendizado base de 0,01 e *weight decay* de $5 \times 10^{-4}$, porém, ao longo das 25.000 iterações, o treinamento inicia com uma etapa de *warmup* de 1.000 iterações, onde a taxa de aprendizado cresce de forma linear entre 0 e 0.01. Na sequência, mantém-se o treinamento por 7.000 iterações sob uma taxa constante de 0,01. Nas últimas 17.000 iterações, a taxa de aprendizado diminui progressivamente até atingir 0, utilizando a regra polinomial.
 
 ### RGB (*Red, Green, Blue*)
 A primeira estratégia foi utilizar como entrada do modelo apenas os canais RGB, pois, é possível é estabelecer um referencial de desempenho baseado unicamente no espectro visível. O objetivo deste experimento é mensurar o quanto a ausência de faixas espectrais infravermelhas prejudica a geração das segmentações e o quanto o modelo se torna vulnerável a ruídos de sombreamento e variações de iluminação natural nas imagens aéreas. A curva de aprendizado pode ser observada na Figura 5.
@@ -205,6 +205,7 @@ Nessa abordagem expandiu-se o espaço de entrada para englobar a informações N
 </div>
 
 ### RGBNVW (*Red, Green, Blue, NIR, NDVI, NDWI*)
+A última estratégia introduz a fusão completa de recursos ao concatenar os canais RGB e NIR aos subespaços espectrais calculados, resultando no arranjo RGBNVW. Nessa configuração, o tensor de entrada do modelo é expandido para a dimensão $512 \times 512 \times 6$. A hipótese fundamental dessa abordagem é que, ao fornecer explicitamente os mapas de calor do NDVI (vigor vegetativo) e do NDWI (dinâmica hídrica/solo) junto às bandas brutas, a rede de segmentação semântica seja guiada por indutores de características altamente discriminantes. A curva de *loss* pode ser observada na Figura 7.
 
 <div align="center">
   <img src="assets/loss_rgbnvw.png" alt="Loss RGBNVW" width="900">
@@ -217,6 +218,8 @@ Nessa abordagem expandiu-se o espaço de entrada para englobar a informações N
 
 ### Resultados
 
+Com o fim do treinamento os valores de $IoU$ para os dados de validação foram validados e estão presentes na Tabela 2. Ao analisar os resultados numéricos obtidos nos experimentos demonstram que a progressiva expansão do tensor de entrada e a aplicação de funções de perda ponderadas alteraram significativamente a capacidade de convergência e a acurácia de sobreposição por classe nas redes de segmentação semântica.
+
 | | mIoU (%) | Background | Double plant | Drydown | Endrow | Nutrient deficiency | Planter skip | Water | Waterway | Weed cluster |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | RGB | 0,3693 | 0,7189 | 0,2289 | 0,5057 | 0,0942 | 0,2803 | **0,3006** | 0,7028 | 0,2288 | 0,263 |
@@ -224,6 +227,11 @@ Nessa abordagem expandiu-se o espaço de entrada para englobar a informações N
 | RGBN | 0,3756 | 0,7291 | 0,2024 | 0,4996 | **0,1133** | 0,3554 | 0,276 | 0,7068 | 0,2564 | 0,2418 |
 | RGBNVW | **0,3836** | **0,7326** | **0,2308** | **0,5215** | 0,1033 | **0,3512** | 0,2709 | **0,7194** | **0,2757** | 0,247 |
 
+A análise quantitativa dos experimentos revela que a progressiva adição de informação espectral impactou diretamente a capacidade de generalização do modelo. O arranjo RGBNVW ($RGB + NIR + NDVI + NDWI$) atingiu o melhor desempenho global do projeto, estabelecendo o pico de $mIoU$ em 38,36%. A inclusão explícita dos subespaços baseados em índices forneceu à rede neural convolucional um forte indutor de características, o que permitiu obter os melhores resultados nas classes estruturais complexas do dataset *Agriculture-Vision*, como *double plant* (23,08%) e *drydown* (52,15%), superando o uso da informação espectral bruta isolada. Além disso, a inserção do NDWI na entrada impulsionou significativamente a detecção de dinâmicas hídricas, alcançando os maiores índices de acerto nas classes *water* (71,94%) e *waterway* (27,57%).
+
+Por outro lado, a transição do espectro visível ($RGB$) para o espectro multiespectral bruto (RGBN) gerou um ganho imediato, elevando o $mIoU$ global de 36,93% para 37,56%. O canal $NIR$ bruto isolado provou-se eficiente em delimitar áreas de transição mecânica e falhas de borda no campo, fazendo com que a classe *endrow* atingisse o seu ápice de desempenho com 11,33%. A resposta física da clorofila na banda do infravermelho próximo também reduziu de forma expressiva as ambiguidades visuais na identificação de distúrbios metabólicos na lavoura, fazendo a métrica da classe *nutrient deficiency* dar um salto de 28,03% para 35,54% de $mIoU$.
+
+Em paralelo, a aplicação da estratégia RGB + Weighted Loss introduziu uma dinâmica importante para tentar mitigar o desbalanceamento de classes do dataset. Ao alterar a penalização dos erros na função de custo, a abordagem conseguiu um ganho focado na classe *weed cluster* que, apesar de ser a terceira mais frequente do *dataset*, alcançou o seu melhor resultado histórico com 27,63% de $mIoU$. Contudo, essa estratégia mostrou-se pouco suficiente para resolver o problema de maneira ampla, uma vez que o ganho no $mIoU$ global foi marginal e gerou um relativo trade-off ao degradar o desempenho em anomalias menos frequentes e de geometria linear perfeita, como planter skip, que decaiu de 30,06% para 28,61%. Esse comportamento evidencia que apenas ajustar os pesos na função de perda não basta para compensar as complexidades do dataset sem prejudicar o aprendizado de feições geométricas específicas e menos representadas.
 
 > Descrição dos resultados mais importantes obtidos.
 > Apresente os resultados da forma mais rica possível, com gráficos e tabelas. Mesmo que o seu código rode online em um notebook, copie para esta parte a figura estática. A referência a código e links para execução online pode ser feita também, mas é preciso apresentar os principais resultados neste documento.
