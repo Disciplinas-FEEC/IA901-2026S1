@@ -246,6 +246,7 @@ Como lições aprendidas a primeira é que a engenharia envolvida nos canais de 
 
 ## Trabalhos Futuros
 > Ler outros trabalhos que utilizem o Agriculture Vision dataset a fim de avaliar soluções que possam ser úteis pra nos aprofundar em melhores modelos, indo além do baseline. (O desenvolvimento de baseline foi bom para nos inteirar sobre o desafio tratado.)
+
 > Explorar losses que compensem o desbalanceamento do dataset, como a aplicada aqui, a weighted loss.
 
 ## Uso de IA Generativa
