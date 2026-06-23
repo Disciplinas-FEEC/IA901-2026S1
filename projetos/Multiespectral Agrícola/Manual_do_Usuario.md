@@ -14,7 +14,7 @@ rodar o pipeline completo e chegar aos mesmos resultados.
 
 ## Sumário
 
-1. [Visão geral em 1 minuto](#1-visão-geral-em-1-minuto)
+1. [Visão geral](#1-visão-geral)
 2. [Estrutura do repositório](#2-estrutura-do-repositório)
 3. [Pré-requisitos](#3-pré-requisitos)
 4. [Instalação passo a passo](#4-instalação-passo-a-passo)
