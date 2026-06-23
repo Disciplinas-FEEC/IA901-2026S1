@@ -194,6 +194,14 @@ A generalização entre datasets foi avaliada através de um protocolo de teste 
 
 3. **Variabilidade por Arquitetura**: Embora UNETR tenha apresentado desempenho ligeiramente melhor em alguns cenários de teste em domínio, sua transferibilidade mostrou-se menos estável que a de modelos baseados em U-Net quando extrapolados para novos domínios.
 
+As figuras abaixo mostram a variabilidade das performances, comparando quando o teste acontece dentro e fora do domínio de treinamento.
+
+![Performance de Generalização - UNet](assets/results/perf_gen_unet.png)
+
+![Performance de Generalização - AttentionUnet](assets/results/perf_gen_attentionunet.png)
+
+![Performance de Generalização - UNETR](assets/results/perf_gen_unetr.png)
+
 ### Otimização de Hiperparâmetros
 
 A otimização com Optuna (15 trials por combinação modelo-dataset) revelou learning rates ótimos específicos para cada arquitetura e dataset:
@@ -203,12 +211,6 @@ A otimização com Optuna (15 trials por combinação modelo-dataset) revelou le
 - **UNETR**: Learning rates entre $1.19 \times 10^{-4}$ (NuInSeg) e $2.44 \times 10^{-4}$ (MoNuSeg)
 
 Estes valores reforçam que diferentes arquiteturas e datasets requerem configurações de otimizador adaptadas para máxima eficiência.
-
-![Performance de Generalização - UNet](assets/results/perf_gen_unet.png)
-
-![Performance de Generalização - AttentionUnet](assets/results/perf_gen_attentionunet.png)
-
-![Performance de Generalização - UNETR](assets/results/perf_gen_unetr.png)
 
 ### Few-Shot Learning
 
