@@ -19,7 +19,9 @@ A segmentação de núcleos celulares em imagens histológicas é uma tarefa imp
 
 Nesse contexto, o presente projeto busca investigar o comportamento de arquiteturas de segmentação quando aplicadas a datasets histológicos com características distintas. A proposta procura se aproximar de um problema mais realista de adaptação de domínio, avaliando como diferentes modelos se comportam em situações de transferência entre bases de dados.
 
-Para isso, serão utilizados três datasets públicos amplamente utilizados na literatura: MoNuSeg, PanNuke e NuInsSeg. Inicialmente, pretende-se realizar experimentos de treinamento e teste entre diferentes bases, analisando qualitativamente e quantitativamente os resultados obtidos. Posteriormente, também serão exploradas estratégias relacionadas a fine-tuning e adaptação de domínio.
+Para isso, são utilizados três datasets públicos amplamente adotados na literatura: MoNuSeg², PanNuke³ e NuInsSeg⁴. O projeto segue um pipeline completo de processamento de dados e treinamento, incluindo padronização de formatos, geração de patches, normalização e aumento de dados, além de divisão sistemática em conjuntos de treinamento, validação e teste. O treinamento dos modelos é precedido por uma etapa de otimização de hiperparâmetros via Optuna, com foco na maximização do Dice Score na validação.
+
+São investigadas três arquiteturas de segmentação (UNet, Attention UNet e UNETR), treinadas sob configurações otimizadas e avaliadas de forma extensiva. A análise experimental inclui testes dentro do próprio dataset onde foi realizado o treinamento, além de avaliação cross-dataset para medir generalização entre domínios distintos e também experimentos de few-shot learning⁵ para estudar adaptação com poucas amostras. A performance dos modelos é mensurada principalmente pelo Dice Score, complementada por análises quantitativas e qualitativas das predições.
 
 ## Metodologia
 
@@ -296,6 +298,9 @@ O presente projeto demonstrou que a segmentação de núcleos em imagens histol�
 - Melhoria de escrita: O Claude foi utilizado em algumas ocasiões para melhorar algumas partes do texto.
     - Prompts Utilizados: variações de "melhore essa frase/parte do texto"
 
+- Criação do Workflow: O ChatGPT foi utilizado para gerar a imagem do workflow a partir da descrição da metodologia.
+    - Prompt Utilizado: "gere uma imagem para o workflow sobre a seguinte metodologia do projeto"
+
 
 ## Referências
 
@@ -306,3 +311,5 @@ O presente projeto demonstrou que a segmentação de núcleos em imagens histol�
 ³ LJUBENOVIĆ, M. et al. *NuInsSeg: A Fully Annotated Dataset for Nuclei Instance Segmentation in H&E-Stained Histological Images*. arXiv preprint arXiv:2207.04643, 2022.
 
 ⁴ GAMPER, Jevgenij et al. *PanNuke: An Open Pan-Cancer Histology Dataset for Nuclei Instance Segmentation and Classification*. In: European Congress on Digital Pathology. Springer, 2019. p. 11–19.
+
+⁵ MING, Yu et al. *Few-Shot Learning for Annotation-Efficient Nucleus Instance Segmentation.* IEEE Transactions on Medical Imaging, v. 44, n. 8, 2025
