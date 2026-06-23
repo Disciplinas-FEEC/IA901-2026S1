@@ -19,7 +19,7 @@ A segmentação de núcleos celulares em imagens histológicas é uma tarefa imp
 
 Nesse contexto, o presente projeto busca investigar o comportamento de arquiteturas de segmentação quando aplicadas a datasets histológicos com características distintas. A proposta procura se aproximar de um problema mais realista de adaptação de domínio, avaliando como diferentes modelos se comportam em situações de transferência entre bases de dados.
 
-Para isso, são utilizados três datasets públicos amplamente adotados na literatura: MoNuSeg², PanNuke³ e NuInsSeg⁴. O projeto segue um pipeline completo de processamento de dados e treinamento, incluindo padronização de formatos, geração de patches, normalização e aumento de dados, além de divisão sistemática em conjuntos de treinamento, validação e teste. O treinamento dos modelos é precedido por uma etapa de otimização de hiperparâmetros via Optuna, com foco na maximização do Dice Score na validação.
+Para isso, são utilizados três datasets públicos amplamente adotados na literatura: MoNuSeg², NuInsSeg³ e PanNuke⁴. O projeto segue um pipeline completo de processamento de dados e treinamento, incluindo padronização de formatos, geração de patches, normalização e aumento de dados, além de divisão sistemática em conjuntos de treinamento, validação e teste. O treinamento dos modelos é precedido por uma etapa de otimização de hiperparâmetros via Optuna, com foco na maximização do Dice Score na validação.
 
 São investigadas três arquiteturas de segmentação (UNet, Attention UNet e UNETR), treinadas sob configurações otimizadas e avaliadas de forma extensiva. A análise experimental inclui testes dentro do próprio dataset onde foi realizado o treinamento, além de avaliação cross-dataset para medir generalização entre domínios distintos e também experimentos de few-shot learning⁵ para estudar adaptação com poucas amostras. A performance dos modelos é mensurada principalmente pelo Dice Score, complementada por análises quantitativas e qualitativas das predições.
 
@@ -120,7 +120,7 @@ O projeto utiliza três datasets públicos amplamente consolidados na comunidade
 
 Base de Dados | Endereço na Web | Resumo descritivo
 ----- | ----- | -----
-PanNuke | https://warwick.ac.uk/fac/cross_fac/tia/data/pannuke/ | Grande dataset com 7904 amostras de imagens histológicas de diferentes tecidos, além de máscaras de segmentação e anotaçãoe sobre a histologia. Este dataset se destaca pela quantidade e diversidade nas amostras.
+PanNuke | https://warwick.ac.uk/fac/cross_fac/tia/data/pannuke/ | Grande dataset com 7904 amostras de imagens histológicas de diferentes tecidos, além de máscaras de segmentação e anotações sobre a histologia. Este dataset se destaca pela quantidade e diversidade nas amostras.
 NuInsSeg | https://www.kaggle.com/datasets/ipateam/nuinsseg | Dataset com 665 amostras de imagens histológicas anotadas, desenvolvido com foco em treinar e avaliar modelos de segmentação de núcleos celulares em imagens de microscopia.
 MoNuSeg | https://monuseg.grand-challenge.org/Data/ | Dataset com 44 imagens histopatológicas de diversos órgãos em alta resolução com anotações feitas manualmente por especialistas. Criado originalmente para uma competição, se tornou um benchmark frequentemente usado em pesquisas de patologia digital.
 
@@ -230,7 +230,7 @@ MoNuSeg | https://monuseg.grand-challenge.org/Data/ | Dataset com 44 imagens his
 
 **Principais Conclusões do Grupo sobre os Datasets:**
 
-1. **Complementaridade**: Os três datasets cobrem espectros distintos — MoNuSeg é um benchmark com núcleos bem-definidos, PanNuke simula cenários clínicos reais com diversidade, e NuInsSeg desafia modelos com ambiguidades inherentes.
+1. **Complementaridade**: Os três datasets cobrem espectros distintos — MoNuSeg é um benchmark com núcleos bem-definidos, PanNuke simula cenários clínicos reais com diversidade, e NuInsSeg desafia modelos com ambiguidades inerentes.
 
 2. **Transformações Padronizadas**: Apesar de formatos heterogêneos originais (TIFF, NPY, PNG), o pipeline de pré-processamento ([00_Preprocessing](notebooks/00_Preprocessing.ipynb)) unifica todas as bases em patches de 256×256 em formato NPY, facilitando treinamento consistente.
 
@@ -238,8 +238,6 @@ O detalhamento adicional sobre os datasets utilizados pode ser encontrado no [da
 A figura abaixo apresenta uma amostra de cada dataset.
 
 ![Amostras](assets/results/amostras.png)
-
-O detalhamento sobre os datasets utilizados pode ser encontrado no [datasheet desenvolvido pelo grupo](data/Datasheets.md).
 
 ## Ferramentas
 
