@@ -160,7 +160,7 @@ O projeto está sendo desenvolvido em Python, utilizando bibliotecas voltadas pa
 
 O workflow atual do projeto segue a estrutura ilustrada abaixo:
 
-![Workflow do projeto](assets/WorkflowE2.png)
+![Workflow do projeto](assets/Workflow_E3.png)
 
 ## Experimentos e Resultados preliminares
 
