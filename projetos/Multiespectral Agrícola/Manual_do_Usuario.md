@@ -56,7 +56,7 @@ mIoU, medindo o impacto dos canais NIR (n), NDVI (v) + NDWI (w).
 
 ## 2. Estrutura do repositório
 
-```
+```bash
 Multiespectral Agrícola/
 ├── config.yaml                  # ÚNICO arquivo que você edita para configurar tudo
 ├── pyproject.toml               # dependências do projeto (gerenciadas pelo uv)
