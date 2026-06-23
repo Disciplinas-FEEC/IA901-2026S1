@@ -245,14 +245,25 @@ Em relação aos principais desafios enfrentados, o alto desequilíbrio na distr
 Como lições aprendidas a primeira é que a engenharia envolvida nos canais de entrada provou ser decisiva para o desempenho final. Em cenários agrícolas multiespectrais, estruturar o espaço de entrada combinando o dado original com subespaços semânticos de sensoriamento remoto mostrou-se muito mais proveitoso do que delegar à rede o aprendizado autônomo de relações não lineares a partir das bandas brutas, evidenciando o valor do conhecimento de domínio dos dados. Além disso, a busca por compensar o desbalanceamento de classes exige estratégias que combinem mais de uma técnica durante o treinamento. Intervenções isoladas, como o ajuste estático de pesos na função de perda , mostraram-se pouco suficientes e geraram *trade-offs* que prejudicaram outras classes.
 
 ## Trabalhos Futuros
-> O que poderia ser melhorado se houvesse mais tempo?
+> Ler outros trabalhos que utilizem o Agriculture Vision dataset a fim de avaliar soluções que possam ser úteis pra nos aprofundar em melhores modelos, indo além do baseline. (O desenvolvimento de baseline foi bom para nos inteirar sobre o desafio tratado.)
+> Explorar losses que compensem o desbalanceamento do dataset, como a aplicada aqui, a weighted loss.
 
 ## Uso de IA Generativa
 Utilizou-se o [Gemini](https://gemini.google/us/about/?hl=en) a fim de avaliar a coesão e concordância dos textos redigidos. O prompt utilizado foi:
 > "Avalia o texto a seguir, considerando sua coesão e concordância: '<texto>'"
 ### Auxílio na criação dos códigos
 Utilizou-se o [Gemini](https://gemini.google/us/about/?hl=en) a fim de verificar se a mIoU modificada que o dataset sugere foi codificada corretamente, além disso foi utilizada para colaborar em como seria executar o treinamento em duas GPUs.
-> "Dado os seguintes diretórios escreva um código que permita acessar as imagens presentes nas pastas.".
+O prompt utilizado para a mIoU foi:
+> "Veja se a mIoU do code "<code>" está de acordo com a screenshot. (A screenshot possuiaDado os seguintes diretórios escreva um código que permita acessar as imagens presentes nas pastas.".
+
+<div align="center">
+  <img src="assets/print_mIoU_modificada.png" alt="Loss RGBNVW" width="900">
+  
+  <p>
+    <b>Figura 9:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RGBNVW.
+    <br>
+  </p>
+</div>
 
 ## Referências
 [[1]] SHEN, Yao; WANG, Lei; JIN, Yue. AAFormer: A multi-modal transformer network for aerial agricultural images. In: Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022. p. 1705-1711.
