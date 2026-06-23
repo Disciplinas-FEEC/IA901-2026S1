@@ -124,7 +124,10 @@ PanNuke | https://warwick.ac.uk/fac/cross_fac/tia/data/pannuke/ | Grande dataset
 NuInsSeg | https://www.kaggle.com/datasets/ipateam/nuinsseg | Dataset com 665 amostras de imagens histológicas anotadas, desenvolvido com foco em treinar e avaliar modelos de segmentação de núcleos celulares em imagens de microscopia.
 MoNuSeg | https://monuseg.grand-challenge.org/Data/ | Dataset com 44 imagens histopatológicas de diversos órgãos em alta resolução com anotações feitas manualmente por especialistas. Criado originalmente para uma competição, se tornou um benchmark frequentemente usado em pesquisas de patologia digital.
 
-<<<<<<< HEAD
+A figura abaixo apresenta uma amostra de cada dataset.
+
+![Amostras](assets/results/amostras.png)
+
 
 ### Características Detalhadas por Dataset
 
@@ -236,13 +239,6 @@ MoNuSeg | https://monuseg.grand-challenge.org/Data/ | Dataset com 44 imagens his
 2. **Transformações Padronizadas**: Apesar de formatos heterogêneos originais (TIFF, NPY, PNG), o pipeline de pré-processamento ([00_Preprocessing](notebooks/00_Preprocessing.ipynb)) unifica todas as bases em patches de 256×256 em formato NPY, facilitando treinamento consistente.
 
 O detalhamento adicional sobre os datasets utilizados pode ser encontrado no [datasheet desenvolvido pelo grupo](data/Datasheets.md).
-=======
-A figura abaixo apresenta uma amostra de cada dataset.
-
-![Amostras](assets/results/amostras.png)
-
-O detalhamento sobre os datasets utilizados pode ser encontrado no [datasheet desenvolvido pelo grupo](data/Datasheets.md).
->>>>>>> 609a276 (amostras e links para notebooks)
 
 ## Ferramentas
 
