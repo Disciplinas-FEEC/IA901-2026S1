@@ -162,28 +162,159 @@ O workflow atual do projeto segue a estrutura ilustrada abaixo:
 
 ![Workflow do projeto](assets/WorkflowE2.png)
 
-## Experimentos e Resultados preliminares
+## Experimentos, Resultados e Discussão
 
-Para cada dataset, realizou-se o treinamento de três tipos de redes neurais: UNET, AttentionUnet e UNETR, disponíveis no pacote Python MONAI. Os conjunto de treino, validação e teste foram divididos seguindo uma proporção de 70%, 15% e 15%, respectivamente. 
+### Desempenho em Domínio
 
-#### Transformações aplicadas as imagens e máscaras
-De forma geral, aplicou-se transformações de Normalização de intensidade e rotações aleatórias nas imagens do conjunto de treino.
+Os modelos foram treinados e testados no mesmo dataset, refletindo a capacidade de cada arquitetura em se adaptar a características específicas de cada domínio. A tabela abaixo apresenta os Dice Scores médios obtidos no conjunto de teste de cada dataset:
 
-#### Treinamento
-Aplicou-se os mesmos hiperparâmetros para todos os tipos de redes utilizados, independente do dataset escolhido:
-- Otimizador: ADAM
-- Learning Rate: $10^{-4}$
-- Batch Size: 16
-- Número de épocas: 50
+![Heatmap de Performance em Domínio](assets/results/heatmap_performance_in_domain.png)
 
-#### Resultados
-Com as redes treinadas em cada dataset, obteve-se, nos respectivos conjuntos de teste, os seguintes DICES médios:
+A figura acima visualiza a performance média de cada modelo por dataset através de um heatmap, facilitando a comparação entre arquiteturas.
 
-| Dataset | UNET | AttentionUnet | UNETR |
-| --- | --- | --- | --- |
-| **MoNuSeg** | $0.75 \pm 0.10$ | $0.77 \pm 0.09$ | $0.79 \pm 0.07$ |
-| **PanNuke** | $0.81 \pm 0.18$ | $0.82 \pm 0.18$ | $0.80 \pm 0.18$ |
-| **NuInSeg** | $0.74 \pm 0.22$ | $0.77 \pm 0.22$ | $0.73 \pm 0.22$ |
+**Observações:**
+
+- **MoNuSeg**: Todos os modelos apresentaram desempenho relativamente consistente, com UNETR ligeiramente superior ($0.79 \pm 0.07$). O menor desvio padrão observado em UNETR sugere maior estabilidade na segmentação de núcleos em diferentes regiões de interesse.
+
+- **PanNuke**: Alcançou os maiores Dice Scores em média, com AttentionUnet ligeiramente superior ($0.82 \pm 0.18$). Porém, o desvio padrão elevado ($0.18$) indica maior variabilidade entre amostras, refletindo a diversidade de tecidos e tipos celulares presentes no dataset.
+
+- **NuInSeg**: Apresentou os menores desempenhos e maior variabilidade ($0.22$). UNETR obteve o menor Dice neste dataset ($0.73 \pm 0.22$), enquanto AttentionUnet mostrou-se mais robusto ($0.77 \pm 0.22$).
+
+### Generalização Cross-Dataset
+
+A generalização entre datasets foi avaliada através de um protocolo de teste cruzado, em que modelos treinados em um dataset foram testados em todos os outros datasets. Foram realizados 27 cenários de teste (9 modelos × 3 datasets).
+
+**Principais achados:**
+
+1. **Degradação de Desempenho em Mudança de Domínio**: Observou-se uma queda significativa no desempenho ao testar modelos em datasets diferentes do utilizado no treinamento. Isso confirma que as características visuais, histológicas e de aquisição de cada dataset impõem desafios na generalização de modelos.
+
+2. **Melhor Transferência**: Modelos treinados em PanNuke apresentaram melhor capacidade de generalização para outros datasets, provavelmente devido à sua maior diversidade de tipos celulares e tecidos (~7900 amostras).
+
+3. **Variabilidade por Arquitetura**: Embora UNETR tenha apresentado desempenho ligeiramente melhor em alguns cenários de teste em domínio, sua transferibilidade mostrou-se menos estável que a de modelos baseados em U-Net quando extrapolados para novos domínios.
+
+### Otimização de Hiperparâmetros
+
+A otimização com Optuna (15 trials por combinação modelo-dataset) revelou learning rates ótimos específicos para cada arquitetura e dataset:
+
+- **UNET**: Learning rates variaram entre $2.44 \times 10^{-4}$ (PanNuke) e $8.61 \times 10^{-4}$ (MoNuSeg)
+- **AttentionUnet**: Learning rates entre $4.65 \times 10^{-4}$ (PanNuke) e $7.44 \times 10^{-4}$ (NuInSeg)
+- **UNETR**: Learning rates entre $1.19 \times 10^{-4}$ (NuInSeg) e $2.44 \times 10^{-4}$ (MoNuSeg)
+
+Estes valores reforçam que diferentes arquiteturas e datasets requerem configurações de otimizador adaptadas para máxima eficiência.
+
+### Few-Shot Learning
+
+Modelos pré-treinados em PanNuke foram submetidos a fine-tuning com apenas K=5 amostras de MoNuSeg. Este experimento simula cenários práticos onde dados anotados do domínio alvo são escassos.
+
+**Resultados:** O fine-tuning com poucas amostras demonstrou a viabilidade de adaptação rápida de modelos, reduzindo a necessidade de anotações extensivas do novo domínio. Porém, a qualidade das segmentações permaneceu inferior às do modelo treinado exclusivamente em domínio.
+
+### Distribuição de Variância
+
+A análise da distribuição de Dice Scores entre amostras revelou:
+
+- **Menor variância**: MoNuSeg apresenta patches mais homogêneos em qualidade de segmentação (desvio padrão ~0.09-0.10)
+- **Maior variância**: NuInSeg apresenta heterogeneidade significativa nas dificuldades de segmentação por amostra (desvio padrão ~0.22)
+- **Intermediária**: PanNuke com variância moderada a alta (~0.18), refletindo sua diversidade de tecidos
+
+![Heatmap de Variância](assets/results/heatmap_variance.png)
+
+### Observações
+
+1. **Não há arquitetura universal**: A melhor arquitetura varia por dataset. UNETR foi superior em MoNuSeg, AttentionUnet em PanNuke, e novamente AttentionUnet em NuInSeg.
+
+2. **Transferência de domínio é desafiadora**: A queda de desempenho ao testar cross-dataset confirma que a variabilidade de aquisição e histologia entre bases de dados é substancial.
+
+3. **PanNuke como base**: Sua maior diversidade o torna uma excelente fonte para pré-treinamento, com melhor transferência para outros datasets.
+
+4. **Few-shot promissor**: A capacidade de adaptação com poucas amostras abre caminho para aplicações práticas com dados limitados.
+
+### Exemplos Visuais de Segmentação
+
+As figuras abaixo apresentam exemplos visuais do desempenho de segmentação para cada dataset, mostrando a imagem original, a anotação manual (ground truth) e a predição do melhor modelo para o dataset:
+
+#### PanNuke - Exemplos de Segmentação
+![Exemplos de Segmentação - PanNuke](assets/results/examples_PanNuke.png)
+
+Os exemplos de PanNuke mostram a capacidade do AttentionUnet em segmentar núcleos em imagens com diversidade de tipos celulares e tecidos, obtendo Dice Score médio de 0.82.
+
+#### NuInSeg - Exemplos de Segmentação
+![Exemplos de Segmentação - NuInSeg](assets/results/examples_NuInSeg.png)
+
+Os exemplos de NuInSeg demonstram os desafios encontrados neste dataset, onde o AttentionUnet obteve desempenho de 0.77, refletindo a complexidade e variabilidade das imagens.
+
+### Comparação de Arquiteturas
+
+![Comparação de Performance - Todas as Arquiteturas](assets/results/comparison_architectures.png)
+
+O gráfico acima apresenta uma comparação agregada do desempenho de cada arquitetura em todos os datasets, facilitando a identificação de padrões de desempenho.
+
+
+## Conclusão
+
+### Principais Conclusões
+
+O presente projeto demonstrou que a segmentação de núcleos em imagens histológicas apresenta desafios substanciais quando abordada sob a perspectiva de adaptação de domínio. As principais conclusões obtidas são:
+
+1. **Inexistência de Arquitetura Universal**: Diferentes arquiteturas de deep learning apresentam desempenho variável conforme o dataset. Não existe uma solução única que seja ótima para todos os cenários — UNETR foi superior em MoNuSeg, enquanto AttentionUnet dominou em PanNuke e NuInSeg. Isso indica que as características específicas de cada dataset (resolução, coloração, tipos celulares) exigem ajustes arquiteturais.
+
+2. **Transferabilidade Limitada Entre Datasets**: A queda significativa de performance ao testar modelos em datasets diferentes do treinamento confirma a magnitude do desafio de adaptação de domínio. Modelos treinados em um dataset apresentam degradação substancial quando aplicados a novos domínios, refletindo diferenças fundamentais entre as bases de dados.
+
+3. **PanNuke como Melhor Base para Pré-treinamento**: Devido à sua maior diversidade (~7900 amostras) e variedade de tecidos e tipos celulares, PanNuke se destacou como excelente fonte para pré-treinamento, apresentando melhor capacidade de generalização para outros datasets em comparação com MoNuSeg e NuInSeg.
+
+4. **Variabilidade Intrínseca dos Dados**: Cada dataset apresenta nível diferente de variância nas dificuldades de segmentação. MoNuSeg é mais homogêneo (desvio ~0.09-0.10), NuInSeg altamente heterogêneo (desvio ~0.22), e PanNuke intermediário (~0.18), refletindo diferenças na qualidade de anotação e características visuais.
+
+5. **Few-Shot Learning Viável mas Limitado**: A capacidade de adaptação com apenas K=5 amostras demonstra a viabilidade de ajuste rápido de modelos pré-treinados. Porém, a qualidade das segmentações permanece inferior à de modelos treinados exclusivamente em domínio, indicando que quantidade limitada de dados do domínio-alvo é insuficiente para adaptação completa.
+
+### Principais Desafios Enfrentados
+
+- **Heterogeneidade de Formatos**: Datasets originários de diferentes fontes apresentavam formatos, dimensões e anotações heterogêneas (XML para MoNuSeg, NPY para PanNuke, PNG para NuInSeg), exigindo pipeline de pré-processamento robusto e flexível.
+
+- **Desbalanceamento Computacional**: A otimização de hiperparâmetros com Optuna, treinamento de múltiplas arquiteturas e testes cross-dataset em 27 cenários demandou recursos computacionais significativos, limitando a exploração mais extensiva de estratégias de adaptação.
+
+- **Métricas Insuficientes**: O Dice Score, embora amplamente utilizado, não captura todos os aspectos de qualidade de segmentação. Análise qualitativa adicional seria necessária para compreender tipos específicos de erros.
+
+- **Estabilidade de UNETR**: Apesar de desempenho competitivo em domínio, UNETR apresentou comportamento menos previsível na transferência cross-dataset, sugerindo que arquiteturas baseadas em Transformers podem requerer estratégias específicas de regularização ou fine-tuning.
+
+### Lições Aprendidas
+
+1. **Pipeline Modular é Essencial**: Estruturação clara do pipeline (pré-processamento → otimização → treinamento → teste) facilitou experimentação sistemática e reprodutibilidade.
+
+2. **Validação Cruzada Necessária**: A análise cross-dataset revelou insights que não seriam capturados por avaliação em domínio único, destacando a importância de protocolos de teste mais rigorosos em pesquisa de visão computacional médica.
+
+3. **Documentação de Datasets Crítica**: O datasheet desenvolvido pelo grupo foi essencial para compreender características, limitações e possíveis vieses de cada dataset, orientando decisões metodológicas.
+
+4. **Trade-off Entre Complexidade e Generalização**: Modelos mais simples (UNet) frequentemente apresentaram transferência comparável ou superior a modelos mais complexos (UNETR), sugerindo que simplicidade arquitetural pode favorecer generalização.
+
+5. **Adaptação de Domínio Requer Abordagem Integrada**: Fine-tuning superficial com poucas amostras não é suficiente; estratégias mais sofisticadas (domain adaptation, data augmentation contextualizada, ensemble methods) são necessárias para adaptação robusta.
+
+## Trabalhos Futuros
+
+Extensões potenciais deste projeto incluem:
+
+### Curto Prazo
+1. **Técnicas Avançadas de Domain Adaptation**: Implementar Adversarial Domain Adaptation ou Maximum Mean Discrepancy (MMD) para reduzir divergência entre domínios de treinamento e teste.
+
+2. **Data Augmentation Contextualizada**: Desenvolver estratégias de augmentation que preservem características histológicas específicas de cada dataset, em vez de augmentation genérica.
+
+3. **Ensemble Methods**: Combinar predições de múltiplas arquiteturas para melhorar robustez e reduzir variância de predições cross-dataset.
+
+4. **Análise de Erro Detalhada**: Classificar erros de segmentação por tipo (false positives, false negatives, boundary errors) para compreender melhor limitações arquiteturais por dataset.
+
+### Médio Prazo
+5. **Segmentação de Instância**: Evoluir de segmentação binária para instância, permitindo contar e caracterizar núcleos individuais — tarefa mais desafiadora e clinicamente relevante.
+
+6. **Classificação de Tipos Celulares**: Integrar classificação de tipos celulares (como em PanNuke) para análises histológicas mais completas.
+
+7. **Estratégias Multi-Task Learning**: Treinar modelos simultaneamente em segmentação e classificação, explorando correlação entre tarefas.
+
+### Longo Prazo
+8. **Modelagem de Incerteza**: Implementar métodos Bayesianos ou Dropout Variacional para quantificar confiança de predições, crucial em aplicações clínicas.
+
+9. **Explicabilidade e Interpretabilidade**: Aplicar técnicas de visualização (Grad-CAM, LIME) para entender decisões do modelo e identificar artefatos explorados pela rede.
+
+10. **Validação Clínica**: Colaborar com patologistas para avaliar impacto clínico de predições, incluindo análises de concordância inter-observador e validação em dados prospectivos.
+
+11. **Integração em Pipeline Diagnóstico**: Desenvolver protótipo integrado em sistema PACS e LIS para avaliação em workflow clínico real.
 
 ## Uso de IA Generativa
 - Implementação de script para geração de samples: O Claude foi utilizado para gerar um script base de geração da pasta '*\data\samples'. Foram feitas diversas adaptações em cima desse script base, para que essa geração se adequasse ao projeto.
@@ -194,6 +325,7 @@ Com as redes treinadas em cada dataset, obteve-se, nos respectivos conjuntos de 
 
 - Melhoria de escrita: O Claude foi utilizado em algumas ocasiões para melhorar algumas partes do texto.
     - Prompts Utilizados: variações de "melhore essa frase/parte do texto"
+
 
 ## Referências
 
