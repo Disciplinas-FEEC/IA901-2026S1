@@ -160,7 +160,7 @@ O projeto está sendo desenvolvido em Python, utilizando bibliotecas voltadas pa
 
 O workflow atual do projeto segue a estrutura ilustrada abaixo:
 
-![Workflow do projeto](assets/WorkflowE2.png)
+![Workflow do projeto](assets/Workflow_E3.png)
 
 ## Experimentos, Resultados e Discussão
 
@@ -279,42 +279,12 @@ O presente projeto demonstrou que a segmentação de núcleos em imagens histol�
 
 1. **Pipeline Modular é Essencial**: Estruturação clara do pipeline (pré-processamento → otimização → treinamento → teste) facilitou experimentação sistemática e reprodutibilidade.
 
-2. **Validação Cruzada Necessária**: A análise cross-dataset revelou insights que não seriam capturados por avaliação em domínio único, destacando a importância de protocolos de teste mais rigorosos em pesquisa de visão computacional médica.
+2. **Validação Cruzada Necessária**: A análise cross-dataset revelou informações que não seriam capturados por avaliação em domínio único, destacando a importância de protocolos de teste mais rigorosos em pesquisa de visão computacional médica.
 
-3. **Documentação de Datasets Crítica**: O datasheet desenvolvido pelo grupo foi essencial para compreender características, limitações e possíveis vieses de cada dataset, orientando decisões metodológicas.
-
-4. **Trade-off Entre Complexidade e Generalização**: Modelos mais simples (UNet) frequentemente apresentaram transferência comparável ou superior a modelos mais complexos (UNETR), sugerindo que simplicidade arquitetural pode favorecer generalização.
-
-5. **Adaptação de Domínio Requer Abordagem Integrada**: Fine-tuning superficial com poucas amostras não é suficiente; estratégias mais sofisticadas (domain adaptation, data augmentation contextualizada, ensemble methods) são necessárias para adaptação robusta.
+3. **Trade-off Entre Complexidade e Generalização**: Modelos mais simples (UNet) frequentemente apresentaram transferência comparável ou superior a modelos mais complexos (UNETR), sugerindo que simplicidade arquitetural pode favorecer generalização.
 
 ## Trabalhos Futuros
-
-Extensões potenciais deste projeto incluem:
-
-### Curto Prazo
-1. **Técnicas Avançadas de Domain Adaptation**: Implementar Adversarial Domain Adaptation ou Maximum Mean Discrepancy (MMD) para reduzir divergência entre domínios de treinamento e teste.
-
-2. **Data Augmentation Contextualizada**: Desenvolver estratégias de augmentation que preservem características histológicas específicas de cada dataset, em vez de augmentation genérica.
-
-3. **Ensemble Methods**: Combinar predições de múltiplas arquiteturas para melhorar robustez e reduzir variância de predições cross-dataset.
-
-4. **Análise de Erro Detalhada**: Classificar erros de segmentação por tipo (false positives, false negatives, boundary errors) para compreender melhor limitações arquiteturais por dataset.
-
-### Médio Prazo
-5. **Segmentação de Instância**: Evoluir de segmentação binária para instância, permitindo contar e caracterizar núcleos individuais — tarefa mais desafiadora e clinicamente relevante.
-
-6. **Classificação de Tipos Celulares**: Integrar classificação de tipos celulares (como em PanNuke) para análises histológicas mais completas.
-
-7. **Estratégias Multi-Task Learning**: Treinar modelos simultaneamente em segmentação e classificação, explorando correlação entre tarefas.
-
-### Longo Prazo
-8. **Modelagem de Incerteza**: Implementar métodos Bayesianos ou Dropout Variacional para quantificar confiança de predições, crucial em aplicações clínicas.
-
-9. **Explicabilidade e Interpretabilidade**: Aplicar técnicas de visualização (Grad-CAM, LIME) para entender decisões do modelo e identificar artefatos explorados pela rede.
-
-10. **Validação Clínica**: Colaborar com patologistas para avaliar impacto clínico de predições, incluindo análises de concordância inter-observador e validação em dados prospectivos.
-
-11. **Integração em Pipeline Diagnóstico**: Desenvolver protótipo integrado em sistema PACS e LIS para avaliação em workflow clínico real.
+> O que poderia ser melhorado se houvesse mais tempo?
 
 ## Uso de IA Generativa
 - Implementação de script para geração de samples: O Claude foi utilizado para gerar um script base de geração da pasta '*\data\samples'. Foram feitas diversas adaptações em cima desse script base, para que essa geração se adequasse ao projeto.
