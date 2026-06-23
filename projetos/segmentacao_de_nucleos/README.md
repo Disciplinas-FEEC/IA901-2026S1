@@ -371,12 +371,12 @@ A análise da distribuição de Dice Scores entre amostras revelou:
 As figuras abaixo apresentam exemplos visuais do desempenho de segmentação para cada dataset, mostrando a imagem original, a anotação manual (ground truth) e a predição do melhor modelo para o dataset:
 
 #### PanNuke - Exemplos de Segmentação
-![Exemplos de Segmentação - PanNuke](assets/results/examples_PanNuke.png)
+![Exemplos de Segmentação - PanNuke](assets/results/Examples_PanNuke.png)
 
 Os exemplos de PanNuke mostram a capacidade do AttentionUnet em segmentar núcleos em imagens com diversidade de tipos celulares e tecidos, obtendo Dice Score médio de 0.82.
 
 #### NuInSeg - Exemplos de Segmentação
-![Exemplos de Segmentação - NuInSeg](assets/results/examples_NuInSeg.png)
+![Exemplos de Segmentação - NuInSeg](assets/results/Examples_NuInSeg.png)
 
 Os exemplos de NuInSeg demonstram os desafios encontrados neste dataset, onde o AttentionUnet obteve desempenho de 0.77, refletindo a complexidade e variabilidade das imagens.
 
