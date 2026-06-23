@@ -1,6 +1,8 @@
-# Segmentação de Tumores Cerebrais em Ressonâncias Magnéticas Multimodais usando ACU-Net 2.5D com Mecanismo de Atenção
+# Segmentação de Tumores Cerebrais em Ressonâncias Magnéticas Multimodais usando ACU-Net 2.5D
 
 # Brain Tumor Segmentation in Multimodal Magnetic Resonance Imaging Using a 2.5D Attention-Based ACU-Net
+
+> **Relatório final completo:** [assets/projeto_final_207726_298997.pdf](assets/projeto_final_207726_298997.pdf)
 
 ## Apresentação
 
@@ -56,7 +58,7 @@ Inicialmente, os voxels com valor igual a zero são ignorados, pois normalmente 
 A normalização é dada por:
 
 $$
-z = \frac{x - \mu}{\sigma + 10^{-8}}
+z = \frac{x - \mu}{\sigma}
 $$
 
 onde:
@@ -300,9 +302,7 @@ Kaggle API: utilizada para realizar o download automatizado dos conjuntos BraTS 
 
 ## Workflow
 
-> *(Após definição de continuação em 3D ou 2.5D será inserido a imagem aqui)*
-> 
-> Fluxograma planejado (2.5D): [Volumes NIfTI] -> [Otsu Mask & N4 Bias Correction] -> [Brain-Only Z-Score] -> [DataGenerator: Extração de Blocos 2.5D (12 canais)] -> [ACU-Net: Encoder -> Attention Gate -> Decoder] -> [Máscaras Preditivas WT, TC, ET] -> [Avaliação: Dice Coefficient].
+![Workflow do pipeline ACU-Net 2.5D](assets/Workflow.jpg)
 
 ## Experimentos e Resultados
 
