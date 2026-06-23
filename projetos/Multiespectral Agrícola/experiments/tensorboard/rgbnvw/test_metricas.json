@@ -1,0 +1,15 @@
+{
+  "checkpoint": "../experiments/checkpoints/rgbnvw/best.pth",
+  "mIoU": 0.3738189096841563,
+  "iou_por_classe": {
+    "double_plant": 0.22123690797283552,
+    "drydown": 0.5544356352820994,
+    "endrow": 0.13269713299496827,
+    "nutrient_deficiency": 0.3134210154498779,
+    "planter_skip": 0.22973304013810578,
+    "water": 0.6565190365060402,
+    "waterway": 0.3045128873420637,
+    "weed_cluster": 0.24954156153025694,
+    "background": 0.7022729699411593
+  }
+}

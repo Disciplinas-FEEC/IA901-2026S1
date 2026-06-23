@@ -1,0 +1,7 @@
+/data/dataset
+.env
+experiments/checkpoints/
+/data/dataset
+__pycache__/
+*.pyc
+*.pyo

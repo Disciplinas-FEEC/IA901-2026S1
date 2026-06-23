@@ -1,0 +1,27 @@
+dataset_path: '${DATASET_PATH:-data/dataset/supervised/Agriculture-Vision-2021}'
+
+
+input_channels: 'rgbnvw' # 'rgb', 'rgbn', 'rgbnvw'
+
+
+classes_to_evaluate:
+  - double_plant
+  - drydown
+  - endrow
+  - nutrient_deficiency
+  - planter_skip
+  - water
+  - waterway
+  - weed_cluster
+  # - storm_damage
+
+code_variables:
+  isSplitValidationSet: true
+  taxForValidationSet: 0.5
+  seed: 7
+
+model_hyperparameters:
+  name: resnet50
+  pretrained: true
+  batch_size: 20
+  is_weighted_loss: false

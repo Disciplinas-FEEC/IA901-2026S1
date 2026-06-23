@@ -29,9 +29,9 @@ O método mais difundido para obter informações sobre a vegetação é atravé
   </p>
 </div>
 
-Certas bandas, capturadas em frequências específicas ao longo do espectro eletromagnético, têm a capacidade de revelar informações distintas sobre as plantas. Entre essas bandas, a do infravermelho próximo (NIR) possui grande relevância em tarefas agrícolas, pois consegue destacar de forma eficaz a absorção da clorofila e o conteúdo de água na vegetação. Um índice amplamente utilizado que depende da banda NIR é o NDVI (Normalized Difference Vegetation Index), que fornece uma medida quantitativa do vigor e da densidade da vegetação. Em comparação com dados baseados apenas em RGB, a incorporação dessa informação espectral adicional pode potencializar a discriminação de diferentes objetos e feições dentro das imagens. Isso viabiliza uma identificação e classificação mais precisas das culturas, aprimorando o processo de segmentação de imagens [[3]].
+Certas bandas, capturadas em frequências específicas ao longo do espectro eletromagnético, têm a capacidade de revelar informações distintas sobre as plantas. Entre essas bandas, a do infravermelho próximo (NIR) possui grande relevância em tarefas agrícolas, pois consegue destacar de forma eficaz a absorção da clorofila e o conteúdo de água na vegetação. Um índice amplamente utilizado que depende da banda NIR é o NDVI (*Normalized Difference Vegetation Index*), que fornece uma medida quantitativa do vigor e da densidade da vegetação. Em comparação com dados baseados apenas em RGB, a incorporação dessa informação espectral adicional pode potencializar a discriminação de diferentes objetos e feições dentro das imagens. Isso viabiliza uma identificação e classificação mais precisas das culturas, aprimorando o processo de segmentação de imagens [[3]].
 
-Além disso, o NDWI (Normalized Difference Water Index) tem sido amplamente utilizado em Sensoriamento Remoto (SR) para distinguir corpos d'água de outras superfícies. Este índice baseia-se na observação de que os corpos d'água absorvem a maior parte da banda do NIR, enquanto a vegetação a reflete em sua extensão máxima [[4],[5]]. Na Tabela 1, é possível observar a correlação de diferentes circunstâncias nas lavouras com os índices abordados.
+Além disso, o NDWI (*Normalized Difference Water Index*) tem sido amplamente utilizado em Sensoriamento Remoto (SR) para distinguir corpos d'água de outras superfícies. Este índice baseia-se na observação de que os corpos d'água absorvem a maior parte da banda do NIR, enquanto a vegetação a reflete em sua extensão máxima [[4],[5]]. Na Tabela 1, é possível observar a correlação de diferentes circunstâncias nas lavouras com os índices abordados.
 
 <div align="center">
 
@@ -51,16 +51,13 @@ Além disso, o NDWI (Normalized Difference Water Index) tem sido amplamente util
 <i>Fonte: Adaptado de Sa et al. [[6]].</i>
 </div>
 
-Além disso, Sa et al. [[6]] propuseram o WeedMap, um framework de mapeamento semântico que utiliza imagens multiespectrais para otimizar a detecção de espécies invasoras na agricultura de precisão e seus resultados mostraram que o NDVI contribui significativamente para uma classificação precisa da vegetação. Nesse contexto, Wijitdechakul [[7]] apresentaram um espaço multiespectral semântico para a análise de fazendas o qual consistia de imagens com NDVI, NDWI e SAVI (Soil Adjust Vegetation Index) o qual se mostrou capaz de detectar áreas agrícolas saudáveis e não saudáveis por meio da análise de processamento de imagens multiespectrais. A partir dessas premissas, espera-se que a inclusão dessas informações espectrais resulte em uma maior eficiência na segmentação de bordas e anomalias complexas. Ao fornecer um contraste nítido entre diferentes níveis de vigor vegetativo e corpos d'água, os índices reduzem o ruído de iluminação nas imagens aéreas, permitindo que o modelo delimite com precisão as transições de estresse foliar, como zonas de drydown ou deficiência de nutrientes.
+Além disso, Sa et al. [[6]] propuseram o *WeedMap*, um *framework* de mapeamento semântico que utiliza imagens multiespectrais para otimizar a detecção de espécies invasoras na agricultura de precisão e seus resultados mostraram que o NDVI contribui significativamente para uma classificação precisa da vegetação. Nesse contexto, Wijitdechakul [[7]] apresentaram um espaço multiespectral semântico para a análise de fazendas o qual consistia de imagens com NDVI, NDWI e SAVI (*Soil Adjust Vegetation Index*) o qual se mostrou capaz de detectar áreas agrícolas saudáveis e não saudáveis por meio da análise de processamento de imagens multiespectrais. A partir dessas premissas, espera-se que a inclusão dessas informações espectrais resulte em uma maior eficiência na segmentação de bordas e anomalias complexas. Ao fornecer um contraste nítido entre diferentes níveis de vigor vegetativo e corpos d'água, os índices reduzem o ruído de iluminação nas imagens aéreas, permitindo que o modelo delimite com precisão as transições de estresse foliar, como zonas de drydown ou deficiência de nutrientes.
 
 A principal motivação deste trabalho é verificar a eficácia de modelos de segmentação semântica com a integração dos canais RGB com os índices NDVI e NDWI, haja vista a sua aplicação no monitoramento de lavouras e na identificação de anomalias em imagens aéreas agrícolas. O sistema proposto deve ser capaz de processar dados multiespectrais para delimitar com precisão regiões de estresse vegetativo e corpos d'água superficiais, correlacionando esses índices com as classes de interesse. O resultado esperado do modelo será a geração de máscaras de segmentação semanticamente consistentes, onde os limites geométricos das anomalias sejam preservados de forma estatisticamente e espacialmente coerente com os dados reais de entrada.
 
 ## Metodologia
-
-Portanto, detalhando os métodos utilizados para a construção do espaço semântico podemos segmentar em duas características principais para este trabalho.
-
-#### Extração de Características: NDVI
-O primeiro subespaço considerado é o NDVI, gerado a partir da combinação dos canais Vermelho (Red) e NIR. Este subespaço está relacionado ao índice de vegetação por diferença normalizada, que é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [[7]], o NDVI é definido pela equação (1).
+### Cálculo dos índices climáticos
+No nosso trabalho investigamos a influência do NDVI e NDWI para segmentação das imagens, o NDVI é um índice de verdejamento ou atividade fotossintética das plantas e um dos índices de vegetação comumente usados [[7]], o NDVI é definido pela equação (1).
 
 $$
 \begin{array}{cc}
@@ -68,133 +65,228 @@ NDVI = \dfrac{NIR - RED}{NIR + RED} & \text{(1)}
 \end{array}
 $$
 
-Onde NIR é o valor do pixel infravermelho próximo e RED é o valor do pixel vermelho. É importante ressaltar que o NDVI apresenta valor no intervalo [-1, 1] onde valores maiores que 0 indicam a presença de plantas e valores menores que 0 indicam a ausência. Nesse contexto, para armazenar o NDVI em formato de imagem é necessário fazer a conversão do intervalo [-1, 1] para [0, 255] e para manter o mesmo tipo de arquivo que as imagens em NIR foi escolhido o formato <i>.jpg</i>.
+Onde NIR é o valor do pixel infravermelho próximo e RED é o valor do pixel vermelho. É importante ressaltar que o NDVI apresenta valor no intervalo [-1, 1] onde valores maiores que 0 indicam a presença de plantas e valores menores que 0 indicam a ausência. Nesse contexto, para armazenar o NDVI em formato de imagem foi necessário fazer a conversão do intervalo [-1, 1] para [0, 255] e para manter o mesmo tipo de arquivo que as imagens em NIR foi escolhido o formato <i>.jpg</i>.
 
-#### Extração de Características: NDWI
-O segundo subespaço necessário é o NDWI o qual é obtido pelos eixos Verde (Green) e NIR. A combinação desses dois canais pode ser utilizada tanto para analisar o teor de água nas folhas das plantas quanto para delimitar corpos d'água na superfície [[7]], o NDWI pode ser obtido através da equação (2).
+Ademais, o NDWI pode ser utilizado tanto para analisar o teor de água nas folhas das plantas quanto para delimitar corpos d'água na superfície [[7]], o NDWI pode ser obtido através da equação (2).
 
 $$
 \begin{array}{cc}
-NDWI = \dfrac{GREEN - NIR}{GREEN + IR} & \text{(2)}
+NDWI = \dfrac{GREEN - NIR}{GREEN + NIR} & \text{(2)}
 \end{array}
 $$
 
-Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo. Da mesma forma o índice anterior, o NDWI também é mapeado no intervalo [-1, 1] os quais valores maiores que 0 indicam presença de água, enquanto valores menores que 0 geralmente representam solo ou vegetação. Da mesma forma descrita anteriormente, houve a mudança de intervalo para [0, 255] e armazenados no formato <i>.jpg</i>. 
+Onde GREEN é o valor do pixel verde e NIR é o valor do pixel infravermelho próximo. Da mesma forma o índice anterior, o NDWI também é mapeado no intervalo [-1, 1] os quais valores maiores que 0 indicam presença de água, enquanto valores menores que 0 geralmente representam solo ou vegetação. Portanto, houve a mudança de intervalo para [0, 255] e armazenados no formato <i>.jpg</i>.
 
-### Pipeline de Processamento
-1. **Carregamento do Dataset**:
-   - O dataset é estruturado em diferentes modos (`train`, `val`, `test`), com diretórios específicos para imagens RGB, NIR, máscaras e limites.
-   - A classe `AgriVisionDataset` organiza os caminhos dos arquivos para facilitar o acesso.
+### Modelo utilizado
+O modelo utilizado neste trabalho é considerado o *baseline* para o Agriculture-Vision e baseia-se em uma arquitetura FPN (*Feature Pyramid Network*). O *encoder* da FPN é uma rede ResNet-50, da qual são mantidos os três primeiros blocos residuais, enquanto o último bloco (layer4) é modificado para um bloco residual dilatado com taxa igual a 4.
 
-2. **Cálculo de Índices Espectrais**:
-   - Os índices NDVI e NDWI são calculados utilizando as fórmulas mencionadas, a partir dos canais RGB e NIR das imagens.
-   - As imagens RGB e NIR são carregadas, e os valores de pixel são processados para gerar o índice.
+No *decoder* da FPN, as conexões laterais são implementadas utilizando duas camadas de convolução 3 × 3 e uma camada 1 × 1. Cada uma das convoluções 3 × 3 é sucedida por uma camada de *batch normalization* e uma função de ativação *Leaky ReLU* com inclinação negativa de 0,01, enquanto a última camada de convolução 1 × 1 não possui unidades de *bias*. Para os módulos de *upsampling*, é utilizada uma camada de deconvolução com *kernel* = 3, *stride* = 2 e *padding* = 1, seguida por uma camada de *batch normalization*, ativação *Leaky ReLU* e outra convolução 1 × 1 sem *bias*.
 
-3. **Fusão de Máscaras**:
-   - As máscaras de diferentes classes são combinadas para criar uma máscara final, indicando as classes presentes em cada imagem.
+A saída de cada conexão lateral e do respectivo módulo de *upsampling* são somadas, e o resultado é processado por mais duas camadas de convolução 3 × 3 com *batch normalization* e *Leaky ReLU*. Por fim, as saídas de todos os níveis da pirâmide são redimensionadas para a maior resolução da pirâmide via interpolação bilinear e, em seguida, concatenadas. Esse resultado final é passado por uma camada de convolução 1 × 1 com unidades de *bias* para predizer o mapa semântico definitivo.
 
-4. **Visualização de Amostras**:
-   - Para cada amostra selecionada, são exibidas as imagens RGB, NIR, máscaras, limites e o índice NDVI.
-   - As regiões de interesse (ROI) são destacadas, mostrando apenas os pixels relevantes para análise.
+Porém esse mapa semântico obtido tem tamanho diferente dos labels. Enquanto o mapa semântico possui $128 \times 128 \times K$, o tensor do label tem 512 \times 512 \times K. Desta forma, adicionou-se por iniciativa própria a adição de uma interpolação bilinear para aumentar a resolução do mapa semântico.
 
- 
+### Métodos de avaliação
+A avaliação do desempenho do modelo foi realizada através de duas abordagens: (i) **análise quantitativa** baseada na métrica *Mean Intersection over Union* ($mIoU$) descrita na equação (3), comumente utilizada para mensurar a acurácia de sobreposição por classe, e (ii) **análise qualitativa** por meio da inspeção visual e comparativa das máscaras de segmentação geradas pelo modelo em relação ao *ground-truth* das imagens agrícolas. 
+
+A métrica $mIoU$ calcula a média da razão entre a área de interseção e a área de união entre as predições do modelo e as anotações reais, computada sobre todas as 8 classes de anomalia e a classe de *background*.
+
+$$
+\begin{array}{cc}
+mIoU = \frac{1}{k} \sum_{i=1}^{k} \frac{TP_i}{TP_i + FP_i + FN_i} & \text{(3)}
+\end{array}
+$$
+
+Onde:
+* **$k$**: Número total de classes.
+* **$TP_i$** (*True Positives*): Verdadeiros Positivos da classe $i$.
+* **$FP_i$** (*False Positives*): Falsos Positivos da classe $i$.
+* **$FN_i$** (*False Negatives*): Falsos Negativos da classe $i$.
+
+## Bases de Dados
+O dataset utilizado é o Agriculture-Vision 2022, disponível em: [Agriculture-Vision Challenge 2022](https://www.agriculture-vision.com/agriculture-vision-2022/prize-challenge-2022/agriculture-vision-challenge-2022).
+
+A base é composta por 75.278 imagens aéreas coletadas por drones cobrindo diversos hectares de lavouras nos Estados Unidos ao longo de diversas safras entre 2017 e 2019. Cada amostra do *dataset* consiste de imagens matriciais multiespectrais que contêm 4 canais: RGB e NIR, além disso, cada imagem possui um *boundary map* e uma máscara, onde o *boundary map* indica a região de plantação e a máscara sinaliza os pixels válidos, portanto, regiões que não estão contidas no *boundary map* ou da máscara não são utilizadas.
+
+O *dataset* contém 9 tipos de anotações as quais são armazenadas separadamente através de máscaras binárias permitindo sobreposição: 
+* *Double plant*: quando duas linhas de plantio se cruzam de forma sobreposta, gerando um superadensamento local de plantas;
+* *Drydown*: fase em que a planta perde umidade e começa a secar gradualmente antes da colheita;
+* *Endrow*: extremidades da plantação onde as máquinas agrícolas realizam curvas de manobra;
+* *Nutrient deficiency*: áreas onde a cultura sofre por falta de compostos essenciais resultando em amarelamento das folhas;
+* *Planter skip*: falhas mecânicas na semeadora, deixando áreas vazias sem nenhuma semente ou planta;
+* *Storm damage*: áreas afetadas por eventos climáticos severos;
+* *Water*: acúmulos explícitos de água dentro ou nas margens da plantação, como poças de inundação ou lagos de irrigação;
+* *Waterway*: caminhos para o fluxo e escoamento do excesso de água de chuva no campo;
+* *Weed cluster*: manchas de vegetação invasora que disputam nutrientes com a cultura principal.
+
+Dentre essas 9 classes os criadores da base de dados sugerem não utilizar *storm damage* devido a baixa quantidade de imagens o que seria problemático para o treinamento do modelo. Na Figura 2 é possível observar uma amostra da classe *weed cluster* e sua respectiva ROI (*Region of Interest*).
+
 <div align="center">
-  <img src="assets/image-1.png" alt="Visualização de Amostras" width="600">
+  <img src="assets/explain_image.png" alt="Exemplo de amostra do *dataset* " width="1000">
+  
   <p>
-    <b>Figura 2:</b> Análise visual de amostra do dataset, incluindo imagens RGB, NIR, máscaras de segmentação, NDVI e ROI.
+    <b>Figura 2:</b> Exemplo de amostra da classe <i>weed cluster</i>.
     <br>
-    <i>Fonte: Autoria própria.</i>
   </p>
 </div>
 
-### Visualização de Resultados
-- **Gráficos Gerados**:
-  - As imagens são exibidas em um layout organizado, com títulos descritivos para cada componente (e.g., "RGB (Raw)", "NDVI (Region of Interest)").
-  - Barras de cores são incluídas para os índices NDVI, facilitando a interpretação dos valores.
+Na Figura 3 é apresentada a mesma amostra anterior, porém com os índices NDVI e NDWI.
+
+<div align="center">
+  <img src="assets/explain_image_dw.png" alt="Exemplo de amostra do *dataset* dw " width="1000">
   
+  <p>
+    <b>Figura 3:</b> Exemplo anterior da classe <i>weed cluster</i> com NDVI e NDWI.
+    <br>
+  </p>
+</div>
 
-- **Destaque de Regiões de Interesse**:
-  - As regiões de interesse são recortadas com base em condições específicas, como a interseção de máscaras e limites.
+Além disso, a base de dados possui sugestão de divisão entre treinamento/validação/teste, no entanto, como este *dataset* é utilizado em um *challenge* anual as imagens de teste não possui anotações, então, a adaptação adotada foi derivar o *split* de teste a partir do *split* de validação oficial, seguindo a mesma lógica descrita no *paper* original — splitar por fazenda, não por imagem individual. Assim, o *split* de validação oficial foi dividido em *val* (50% das fazendas) e teste (50% das fazendas), essa divisão por *farmland* evita o *data leakeage*. A distribuição das classes no *split* utilizado é observada na Figura 4.
 
-## Bases de Dados e Evolução
+<div align="center">
+  <img src="assets/distribuicao_classes_original.png" alt="CLasses original" width="1000">
+  
+  <p>
+    <b>Figura 4:</b> Distribuição das classes no <i>split</i> utilizado.
+    <br>
+  </p>
+</div>
 
-Base de Dados | Endereço na Web | Resumo descritivo
------ | ----- | -----
-Agriculture-Vision | https://www.agriculture-vision.com/agriculture-vision-2021/dataset-2021 | Dataset voltado para a agricultura de precisão, composto por 94.986 imagens aéreas multiespectrais (RGB e NIR). Ele apresenta nove classes de anomalias as quais podem ser utilizadas para segmentação semântica.
+Observando a Figura 4 é notório o grande desbalanceamento de classes, um dos principais desafios do Agriculture Vision. Enquanto classes como *drydown* e *nutrient_deficiency* apresentam uma frequência expressiva outras categorias sofrem com escassez de dados. Essa diferença na distribuição amostral impõe uma grande dificuldade para que os modelos aprendam os padrões mais raros de forma equilibrada.
 
 [Link para o datasheet do dataset](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/data/Datasheet___Agriculture_Vision.pdf)
 
 ## Ferramentas
-As seguintes ferramentas e bibliotecas foram utilizadas para viabilizar o pipeline de processamento de dados, análise estatística, otimização de I/O e visualização de resultados:
-
-### Processamento de Imagens e Visão Computacional
-* **Pillow (PIL):** Responsável pela abertura, manipulação e salvamento de imagem do dataset. Utilizado para o carregamento dos arquivos brutos.
-* **Matplotlib (Pyplot / Image):** Para leitura e exibição de imagens e máscaras de segmentação.
-
-### Manipulação de Dados e Análise Estatística
-* **NumPy:** Manipulação matemática de arrays para o processamento pixel a pixel, normalização de canais e operações algébricas sobre as bandas espectrais (RGB e NIR).
-* **Pandas:** Estruturação e manipulação de metadados das imagens.
-* **Seaborn:** Construção de visualizações de gráficos.
-
-### Utilidades
-* **Concurrent Futures (ThreadPoolExecutor):** Para ler e gravar o volume massivo de imagens do dataset de forma otimizada, reduzindo o gargalo do disco.
-* **Tqdm:** Possibilita criar barras de progresso interativas em terminais e loops, dando visibilidade sobre o tempo estimado de execução em processos do pipeline.
-* **Pickle:** Serialização e persistência de objetos estruturados em Python, permitindo salvar dicionários de metadados, estruturas de dados intermediárias ou representações compactadas em disco para carregamento rápido.
-
+* Ambiente Virtual com uv: Gerenciador de pacotes utilizado para garantir a instalação extremamente rápida de dependências e a reprodutibilidade isolada do ambiente de desenvolvimento.
+* PyTorch: Framework de Deep Learning empregado na construção, treinamento e manipulação dos tensores multidimensionais dos modelos de segmentação, com suporte nativo a aceleração por GPU.
+* TensorBoard: Plataforma de visualização utilizada para o monitoramento em tempo real das curvas de *loss* e da evolução da métrica $mIoU$ durante as iterações de treino e validação.
+* OpenCV e Pillow (PIL): Bibliotecas fundamentais de processamento digital de imagens aplicadas na manipulação, leitura das bandas espectrais e geração visual das máscaras de predição.
 
 ## Workflow
 
-![Diagrama de Workflow do Projeto](assets/Diagrama_Projeto.png)
+![Diagrama de Workflow do Projeto](assets/workflow.png)
 
+## Experimentos e Resultados
+Neste trabalho abordamos quatro estratégias para avaliar o impacto dos diversos canais de entradas e do desbalanceamento de classes, para cada abordagem os modelos foram treinados em 25.000 iterações e foi utilizado um *batch* de 40 amostras divididos em duas *GTX Titan Xp* (12 GB), onde os pesos em cada GPU são atualizados a cada 2 *batchs* lidos, sendo que o valor de $Iou$ dos dados de validação era coletado a cada 2.500 iterações. Foi utilizado o algoritmo SGD com uma taxa de aprendizado base de 0,01 e *weight decay* de $5 \times 10^{-4}$, porém, ao longo das 25.000 iterações, o treinamento inicia com uma etapa de *warmup* de 1.000 iterações, onde a taxa de aprendizado cresce de forma linear entre 0 e 0.01. Na sequência, mantém-se o treinamento por 7.000 iterações sob uma taxa constante de 0,01. Nas últimas 17.000 iterações, a taxa de aprendizado diminui progressivamente até atingir 0, utilizando a regra polinomial.
 
-## Experimentos e Resultados preliminares
-### Cálculo dos índices NDVI e NDWI
-
-Esta seção apresenta a visualização e a análise dos resultados obtidos na geração dos índices [NDVI](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/data/interim/nvdi) e [NDWI](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/data/interim/ndwi), calculados por meio da combinação de bandas espectrais conforme detalhado na metodologia. Os códigos correspondentes a esta etapa de processamento estão disponíveis neste [notebook](https://github.com/luisso2/IA901-2026S1/blob/main/projetos/Multiespectral%20Agrícola/notebooks/NDVI%20and%20NDWI%20generation/nvdi_ndwi.ipynb). Essas novas imagens matriciais foram geradas para cada um dos conjuntos de dados de treinamento, validação e teste. Dentre elas foram escolhidas duas as quais ilustram melhor o comportamento de ambos os índices, a Figura 3 é a primeira delas.
+### RGB (*Red, Green, Blue*)
+A primeira estratégia foi utilizar como entrada do modelo apenas os canais RGB, pois, é possível é estabelecer um referencial de desempenho baseado unicamente no espectro visível. O objetivo deste experimento é mensurar o quanto a ausência de faixas espectrais infravermelhas prejudica a geração das segmentações e o quanto o modelo se torna vulnerável a ruídos de sombreamento e variações de iluminação natural nas imagens aéreas. A curva de aprendizado pode ser observada na Figura 5.
 
 <div align="center">
-  <img src="assets/imagem_2026-05-20_121455397.png" alt="Representação do Espectro Eletromagnético" width="600">
+  <img src="assets/loss_rgb.png" alt="Loss RGB" width="900">
+  
   <p>
-    <b>Figura 3:</b> Imagem com presença de <i> double plantation </i> em RGB, NIR, NDVI e NDWI.
+    <b>Figura 5:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RGB.
     <br>
-    <i>Fonte: Autoria própria.</i>
   </p>
 </div>
 
-Na Figura 3, observa-se o fenômeno de <i> double plantation </i>, no qual duas linhas de plantio se cruzam de forma sobreposta. Para esse cenário, é esperado que tais áreas apresentem valores elevados de NDVI, devido à maior densidade de biomassa e à intensa atividade fotossintética local, características que são evidenciadas com maior contraste por esse índice. Adicionalmente, destaca-se a aplicação de <i> color maps </i> nas representações do NDVI e NDWI, para tornar mais fácil a interpretação das variações de vigor e umidade para o público geral. Paralelamente, analisando o NDWI, observa-se que a região de sobreposição das culturas exibe uma resposta distinta das áreas de plantio convencional ao seu redor. Devido a alta presença da folhagem no cruzamento das linhas, ocorre uma maior reflexão da radiação na banda do infravermelho próximo NIR, o que se traduz no mapa de calor o qual mostra a ausência de humidade naquele local enquanto o resto da plantação apresenta relativo NDWI, provavelmente, pela presença de solo úmido. Por fim, na Figura 4 é possível observar outra circunstância a ser analisada.
+### RGB com Weight Loss (*Red, Green, Blue* + *Weight Loss*)
+
+A segunda estratégia manteve o espaço de entrada restrito aos canais visíveis (RGB), mas introduziu a aplicação de pesos na função de custo (Weighted Loss). O objetivo fundamental deste experimento é avaliar a capacidade do modelo em lidar com o severo desbalanceamento de classes inerente às imagens agrícolas, onde a área correspondente ao cultivo saudável (background) domina massivamente os pixels em relação às áreas com anomalias. A utilização da weighted loss atua diretamente na correção desse viés, aplicando multiplicadores de penalidade significativamente maiores aos falsos negativos das classes minoritárias. Isso força o modelo a priorizar a extração de características discriminantes dos padrões raros, em vez de negligenciá-los. Por exemplo, isso significa que se uma anomalia (como *weed cluster*) aparece em apenas 1% dos pixels, o peso dela será em torno de 99. Isso força a rede a levar um erro de falso negativo dessa classe 99 vezes mais a sério do que um erro em uma classe muito frequente. Na Figura 6, é ilustrado o comportamento da loss de treino e validação durante o treinamento.
 
 <div align="center">
-  <img src="assets/imagem_2026-05-20_121524694.png" alt="Representação do Espectro Eletromagnético" width="600">
+  <img src="assets/loss_rgb.png" alt="Loss RGB Weighted" width="900">
+  
   <p>
-    <b>Figura 4:</b> Imagem com presença de plantas e corpos d'água em RGB, NIR, NDVI e NDWI.
+    <b>Figura 6:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RGB com Weight Loss.
     <br>
-    <i>Fonte: Autoria própria.</i>
   </p>
 </div>
 
-A figura acima foi escolhida devido ao fato de apresentar vegetação e áreas com água o que possibilitará observar o comportamento de ambos os índices simultaneamente. Na Figura 4, a porção superior da imagem é composta por uma densa cobertura arbórea, a qual exibe uma forte resposta no NDVI devido à alta refletância no NIR. Inversamente, a grande massa de água que domina a metade inferior absorve quase totalmente a radiação NIR, resultando em valores mínimos de NDVI. No mapa do NDWI, o cenário se inverte onde a região hídrica é destacada com valores máximos no gradiente, mostrando a eficiência do espaço semântico multiespectral em discriminar com precisão alvos com propriedades físicas tão distintas.
+### RGBN (*Red, Green, Blue, NIR*)
+Nessa abordagem expandiu-se o espaço de entrada para englobar a informações NIR, configurando o arranjo como RGBN. Diferente da abordagem convencional que se limita ao espectro visível, a inclusão desse quarto canal fornece ao modelo dados diretamente correlacionados com as propriedades biofísicas das áreas agrícolas, tais como o vigor da vegetação e o estresse hídrico. Essa configuração serve como um importante ponto de controle experimental para determinar se o modelo consegue gerar melhores segmentações a partir de outro canal com informações mais detalhadas. Na Figura 7 é ilustrado o comportamento da *loss* de treino e validação durante o treinamento.
 
-> Descreva de forma sucinta e organizada os experimentos realizados.
-> Para cada experimento, apresente os principais resultados obtidos.
-> Aponte os problemas encontrados nas soluções testadas até aqui.
+<div align="center">
+  <img src="assets/loss_rgbn.png" alt="Loss RGBN" width="900">
+  
+  <p>
+    <b>Figura 7:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RGBN.
+    <br>
+  </p>
+</div>
 
-## Próximos passos
-| Etapa | Atividades Específicas | Duração | Período Estimado |
-| :--- | :--- | :---: | :---: |
-| **1. Validação do Pipeline** | • Testar o notebook com um subconjunto do dataset para validar o funcionamento do pipeline.<br>• Ajustar hiperparâmetros do modelo para otimizar os resultados iniciais. | 1 semana | 25/05 a 31/05 |
-| **2. Resultados Preliminares** | • Treinar o modelo com o conjunto completo de dados.<br>• Gerar métricas de desempenho ($IoU$) e salvar as máscaras de segmentação geradas. | 1 semana | 01/06 a 07/06 |
-| **3. Análise de Resultados** | • Comparar os resultados e métricas obtidos a partir dos subespaços dos índices NDVI e NDWI. | 1 semana | 08/06 a 14/06 |
-| **4. Refinamento (Parte 1)** | • Implementar as primeiras melhorias no modelo com base nas falhas e acertos da análise de resultados. | 1 semana | 15/06 a 21/06 |
-| **5. Refinamento (Parte 2)** | • Implementar melhorias no modelo com base na análise de resultados e testar diferentes variações de arquiteturas ou técnicas de regularização para consolidação dos resultados finais. | 1 semana | 22/06 a 28/06 |
+### RGBNVW (*Red, Green, Blue, NIR, NDVI, NDWI*)
+A última estratégia introduz a fusão completa de recursos ao concatenar os canais RGB e NIR aos subespaços espectrais calculados, resultando no arranjo RGBNVW. Nessa configuração, o tensor de entrada do modelo é expandido para a dimensão $512 \times 512 \times 6$. A hipótese fundamental dessa abordagem é que, ao fornecer explicitamente os mapas de calor do NDVI (vigor vegetativo) e do NDWI (dinâmica hídrica/solo) junto às bandas brutas, a rede de segmentação semântica seja guiada por indutores de características altamente discriminantes. A curva de *loss* pode ser observada na Figura 8.
 
+<div align="center">
+  <img src="assets/loss_rgbnvw.png" alt="Loss RGBNVW" width="900">
+  
+  <p>
+    <b>Figura 8:</b> Comportamento da função <i>loss</i> durante o treinamento e validação utilizando RGBNVW.
+    <br>
+  </p>
+</div>
+
+### Resultados
+
+Com o fim do treinamento os valores de $IoU$ para os dados de validação foram validados e estão presentes na Tabela 2. Ao analisar os resultados numéricos obtidos nos experimentos demonstram que a progressiva expansão do tensor de entrada e a aplicação de funções de perda ponderadas alteraram significativamente a capacidade de convergência e a acurácia de sobreposição por classe nas redes de segmentação semântica.
+
+<div align="center">
+
+<b>Tabela 2:</b> Valores de IoU para as estratégias abordadas.
+
+| | mIoU (%) | Background | Double plant | Drydown | Endrow | Nutrient deficiency | Planter skip | Water | Waterway | Weed cluster |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| RGB | 0,3693 | 0,7189 | 0,2289 | 0,5057 | 0,0942 | 0,2803 | **0,3006** | 0,7028 | 0,2288 | 0,263 |
+| RGB + Weighted Loss | 0,3706 | 0,7196 | 0,2211 | 0,5081 | 0,0962 | 0,2783 | 0,2861 | 0,713 | 0,237 | **0,2763** |
+| RGBN | 0,3756 | 0,7291 | 0,2024 | 0,4996 | **0,1133** | 0,3554 | 0,276 | 0,7068 | 0,2564 | 0,2418 |
+| RGBNVW | **0,3836** | **0,7326** | **0,2308** | **0,5215** | 0,1033 | **0,3512** | 0,2709 | **0,7194** | **0,2757** | 0,247 |
+
+</div>
+
+A análise quantitativa dos experimentos revela que a progressiva adição de informação espectral impactou diretamente a capacidade de generalização do modelo. O arranjo RGBNVW (RGB + NIR + NDVI + NDWI) atingiu o melhor desempenho global do projeto, estabelecendo o pico de $mIoU$ em 38,36%. A inclusão explícita dos subespaços baseados em índices forneceu ao modelo um forte indutor de características, o que permitiu obter os melhores resultados nas classes estruturais complexas do dataset *Agriculture-Vision*, como *double plant* (23,08%) e *drydown* (52,15%), superando o uso da informação espectral bruta isolada. Além disso, a inserção do NDWI na entrada impulsionou significativamente a detecção de dinâmicas hídricas, alcançando os maiores índices de acerto nas classes *water* (71,94%) e *waterway* (27,57%).
+
+Por outro lado, a transição do espectro visível (RGB) para o espectro multiespectral bruto (RGBN) gerou um ganho imediato, elevando o $mIoU$ global de 36,93% para 37,56%. O canal NIR bruto isolado provou-se eficiente em delimitar áreas de transição mecânica e falhas de borda no campo, fazendo com que a classe *endrow* atingisse o seu ápice de desempenho com 11,33%. A resposta física da clorofila na banda do infravermelho próximo também reduziu de forma expressiva as ambiguidades visuais na identificação de distúrbios metabólicos na lavoura, fazendo a métrica da classe *nutrient deficiency* dar um salto de 28,03% para 35,54% de $mIoU$.
+
+Em paralelo, a aplicação da estratégia RGB + Weighted Loss introduziu uma dinâmica importante para tentar mitigar o desbalanceamento de classes do dataset. Ao alterar a penalização dos erros na função de custo, a abordagem conseguiu um ganho focado na classe *weed cluster* que, apesar de ser a terceira mais frequente do *dataset*, alcançou o seu melhor resultado histórico com 27,63% de $mIoU$. Contudo, essa estratégia mostrou-se pouco suficiente para resolver o problema de maneira ampla, uma vez que o ganho no $mIoU$ global foi pouco e gerou um relativo *trade-off* ao degradar o desempenho em anomalias menos frequentes e de geometria linear perfeita, como *planter skip*, que decaiu de 30,06% para 28,61%. Esse comportamento evidencia que apenas ajustar os pesos na função de perda não basta para compensar as complexidades do dataset sem prejudicar o aprendizado de feições geométricas específicas e menos representadas.
+
+Ao analisar a Figura 9, que grande parte da imagem pertence a classe *drydown* algo que todas as abordagens conseguiram satisfatoriamente segmentar. No entanto, analisando detalhadamente é revelado que com exceção do RGBN, todas as outras estratégias apresentaram predições incorretas da classe *weed cluster* em uma região específica com vegetação mais clara. Esse comportamento demonstra que apenas a inserção da banda bruta NIR forneceu o contraste espectral necessário para diferenciar essa ambiguidade visual, impedindo que o modelo gerasse falsos positivos induzidos por variações locais de coloração.
+
+<div align="center">
+  <img src="assets/analise_qualitativa.png" alt="Avaliacao" width="1000">
+  
+  <p>
+    <b>Figura 9:</b> Comparação do <i>Ground-truth</i> com (b) RGB, (c) RGB + WeightLoss, (d) RGBN, (e) RGBNVW.
+    <br>
+  </p>
+</div>
+
+Além disso, um importante detalhe é que o RGB e RGBN foram capazes de preservar a separação física entre as três áreas distintas de *drydown*. Em contrapartida, as outras estratégias agruparam essas regiões, demonstrando que o ganho de sensibilidade nesse caso possivelmente gerou um viés adaptativo que prioriza a continuidade da classe majoritária, sacrificando a precisão morfológica.
+
+Portanto, os limites encontrados neste *pipeline* indicam que são necessários trabalhos mais profundos para superar o teto de desempenho imposto pelo desbalanceamento crítico e pela complexidade geométrica do dataset *Agriculture-Vision*, além disso, é necessário fazer um maior refino nos canais utilizados, testando várias possibilidades, algo que costuma trazer melhores resultados em outras pesquisas da área.
+
+## Conclusão
+
+O desenvolvimento deste projeto permitiu consolidar importantes conceitos de visão computacional voltada à agricultura de precisão, validando o papel da engenharia de atributos espectrais no *pipeline* de segmentação semântica. A principal conclusão obtida foi o melhor desempenho da abordagem RGBNVW, que estabeleceu o pico de desempenho do projeto atingindo um $mIoU$ de 38,36%, comprovando que fornecer índices climáticos pré-computados atua como um excelente indutor de características. Este resultado representa um ganho de 0,80 pontos percentuais em relação ao melhor alternativo (RGBN com 37,56%), elevando significativamente o desempenho em classes complexas de vigor vegetal (double plant e drydown) e de dinâmica hídrica (water e waterway), superando o aprendizado autônomo baseado apenas no canal multiespectral bruto ($RGBN$). Em contrapartida, verificou-se que a estratégia baseada em função de perda ponderada (RGB + Weighted Loss) mostrou-se pouco suficiente para mitigar as assimetrias do dataset de maneira isolada. Embora tenha otimizado o desempenho na classe *weed cluster*, ela gerou um *trade-off* adverso ao degradar a segmentação de anomalias menos frequentes e geometricamente estruturadas, como as falhas de linha em planter skip.
+
+Em relação aos principais desafios enfrentados, o alto desequilíbrio na distribuição amostral do *Agriculture Vision* representou o maior obstáculo técnico do projeto. A presença de classes minoritárias impediu que o modelo atinjisse uma capacidade de generalização uniforme com o uso de técnicas simples, como o utilizado no *baseline*. Além disso, a manipulação de dados multiespectrais no contexto agrícola demandou uma extensa pesquisa teórica para alinhar o conhecimento agronômico tradicional aos conceitos de visão computacional e *deep learning*. Enquanto os modelos de segmentação semântica convencionais são validados em datasets urbanos ou de objetos cotidianos, a análise de alvos agrícolas exige a interpretação de propriedades das plantas que muitas vezes são invisíveis ao olho humano.
+
+Como lições aprendidas a primeira é que a engenharia envolvida nos canais de entrada provou ser decisiva para o desempenho final. Em cenários agrícolas multiespectrais, estruturar o espaço de entrada combinando o dado original com subespaços semânticos de sensoriamento remoto mostrou-se muito mais proveitoso do que delegar à rede o aprendizado autônomo de relações não lineares a partir das bandas brutas, evidenciando o valor do conhecimento de domínio dos dados. Além disso, a busca por compensar o desbalanceamento de classes exige estratégias que combinem mais de uma técnica durante o treinamento. Intervenções isoladas, como o ajuste estático de pesos na função de perda , mostraram-se pouco suficientes e geraram *trade-offs* que prejudicaram outras classes.
+
+## Trabalhos Futuros
+* Ler outros trabalhos que utilizem o Agriculture Vision dataset a fim de avaliar soluções que possam ser úteis pra nos aprofundar em melhores modelos, indo além do baseline. (O desenvolvimento de baseline foi bom para nos inteirar sobre o desafio tratado.)
+
+* Explorar losses que compensem o desbalanceamento do dataset, como a aplicada aqui, a weighted loss.
 
 ## Uso de IA Generativa
-### Auxílio na parte gramatical do datasheet
-O Gemini foi utilizado no ajuste gramatical e na conversão dos textos para inglês. Prompt utilizado: 
-> "Escreva o seguinte trecho em inglês ajustando erros gramaticais quando necessário:"
+Utilizou-se o [Gemini](https://gemini.google/us/about/?hl=en) a fim de avaliar a coesão e concordância dos textos redigidos. O prompt utilizado foi:
+> "Avalia o texto a seguir, considerando sua coesão e concordância: '<texto>'"
 ### Auxílio na criação dos códigos
-Foi utilizado o Gemini para a criação dos códigos de navegação entre os diretórios do dataset. Prompt utilizado:
-> "Dado os seguintes diretórios escreva um código que permita acessar as imagens presentes nas pastas."
+Utilizou-se o [Gemini](https://gemini.google/us/about/?hl=en) a fim de verificar se a mIoU modificada que o dataset sugere foi codificada corretamente, além disso foi utilizada para colaborar em como seria executar o treinamento em duas GPUs.
+O prompt utilizado para a mIoU foi:
+
+> Sobre o treinamento em paralelo, foram utilizados múltiplos prompts que envolvessem o DDP.
+
+> "Veja se a mIoU do code "<code>" está de acordo com a screenshot. (A screenshot possuiaDado os seguintes diretórios escreva um código que permita acessar as imagens presentes nas pastas.". Vide Figura 9.
+
+<div align="center">
+  <img src="assets/print_mIoU_modificada.png" alt="mIoU modificada" width="900">  
+  <p>
+    <b>Figura 10:</b> Screenshot da mIoU modificada.
+    <br>
+  </p>
+</div>
 
 ## Referências
 [[1]] SHEN, Yao; WANG, Lei; JIN, Yue. AAFormer: A multi-modal transformer network for aerial agricultural images. In: Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2022. p. 1705-1711.
@@ -249,3 +341,4 @@ Foi utilizado o Gemini para a criação dos códigos de navegação entre os dir
 [[13]] CHIU, Mang Tik et al. The 1st agriculture-vision challenge: Methods and results. In: Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops. 2020. p. 48-49.
 
 [13]: https://openaccess.thecvf.com/content_CVPRW_2020/html/w5/Chiu_The_1st_Agriculture-Vision_Challenge_Methods_and_Results_CVPRW_2020_paper.html
+
