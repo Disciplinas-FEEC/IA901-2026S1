@@ -204,6 +204,12 @@ A otimização com Optuna (15 trials por combinação modelo-dataset) revelou le
 
 Estes valores reforçam que diferentes arquiteturas e datasets requerem configurações de otimizador adaptadas para máxima eficiência.
 
+![Performance de Generalização - UNet](assets/results/perf_gen_unet.png)
+
+![Performance de Generalização - AttentionUnet](assets/results/perf_gen_attentionunet.png)
+
+![Performance de Generalização - UNETR](assets/results/perf_gen_unetr.png)
+
 ### Few-Shot Learning
 
 Modelos pré-treinados em PanNuke foram submetidos a fine-tuning com apenas K=5 amostras de MoNuSeg. Este experimento simula cenários práticos onde dados anotados do domínio alvo são escassos.
@@ -286,7 +292,10 @@ O presente projeto demonstrou que a segmentação de núcleos em imagens histol�
 3. **Trade-off Entre Complexidade e Generalização**: Modelos mais simples (UNet) frequentemente apresentaram transferência comparável ou superior a modelos mais complexos (UNETR), sugerindo que simplicidade arquitetural pode favorecer generalização.
 
 ## Trabalhos Futuros
-> O que poderia ser melhorado se houvesse mais tempo?
+
+Para trabalhos futuros, uma melhoria seria a inclusão de métricas de avaliação focadas nos contornos das segmentações, como a Distância de Hausdorff Média e a Distância de Superfície Simétrica. Atualmente, a avaliação do projeto apoia-se fortemente no Coeficiente de Dice, que é excelente para medir a sobreposição de área. Contudo, quantificar o erro exato dos contornos forneceria uma análise mais robusta sobre a capacidade geométrica dos modelos ao operarem em imagens não vistas.
+
+Além disso, embora o projeto tenha utilizado uma estratégia de transferência e fine-tuning com suporte reduzido (Few-Shot do tipo TransFT), a exploração de metodologias avançadas de Few-Shot Learning⁵, como no artigo referenciado e que foi descoberto durante a revisão do estado-da-arte, representaria um avanço significativo.
 
 ## Uso de IA Generativa
 - Implementação de script para geração de samples: O Claude foi utilizado para gerar um script base de geração da pasta '*\data\samples'. Foram feitas diversas adaptações em cima desse script base, para que essa geração se adequasse ao projeto.
