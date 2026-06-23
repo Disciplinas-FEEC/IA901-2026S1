@@ -104,13 +104,131 @@ c) **Few-shot learning**: Ajuste fino com poucas amostras (K=5) do NuInSeg usand
 
 ## Bases de Dados
 
+O projeto utiliza três datasets públicos amplamente consolidados na comunidade de patologia digital, cada um com características distintas que representam diferentes desafios de segmentação e adaptação de domínio:
+
+### Resumo Geral dos Datasets
+
 Base de Dados | Endereço na Web | Resumo descritivo
 ----- | ----- | -----
 PanNuke | https://warwick.ac.uk/fac/cross_fac/tia/data/pannuke/ | Grande dataset com 7904 amostras de imagens histológicas de diferentes tecidos, além de máscaras de segmentação e anotaçãoe sobre a histologia. Este dataset se destaca pela quantidade e diversidade nas amostras.
 NuInsSeg | https://www.kaggle.com/datasets/ipateam/nuinsseg | Dataset com 665 amostras de imagens histológicas anotadas, desenvolvido com foco em treinar e avaliar modelos de segmentação de núcleos celulares em imagens de microscopia.
 MoNuSeg | https://monuseg.grand-challenge.org/Data/ | Dataset com 44 imagens histopatológicas de diversos órgãos em alta resolução com anotações feitas manualmente por especialistas. Criado originalmente para uma competição, se tornou um benchmark frequentemente usado em pesquisas de patologia digital.
 
-O detalhamento sobre os datasets utilizados pode ser encontrado no [datasheet desenvolvido pelo grupo](data/Datasheets.md).
+
+### Características Detalhadas por Dataset
+
+#### **MoNuSeg (Multi-Organ Nucleus Segmentation)**
+
+**Formato e Tamanho:**
+- **Quantidade**: 30 imagens de treinamento + 14 de teste (total: 44 imagens)
+- **Resolução**: 1000×1000 pixels em RGB
+- **Formato original**: TIFF
+- **Tamanho total**: ~500 MB
+
+**Tipo de Anotação:**
+- Formato XML com coordenadas dos contornos nucleares
+- Anotações realizadas manualmente com software Aperio ImageScope
+- Revisão por patologistas experientes
+- Corado com H&E em ampliação 40x
+- Múltiplos órgãos: mama, fígado, rim, próstata, bexiga, pulmão, cérebro e cólon
+- Total: ~28.846 núcleos anotados
+
+**Transformações e Pré-processamento Aplicados:**
+1. **Conversão de formato**: XML → arrays NumPy binários (masks)
+2. **Divisão em patches**: 1000×1000 → patches de 256×256 pixels
+3. **Normalização**: ScaleIntensity (normalização de intensidade)
+4. **Data augmentation (treino)**: Flips aleatórios 50% em cada eixo
+5. **Divisão de dados**: 70% treino / 15% validação / 15% teste
+
+**Características Relevantes:**
+- Dataset mais homogêneo em qualidade (menor variância: σ ~0.09-0.10)
+- Imagens de alta resolução original → maior quantidade de contexto por patch
+- Anotações precisas com limites bem definidos
+- Excelente para avaliar generalização entre órgãos
+
+---
+
+#### **PanNuke (Pan-Cancer Dataset)**
+
+**Formato e Tamanho:**
+- **Quantidade**: 7.904 imagens de 256×256 pixels
+- **Resolução**: 256×256 pixels em RGB
+- **Formato original**: NPY (NumPy arrays)
+- **Tamanho total**: ~2.5 GB
+
+**Tipo de Anotação:**
+- Máscaras em formato 6-canais: 5 tipos celulares + background
+- Anotações semi-automáticas com validação por patologistas
+- Provenientes de 455 campos visuais de >20 mil lâminas histológicas inteiras (WSIs)
+- Total: ~216.000 núcleos anotados
+
+**Transformações e Pré-processamento Aplicados:**
+1. **Agregação de máscaras**: 6 canais → máscara binária única (núcleo sim/não)
+2. **Formato mantido**: NPY já é formato intermediário eficiente
+3. **Normalização**: ScaleIntensity
+4. **Data augmentation (treino)**: Flips aleatórios 50%
+5. **Divisão de dados**: 70% treino / 15% validação / 15% teste
+
+**Características Relevantes:**
+- Dataset mais diverso e representativo de cenários clínicos reais
+- Inclui regiões com artefatos, borrões e coloração inadequada
+- Maior variância (σ ~0.18), refletindo diversidade de tecidos (19 tipos)
+- Excelente base para pré-treinamento e transfer learning
+- Patches de 256×256 já no tamanho otimizado para redes
+
+---
+
+#### **NuInsSeg (Nuclei Instance Segmentation)**
+
+**Formato e Tamanho:**
+- **Quantidade**: 665 imagens de 512×512 pixels
+- **Resolução**: 512×512 pixels em RGB
+- **Formato original**: PNG
+- **Tamanho total**: ~800 MB
+
+**Tipo de Anotação:**
+- Máscaras binárias e de instância
+- Anotações 100% manuais com software ImageJ
+- Revisão por especialistas
+- Máscaras auxiliares: mapas de distância e pesos de borda
+- **Única característica especial**: máscaras de "áreas ambíguas" (regiões que nem especialistas conseguem delimitar com precisão)
+- Provenientes de 31 órgãos diferentes (humanos e camundongos)
+- Total: ~30.698 núcleos anotados
+
+**Transformações e Pré-processamento Aplicados:**
+1. **Conversão de formato**: PNG → NPY
+2. **Divisão em patches**: 512×512 → patches de 256×256 pixels
+3. **Normalização**: ScaleIntensity
+4. **Data augmentation (treino)**: Flips aleatórios 50%
+5. **Divisão de dados**: 70% treino / 15% validação / 15% teste
+
+**Características Relevantes:**
+- Maior variância entre amostras (σ ~0.22), refletindo heterogeneidade de dificuldades
+- Anotações completamente manuais, sem componentes automáticas
+- Presença de máscaras ambíguas torna tarefas mais desafiadoras e realistas
+- Abrange múltiplos órgãos, testando generalização inter-órgãos
+
+---
+
+### Análise Comparativa e Conclusões sobre os Datasets
+
+| Aspecto | MoNuSeg | PanNuke | NuInsSeg |
+|---|---|---|---|
+| **Tamanho (amostras)** | Pequeno (44) | Grande (7.904) | Médio (665) |
+| **Resolução original** | Alto (1000×1000) | Médio (256×256) | Médio (512×512) |
+| **Variância Dice Score** | Baixa (~0.09-0.10) | Moderada (~0.18) | Alta (~0.22) |
+| **Tipo anotação** | XML (instância) | NPY (instância + classe) | PNG binária + ambígua |
+| **Homogeneidade** | Homogêneo | Heterogêneo (clínico) | Heterogêneo |
+| **Melhor para** | Benchmark/Generalização | Pré-treinamento | Desafios realistas |
+| **Qualidade esperada** | Consistente | Variável (realista) | Desafiadora |
+
+**Principais Conclusões do Grupo sobre os Datasets:**
+
+1. **Complementaridade**: Os três datasets cobrem espectros distintos — MoNuSeg é um benchmark com núcleos bem-definidos, PanNuke simula cenários clínicos reais com diversidade, e NuInsSeg desafia modelos com ambiguidades inherentes.
+
+2. **Transformações Padronizadas**: Apesar de formatos heterogêneos originais (TIFF, NPY, PNG), o pipeline de pré-processamento ([00_Preprocessing](notebooks/00_Preprocessing.ipynb)) unifica todas as bases em patches de 256×256 em formato NPY, facilitando treinamento consistente.
+
+O detalhamento adicional sobre os datasets utilizados pode ser encontrado no [datasheet desenvolvido pelo grupo](data/Datasheets.md).
 
 ## Ferramentas
 
@@ -311,6 +429,9 @@ Além disso, embora o projeto tenha utilizado uma estratégia de transferência 
 
 - Criação do Workflow: O ChatGPT foi utilizado para gerar a imagem do workflow a partir da descrição da metodologia.
     - Prompt Utilizado: "gere uma imagem para o workflow sobre a seguinte metodologia do projeto"
+
+- Revisão do texto: O GPT foi utilizado para revisar o texto pronto, principalmente em busca de typos e inconsistências
+    - Prompt Utilizado: "aponte typos e inconsistencias no texto"
 
 
 ## Referências
