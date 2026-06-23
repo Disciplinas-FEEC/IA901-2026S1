@@ -248,10 +248,10 @@ Como lições aprendidas a primeira é que a engenharia envolvida nos canais de 
 > O que poderia ser melhorado se houvesse mais tempo?
 
 ## Uso de IA Generativa
-Utilizou-se o ![Gemini](https://gemini.google/us/about/?hl=en) a fim de avaliar a coesão e concordância dos textos redigidos. O prompt utilizado foi:
+Utilizou-se o [Gemini](https://gemini.google/us/about/?hl=en) a fim de avaliar a coesão e concordância dos textos redigidos. O prompt utilizado foi:
 > "Avalia o texto a seguir, considerando sua coesão e concordância: '<texto>'"
 ### Auxílio na criação dos códigos
-Utilizou-se o ![Gemini](https://gemini.google/us/about/?hl=en) a fim de verificar se a mIoU modificada que o dataset sugere foi codificada corretamente, além disso foi utilizada para colaborar em como seria executar o treinamento em duas GPUs.
+Utilizou-se o [Gemini](https://gemini.google/us/about/?hl=en) a fim de verificar se a mIoU modificada que o dataset sugere foi codificada corretamente, além disso foi utilizada para colaborar em como seria executar o treinamento em duas GPUs.
 > "Dado os seguintes diretórios escreva um código que permita acessar as imagens presentes nas pastas.".
 
 ## Referências
