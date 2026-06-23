@@ -2,9 +2,9 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="210mm"
-   height="297mm"
-   viewBox="0 0 210 297"
+   width="293.95206mm"
+   height="129.24896mm"
+   viewBox="0 0 293.95206 129.24896"
    version="1.1"
    id="svg1"
    xml:space="preserve"
@@ -25,19 +25,28 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.52410025"
-     inkscape:cx="101.12569"
-     inkscape:cy="82.045373"
-     inkscape:window-width="1920"
-     inkscape:window-height="1043"
-     inkscape:window-x="0"
-     inkscape:window-y="0"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="switch5" /><defs
+     inkscape:zoom="0.74118968"
+     inkscape:cx="764.98636"
+     inkscape:cy="503.245"
+     inkscape:window-width="1290"
+     inkscape:window-height="991"
+     inkscape:window-x="26"
+     inkscape:window-y="23"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="switch59"
+     showgrid="false"><inkscape:page
+       x="0"
+       y="0"
+       width="293.95206"
+       height="129.24896"
+       id="page2"
+       margin="0"
+       bleed="0" /></sodipodi:namedview><defs
      id="defs1" /><g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1"><g
+     id="layer1"
+     transform="translate(13.440862,-20.026086)"><g
        id="g111"
        transform="matrix(0.26458333,0,0,0.26458333,8.3343769,58.803647)"><g
          id="g109"><g
@@ -215,7 +224,11 @@
                      sodipodi:role="line"
                      x="281"
                      y="203"
-                     id="tspan122">-editar: config.yaml.</tspan></text></switch></g></g><g
+                     id="tspan122">-editar: config.yaml.</tspan><tspan
+                     sodipodi:role="line"
+                     x="281"
+                     y="214.25"
+                     id="tspan1">executar: ./src/scripts/load_dataset.sh</tspan></text></switch></g></g><g
              transform="translate(-81.800122,-146.56087)"
              id="g17"><rect
                x="381"
@@ -787,7 +800,7 @@
                      sodipodi:role="line"
                      x="648"
                      y="420.5"
-                     id="tspan182">tensor(C,H,W), 3~6bandas,</tspan><tspan
+                     id="tspan182">tensor(C,H,W), 3~6 bandas,</tspan><tspan
                      sodipodi:role="line"
                      x="648"
                      y="431.75"
