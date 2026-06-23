@@ -141,7 +141,6 @@ MoNuSeg | https://monuseg.grand-challenge.org/Data/ | Dataset com 44 imagens his
 5. **Divisão de dados**: 70% treino / 15% validação / 15% teste
 
 **Características Relevantes:**
-- Dataset mais homogêneo em qualidade (menor variância: σ ~0.09-0.10)
 - Imagens de alta resolução original → maior quantidade de contexto por patch
 - Anotações precisas com limites bem definidos
 - Excelente para avaliar generalização entre órgãos
@@ -172,7 +171,6 @@ MoNuSeg | https://monuseg.grand-challenge.org/Data/ | Dataset com 44 imagens his
 **Características Relevantes:**
 - Dataset mais diverso e representativo de cenários clínicos reais
 - Inclui regiões com artefatos, borrões e coloração inadequada
-- Maior variância (σ ~0.18), refletindo diversidade de tecidos (19 tipos)
 - Excelente base para pré-treinamento e transfer learning
 - Patches de 256×256 já no tamanho otimizado para redes
 
@@ -203,7 +201,6 @@ MoNuSeg | https://monuseg.grand-challenge.org/Data/ | Dataset com 44 imagens his
 5. **Divisão de dados**: 70% treino / 15% validação / 15% teste
 
 **Características Relevantes:**
-- Maior variância entre amostras (σ ~0.22), refletindo heterogeneidade de dificuldades
 - Anotações completamente manuais, sem componentes automáticas
 - Presença de máscaras ambíguas torna tarefas mais desafiadoras e realistas
 - Abrange múltiplos órgãos, testando generalização inter-órgãos
@@ -216,7 +213,6 @@ MoNuSeg | https://monuseg.grand-challenge.org/Data/ | Dataset com 44 imagens his
 |---|---|---|---|
 | **Tamanho (amostras)** | Pequeno (44) | Grande (7.904) | Médio (665) |
 | **Resolução original** | Alto (1000×1000) | Médio (256×256) | Médio (512×512) |
-| **Variância Dice Score** | Baixa (~0.09-0.10) | Moderada (~0.18) | Alta (~0.22) |
 | **Tipo anotação** | XML (instância) | NPY (instância + classe) | PNG binária + ambígua |
 | **Homogeneidade** | Homogêneo | Heterogêneo (clínico) | Heterogêneo |
 | **Melhor para** | Benchmark/Generalização | Pré-treinamento | Desafios realistas |
